@@ -42,7 +42,7 @@ export const LOCAL_CJK_FONTS: readonly LocalCjkFont[] = [
   { family: 'Noto Sans SC', importName: 'NotoSansSC', aliasZh: ['Noto Sans CJK SC', '思源黑体'],
     stylesheet: '/fonts/noto-sans-sc/noto-sans-sc.css', weightRange: [100, 900] },
   // Deyihei — SIL Open Font License 1.1(github.com/atelier-anchor/smiley-sans, v2.0.1)
-  { family: 'Smiley Sans', importName: 'SmileySans', aliasZh: ['得意黑'],
+  { family: 'Smiley Sans', importName: 'SmileySans', aliasZh: ['Smiley Sans'],
     files: { 400: '/fonts/smiley-sans/SmileySans-Oblique.woff2' } },
   // Easy Handwriting 1 — Free for commercial use (Easy Handwriting Series; subject to the original publisher’s authorization page)
   { family: 'Qingsong Shouxie Ti Yi', importName: 'QingsongShouxieTiYi', aliasZh: ['轻松手写体一', '轻松手写体'],

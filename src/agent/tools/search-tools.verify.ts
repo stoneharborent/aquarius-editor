@@ -39,7 +39,7 @@ async function main(): Promise<void> {
 
   // ── project scoping + limit ──
   installFetch(() => ({ hits: [] }));
-  await execSearchTool('search_content', { query: '转场', projectId: 'p-9', limit: 5 });
+  await execSearchTool('search_content', { query: 'Transitions', projectId: 'p-9', limit: 5 });
   assert.ok(calls[0]!.url.includes('project=p-9'), 'projectId must be appended');
   assert.ok(calls[0]!.url.includes('limit=5'), 'limit must be appended');
 
@@ -53,7 +53,7 @@ async function main(): Promise<void> {
   (globalThis as Record<string, unknown>).fetch = async () => {
     throw new Error('network down');
   };
-  const failed = await execSearchTool('search_content', { query: '字幕' });
+  const failed = await execSearchTool('search_content', { query: 'Captions' });
   assert.equal((failed as { error: string }).error, 'network down');
 
   console.log('✓ search_content tool verify: URL/hits/errors all passed');

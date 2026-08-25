@@ -46,8 +46,8 @@ function BooleanOverride({ label, resolved, onChange }: {
       <select value={String(resolved.value)}
         onChange={(event) => onChange(event.target.value === 'true')}
         style={inputStyle}>
-        <option value="true">{t('支持')}</option>
-        <option value="false">{t('不支持')}</option>
+        <option value="true">{t('Supported')}</option>
+        <option value="false">{t('Unsupported')}</option>
       </select>
     </label>
   );
@@ -108,11 +108,11 @@ export function ModelCapabilityEditor({
     <section style={boxStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
         <div style={{ minWidth: 0 }}>
-          <b style={{ fontSize: 11.5 }}>{t('模型能力')}</b>
+          <b style={{ fontSize: 11.5 }}>{t('Model capabilities')}</b>
           <div style={summaryStyle}>{modelId} · {resolvedSummary(resolved)}</div>
           {(resolved.contextWindowTokens.estimated || resolved.maxOutputTokens.estimated) && (
             <div style={{ fontSize: 10.5, lineHeight: 1.5, marginTop: 4, color: theme.textDim, maxWidth: 420 }}>
-              {t('该模型不在内置目录，以上数值为估算（上下文 {context} / 输出 {output}）。若与实际不符，点「展开」手动修改。', {
+              {t('This model is not in the built-in catalog, so these values are estimates (context {context} / output {output}). If they do not match the real model, expand and adjust them manually.', {
                 context: resolved.contextWindowTokens.value.toLocaleString(),
                 output: resolved.maxOutputTokens.value.toLocaleString(),
               })}
@@ -123,31 +123,31 @@ export function ModelCapabilityEditor({
           {override && <button type="button" onClick={() => update(Object.fromEntries(
             ['contextWindowTokens', 'maxInputTokens', 'maxOutputTokens', 'supportsTools', 'supportsImages', 'supportsReasoning', 'reasoningEfforts', 'defaultReasoningEffort']
               .map((field) => [field, undefined]),
-          ))} style={clearStyle}>{t('清除覆盖')}</button>}
+          ))} style={clearStyle}>{t('Clear override')}</button>}
           <button type="button" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}
-            style={clearStyle}>{t(expanded ? '收起' : '展开')}</button>
+            style={clearStyle}>{t(expanded ? 'Collapse' : 'Expand')}</button>
         </div>
       </div>
       {expanded && <>
         <div style={gridStyle}>
-          <NumericOverride label="上下文窗口（tokens）" value={override?.contextWindowTokens}
+          <NumericOverride label="Context window (tokens)" value={override?.contextWindowTokens}
             resolved={resolved.contextWindowTokens} minimum={4_096}
             onCommit={(value) => update({ contextWindowTokens: value })} />
-          <NumericOverride label="最大输入（tokens）" value={override?.maxInputTokens}
+          <NumericOverride label="Maximum input (tokens)" value={override?.maxInputTokens}
             resolved={resolved.maxInputTokens} minimum={1}
             onCommit={(value) => update({ maxInputTokens: value })} />
-          <NumericOverride label="最大输出（tokens）" value={override?.maxOutputTokens}
+          <NumericOverride label="Maximum output (tokens)" value={override?.maxOutputTokens}
             resolved={resolved.maxOutputTokens} minimum={1}
             onCommit={(value) => update({ maxOutputTokens: value })} />
-          <BooleanOverride label="工具调用" resolved={resolved.supportsTools}
+          <BooleanOverride label="Tool calling" resolved={resolved.supportsTools}
             onChange={booleanUpdate('supportsTools')} />
-          <BooleanOverride label="图片输入" resolved={resolved.supportsImages}
+          <BooleanOverride label="Media inputs" resolved={resolved.supportsImages}
             onChange={booleanUpdate('supportsImages')} />
-          <BooleanOverride label="推理能力" resolved={resolved.supportsReasoning}
+          <BooleanOverride label="Reasoning" resolved={resolved.supportsReasoning}
             onChange={booleanUpdate('supportsReasoning')} />
         </div>
         {error && <div style={{ ...summaryStyle, color: theme.danger }}>{t(error)}</div>}
-        <div style={summaryStyle}>{t('留空会使用内置模型目录；未知模型使用保守回退值。')}</div>
+        <div style={summaryStyle}>{t('Leave fields empty to use the bundled model catalog. Unknown models use conservative fallback values.')}</div>
       </>}
     </section>
   );

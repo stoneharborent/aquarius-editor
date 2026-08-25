@@ -60,11 +60,11 @@ export function ReviewCommentsButton(props: ReviewCommentsButtonProps) {
 
   return (
     <div style={{ position: 'relative' }}>
-      <button type="button" title={t('审阅评论')} aria-label={t('审阅评论')}
+      <button type="button" title={t('Review comments')} aria-label={t('Review comments')}
         onClick={toggle}
         style={{ ...toolbarButton, color: open ? theme.text : theme.textDim, background: open ? theme.panelAlt : 'transparent' }}>
         <Icon name="clipboard" size={12} />
-        <span>{t('评论')}</span>
+        <span>{t('Comments')}</span>
         {openCount > 0 && <span style={countBadge}>{openCount}</span>}
       </button>
       {open && (
@@ -88,7 +88,7 @@ function useStoredComments(projectId: string) {
     loadReviewComments(projectId)
       .then((loaded) => { if (!cancelled) setComments(loaded); })
       .catch((cause) => {
-        if (!cancelled) setError(cause instanceof Error ? cause.message : t('评论加载失败'));
+        if (!cancelled) setError(cause instanceof Error ? cause.message : t('Failed to load comments'));
       });
     return () => { cancelled = true; };
   }, [projectId, t]);
@@ -101,7 +101,7 @@ function useStoredComments(projectId: string) {
       setComments(next);
       return true;
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : t('评论保存失败'));
+      setError(cause instanceof Error ? cause.message : t('Failed to save comment'));
       return false;
     } finally {
       setBusy(false);
@@ -154,7 +154,7 @@ function ReviewPanel(props: ReviewPanelProps) {
   });
 
   return (
-    <div ref={panelRef} role="dialog" aria-label={t('审阅评论')}
+    <div ref={panelRef} role="dialog" aria-label={t('Review comments')}
       style={props.target ? { ...popover, position: 'fixed', left: position.left, top: position.top, right: 'auto' } : popover}>
       <PanelHeader onClose={props.onClose} />
       <AddCommentForm text={text} setText={setText} busy={props.busy} onAdd={addComment} />
@@ -169,8 +169,8 @@ function PanelHeader({ onClose }: { onClose: () => void }) {
   const t = useT();
   return (
     <div style={header}>
-      <strong>{t('审阅评论')}</strong>
-      <button type="button" title={t('关闭')} onClick={onClose} style={iconButton}>
+      <strong>{t('Review comments')}</strong>
+      <button type="button" title={t('Close')} onClick={onClose} style={iconButton}>
         <Icon name="x" size={14} />
       </button>
     </div>
@@ -187,13 +187,13 @@ function AddCommentForm({ text, setText, busy, onAdd }: {
   return (
     <div style={{ padding: 10, borderBottom: `0.5px solid ${theme.border}` }}>
       <textarea autoFocus value={text} onChange={(event) => setText(event.target.value)}
-        placeholder={t('在当前帧添加审阅评论')} style={textarea} />
+        placeholder={t('Add a review comment at the current frame')} style={textarea} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 7 }}>
         <span style={{ flex: 1, fontSize: 10, color: theme.textMuted }}>
-          {t('绑定当前帧；可用时同时记录片段与源位置')}
+          {t('Anchors to this frame and, when available, the clip and source position')}
         </span>
         <button type="button" disabled={busy || !text.trim()} onClick={() => void onAdd()} style={primaryButton}>
-          {t('添加评论')}
+          {t('Add comment')}
         </button>
       </div>
     </div>
@@ -212,7 +212,7 @@ function CommentList(props: CommentListProps) {
   const t = useT();
   return (
     <div style={{ overflowY: 'auto', maxHeight: 360, padding: 8 }}>
-      {props.comments.length === 0 && <div style={empty}>{t('还没有审阅评论')}</div>}
+      {props.comments.length === 0 && <div style={empty}>{t('No review comments yet')}</div>}
       {props.comments.map((comment) => (
         <CommentCard key={comment.id} {...props} comment={comment} />
       ))}
@@ -227,7 +227,7 @@ function CommentCard({ comment, ...props }: CommentListProps & { comment: Review
     <article style={{ ...commentCard, opacity: comment.resolved ? 0.58 : 1 }}>
       <button type="button" onClick={() => props.onSeek(comment.anchor.frame)} style={anchorButton}>
         {formatFrame(comment.anchor.frame, props.state.fps)}
-        {comment.anchor.itemId ? ` · ${t('片段')}` : ` · ${t('时间线')}`}
+        {comment.anchor.itemId ? ` · ${t('Clip')}` : ` · ${t('Timeline')}`}
       </button>
       <p style={{ margin: '7px 0', whiteSpace: 'pre-wrap', lineHeight: 1.45 }}>{comment.text}</p>
       {comment.replies.map((entry) => <div key={entry.id} style={replyRow}>{entry.text}</div>)}
@@ -235,13 +235,13 @@ function CommentCard({ comment, ...props }: CommentListProps & { comment: Review
         <ReplyForm {...props} commentId={comment.id} />
       )}
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-        <button type="button" onClick={startReply} style={smallButton}>{t('回复')}</button>
+        <button type="button" onClick={startReply} style={smallButton}>{t('Reply')}</button>
         <button type="button" disabled={props.busy}
           onClick={() => void props.commit(setReviewResolved(props.comments, comment.id, !comment.resolved))} style={smallButton}>
-          {comment.resolved ? t('重新打开') : t('解决')}
+          {comment.resolved ? t('Reopen') : t('Resolve')}
         </button>
         <span style={{ flex: 1 }} />
-        <button type="button" disabled={props.busy} title={t('删除评论')}
+        <button type="button" disabled={props.busy} title={t('Delete comment')}
           onClick={() => void props.commit(removeReviewComment(props.comments, comment.id))} style={iconButton}>
           <Icon name="trash" size={12} />
         </button>
@@ -256,9 +256,9 @@ function ReplyForm({ commentId, reply, setReply, addReply, busy }: CommentListPr
     <div style={{ display: 'flex', gap: 6, marginTop: 7 }}>
       <input autoFocus value={reply} onChange={(event) => setReply(event.target.value)}
         onKeyDown={(event) => { if (event.key === 'Enter' && reply.trim()) void addReply(commentId); }}
-        placeholder={t('输入回复')} style={replyInput} />
+        placeholder={t('Write a reply')} style={replyInput} />
       <button type="button" disabled={busy || !reply.trim()} onClick={() => void addReply(commentId)} style={smallButton}>
-        {t('回复')}
+        {t('Reply')}
       </button>
     </div>
   );

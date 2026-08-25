@@ -20,33 +20,33 @@ export function resolveUpstreamUpdateAction(
   state: UpstreamUpdateState,
   desktopUpdate: boolean,
 ): UpstreamUpdateAction {
-  if (state.phase === 'checking') return { label: t('检查中…'), disabled: true, command: 'none' };
+  if (state.phase === 'checking') return { label: t('Checking…'), disabled: true, command: 'none' };
   if (state.phase === 'available') {
     return desktopUpdate
-      ? { label: t('下载更新'), disabled: false, command: 'download' }
-      : { label: t('查看发布页'), disabled: false, command: 'view-release' };
+      ? { label: t('Download update'), disabled: false, command: 'download' }
+      : { label: t('View release'), disabled: false, command: 'view-release' };
   }
   if (state.phase === 'downloading') {
     return {
-      label: t('下载中 {percent}%', { percent: Math.round(state.percent) }),
+      label: t('Downloading {percent}%', { percent: Math.round(state.percent) }),
       disabled: true,
       command: 'none',
     };
   }
   if (state.phase === 'downloaded') {
-    return { label: t('重启并安装'), disabled: false, command: 'install' };
+    return { label: t('Restart and install'), disabled: false, command: 'install' };
   }
-  if (state.phase === 'installing') return { label: t('正在重启…'), disabled: true, command: 'none' };
+  if (state.phase === 'installing') return { label: t('Restarting…'), disabled: true, command: 'none' };
   if (state.phase === 'error') {
     if (state.failedOperation === 'download') {
-      return { label: t('重试下载'), disabled: false, command: 'download' };
+      return { label: t('Retry download'), disabled: false, command: 'download' };
     }
     if (state.failedOperation === 'install') {
-      return { label: t('重试安装'), disabled: false, command: 'install' };
+      return { label: t('Retry installation'), disabled: false, command: 'install' };
     }
-    return { label: t('重新检查'), disabled: false, command: 'check' };
+    return { label: t('Check again'), disabled: false, command: 'check' };
   }
-  return { label: t('检查更新'), disabled: false, command: 'check' };
+  return { label: t('Check for updates'), disabled: false, command: 'check' };
 }
 
 export function upstreamUpdateMessage(state: UpstreamUpdateState, desktopUpdate: boolean): string {
@@ -56,27 +56,27 @@ export function upstreamUpdateMessage(state: UpstreamUpdateState, desktopUpdate:
       current: formatDisplayVersion(state.currentVersion),
     };
     return desktopUpdate
-      ? t('发现 OpenChatCut 新版本 {latest}，当前版本 {current}。可以直接下载并安装。', params)
-      : t('发现 OpenChatCut 新版本 {latest}，当前版本 {current}。请前往项目仓库查看更新。', params);
+      ? t('OpenChatCut {latest} is available; current version: {current}. Download and install it directly.', params)
+      : t('OpenChatCut {latest} is available; current version: {current}. Visit the project repository to review the update.', params);
   }
   if (state.phase === 'current') {
-    return t('当前已是最新版本 {version}', { version: formatDisplayVersion(state.currentVersion) });
+    return t('You are using the latest version, {version}.', { version: formatDisplayVersion(state.currentVersion) });
   }
   if (state.phase === 'downloading') {
-    return t('正在下载 OpenChatCut {latest}：{percent}%', {
+    return t('Downloading OpenChatCut {latest}: {percent}%', {
       latest: formatDisplayVersion(state.latestVersion),
       percent: Math.round(state.percent),
     });
   }
   if (state.phase === 'downloaded') {
-    return t('OpenChatCut {latest} 已下载，重启后完成安装。', {
+    return t('OpenChatCut {latest} is downloaded. Restart to finish installing.', {
       latest: formatDisplayVersion(state.latestVersion),
     });
   }
-  if (state.phase === 'installing') return t('正在重启并安装 OpenChatCut…');
-  if (state.phase === 'error' && state.failedOperation === 'download') return t('下载更新失败，请重试');
-  if (state.phase === 'error' && state.failedOperation === 'install') return t('安装更新失败，请重试');
-  return t('暂时无法检查更新，请稍后重试');
+  if (state.phase === 'installing') return t('Restarting to install OpenChatCut…');
+  if (state.phase === 'error' && state.failedOperation === 'download') return t('The update download failed. Try again.');
+  if (state.phase === 'error' && state.failedOperation === 'install') return t('The update installation failed. Try again.');
+  return t('Unable to check for updates. Please try again later.');
 }
 
 export function runUpstreamUpdateCommand(command: UpstreamUpdateCommand): void {

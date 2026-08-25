@@ -162,7 +162,7 @@ console.log(`catalog: fx=${FX_IDS.length} lut=${LUT_IDS.length} tr=${TRANSITION_
     id: 'plugin:demo/ink',
     label: '水墨',
     frag: 'uniform sampler2D u_outgoing; uniform sampler2D u_incoming; uniform float u_progress; void main(){}',
-    props: [{ key: 'soft', label: '柔和', default: 0.3, min: 0, max: 1 }],
+    props: [{ key: 'soft', label: 'Softness', default: 0.3, min: 0, max: 1 }],
   });
   const d = makeDraft(base);
   const ctx = ctxOf(d);

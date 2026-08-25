@@ -35,8 +35,8 @@ export function ManualCaptionEditor({ captions, items, onUpdate, getPlayheadMs, 
   return (
     <div className="cc-cap-bilingual">
       <button type="button" className="cc-cap-bilingual-toggle" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
-        <span>{t('手动字幕')}{lanes.length ? t('（{n} 车道）', { n: lanes.length }) : ''}</span>
-        <span className="cc-cap-hint">{open ? t('收起') : t('展开')}</span>
+        <span>{t('Manual captions')}{lanes.length ? t(' ({n} lanes)', { n: lanes.length }) : ''}</span>
+        <span className="cc-cap-hint">{open ? t('Collapse') : t('Expand')}</span>
       </button>
       {open && <ManualLanePanel {...{ captions, lanes, lane, laneId, setLaneId, addLane, onUpdate, getPlayheadMs, onSeekMs }} />}
     </div>
@@ -58,12 +58,12 @@ function ManualLanePanel(props: LanePanelProps) {
     <div className="cc-cap-bilingual-body">
       <div className="cc-cap-manual-toolbar">
         {lanes.length > 0 && <select className="cc-cap-select" value={laneId} onChange={(event) => setLaneId(event.target.value)}>
-          {lanes.map((entry) => <option key={entry.id} value={entry.id}>{entry.label ?? t('手动字幕车道')}</option>)}
+          {lanes.map((entry) => <option key={entry.id} value={entry.id}>{entry.label ?? t('Manual caption lane')}</option>)}
         </select>}
-        <button type="button" className="cc-cap-btn sm" onClick={addLane}>{t('新建车道')}</button>
-        {lane && <button type="button" className="cc-cap-btn sm ghost" onClick={() => onUpdate(removeManualLane(captions, lane.id))}>{t('删除车道')}</button>}
+        <button type="button" className="cc-cap-btn sm" onClick={addLane}>{t('New lane')}</button>
+        {lane && <button type="button" className="cc-cap-btn sm ghost" onClick={() => onUpdate(removeManualLane(captions, lane.id))}>{t('Delete lane')}</button>}
       </div>
-      {!lane && <p className="cc-cap-hint">{t('新建手动字幕车道后，可在播放头位置添加字幕，不需要先转写或调用 AI。')}</p>}
+      {!lane && <p className="cc-cap-hint">{t('Create a manual caption lane, then add captions at the playhead without transcription or AI.')}</p>}
       {lane && <ManualCueList key={lane.id} {...{ captions, lane, onUpdate, getPlayheadMs, onSeekMs }} />}
     </div>
   );
@@ -84,12 +84,12 @@ function ManualCueList({ captions, lane, onUpdate, getPlayheadMs, onSeekMs }: Om
   const syncPlayhead = () => setStart(((getPlayheadMs?.() ?? 0) / 1000).toFixed(1));
   return (
     <div className="cc-cap-manual-compose">
-      <textarea className="cc-cap-input cc-cap-textarea" rows={2} value={text} onChange={(event) => setText(event.target.value)} placeholder={t('输入字幕文字')} />
+      <textarea className="cc-cap-input cc-cap-textarea" rows={2} value={text} onChange={(event) => setText(event.target.value)} placeholder={t('Enter caption text')} />
       <div className="cc-cap-manual-controls">
-        <label className="cc-cap-time-field"><span>{t('开始')}</span><input className="cc-cap-input" type="number" min="0" step="0.1" value={start} onChange={(event) => setStart(event.target.value)} /><span>s</span></label>
-        <label className="cc-cap-time-field"><span>{t('时长')}</span><input className="cc-cap-input" type="number" min="0.1" step="0.1" value={duration} onChange={(event) => setDuration(event.target.value)} /><span>s</span></label>
-        <button type="button" className="cc-cap-btn sm" onClick={syncPlayhead}>{t('取播放头')}</button>
-        <button type="button" className="cc-cap-btn primary sm" disabled={!text.trim()} onClick={add}>{t('添加字幕')}</button>
+        <label className="cc-cap-time-field"><span>{t('Start')}</span><input className="cc-cap-input" type="number" min="0" step="0.1" value={start} onChange={(event) => setStart(event.target.value)} /><span>s</span></label>
+        <label className="cc-cap-time-field"><span>{t('Duration')}</span><input className="cc-cap-input" type="number" min="0.1" step="0.1" value={duration} onChange={(event) => setDuration(event.target.value)} /><span>s</span></label>
+        <button type="button" className="cc-cap-btn sm" onClick={syncPlayhead}>{t('Use playhead')}</button>
+        <button type="button" className="cc-cap-btn primary sm" disabled={!text.trim()} onClick={add}>{t('Add caption')}</button>
       </div>
       <div className="cc-cap-manual-list">
         {(lane.words ?? []).map((cue, index) => <ManualCueRow key={cue.id ?? `${lane.id}_${cue.start}_${cue.end}_${index}`} {...{ captions, lane, cue, index, onUpdate, onSeekMs }} />)}
@@ -109,12 +109,12 @@ function ManualCueRow({ captions, lane, cue, index, onUpdate, onSeekMs }: Omit<P
   };
   return (
     <div className="cc-cap-manual-row">
-      <input className="cc-cap-input" aria-label={t('开始秒数')} type="number" min="0" step="0.1" value={start} onChange={(event) => setStart(event.target.value)} onClick={() => onSeekMs?.(cue.start)} />
-      <input className="cc-cap-input" aria-label={t('结束秒数')} type="number" min="0.1" step="0.1" value={end} onChange={(event) => setEnd(event.target.value)} />
-      <input className="cc-cap-input cc-cap-manual-text" aria-label={t('字幕文字')} value={text} onChange={(event) => setText(event.target.value)} />
+      <input className="cc-cap-input" aria-label={t('Start time in seconds')} type="number" min="0" step="0.1" value={start} onChange={(event) => setStart(event.target.value)} onClick={() => onSeekMs?.(cue.start)} />
+      <input className="cc-cap-input" aria-label={t('End time in seconds')} type="number" min="0.1" step="0.1" value={end} onChange={(event) => setEnd(event.target.value)} />
+      <input className="cc-cap-input cc-cap-manual-text" aria-label={t('Caption text')} value={text} onChange={(event) => setText(event.target.value)} />
       <div className="cc-cap-manual-actions">
-        <button type="button" className="cc-cap-btn sm" onClick={save}>{t('保存')}</button>
-        <button type="button" className="cc-cap-btn sm ghost" onClick={() => onUpdate(removeManualCue(captions, lane.id, index))}>{t('删除')}</button>
+        <button type="button" className="cc-cap-btn sm" onClick={save}>{t('Save')}</button>
+        <button type="button" className="cc-cap-btn sm ghost" onClick={() => onUpdate(removeManualCue(captions, lane.id, index))}>{t('Delete')}</button>
       </div>
     </div>
   );

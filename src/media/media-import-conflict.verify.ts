@@ -22,9 +22,9 @@ assert.equal(findMediaNameConflict([{ id: 'a', name: '旅行封面.PNG' }], '旅
 assert.equal(isMediaImportCancelled(new MediaImportCancelledError()), true);
 assert.equal(
   mediaImportErrorMessage(new Error('part 3 failed (503)')),
-  t('上传第 {part} 个分片失败（{status}）', { part: 3, status: 503 }),
+  t('Uploading part {part} failed ({status})', { part: 3, status: 503 }),
 );
-assert.equal(mediaImportErrorMessage(new Error('unexpected internal failure')), t('导入素材失败，请重试'));
+assert.equal(mediaImportErrorMessage(new Error('unexpected internal failure')), t('Failed to import media; retry'));
 
 const oldMaster: MediaAsset = {
   id: 'asset-master',

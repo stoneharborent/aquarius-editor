@@ -36,7 +36,7 @@ function WordRow({ words, deleted, editMode, onWord }: WordRowProps) {
               className={`cc-tx-word${isDel ? ' del' : ''}${editMode ? ' editable' : ''}`}
               data-gi={w.gi}
               onClick={() => onWord(w)}
-              title={editMode ? (isDel ? t('恢复此词') : t('删除此词')) : `${(w.start / 1000).toFixed(2)}s`}
+              title={editMode ? (isDel ? t('Restore this word') : t('Delete this word')) : `${(w.start / 1000).toFixed(2)}s`}
             >
               {w.text}
             </span>
@@ -58,7 +58,7 @@ interface ViewProps {
 export function ParagraphView({ groups, deleted, editMode, onWord }: ViewProps) {
   const t = useT();
   if (!groups.length) {
-    return <div className="cc-tx-muted">{t('这段还没有转写文本。')}</div>;
+    return <div className="cc-tx-muted">{t('This clip has no transcript text yet.')}</div>;
   }
   return (
     <div className="cc-tx-script">
@@ -107,7 +107,7 @@ export function ScriptView({
   const [dragOverSpeech, setDragOverSpeech] = useState<number | null>(null);
 
   if (!rows.length) {
-    return <div className="cc-tx-muted">{t('这段还没有转写文本。')}</div>;
+    return <div className="cc-tx-muted">{t('This clip has no transcript text yet.')}</div>;
   }
 
   // Speech blocks only (for reorder) — indices into `rows`
@@ -175,7 +175,7 @@ export function ScriptView({
               <div className="cc-tx-speech-body">
                 <span
                   className={`cc-tx-grip${canDrag ? ' active' : ''}`}
-                  title={canDrag ? t('拖动以重排语段（同步播放顺序）') : t('当前仅一段，无法重排')}
+                  title={canDrag ? t('Drag to reorder speech blocks (playback order follows)') : t('Only one block — nothing to reorder')}
                 >
                   ⋮⋮
                 </span>
@@ -188,21 +188,21 @@ export function ScriptView({
         const open = adjustGi === row.afterWordGi;
         return (
           <div key={`g-${row.afterWordGi}`} className={`cc-tx-gap-wrap${row.removed ? ' removed' : ''}`}>
-            <div className="cc-tx-gap" role="group" aria-label={t('气口 {clock}', { clock: formatGapClock(row.gapMs) })}>
+            <div className="cc-tx-gap" role="group" aria-label={t('Gap {clock}', { clock: formatGapClock(row.gapMs) })}>
               <button
                 type="button"
                 className="cc-tx-gap-main"
                 onClick={() => setAdjustGi(open ? null : row.afterWordGi)}
-                title={t('点击调整气口时长')}
+                title={t('Click to adjust this gap')}
               >
                 Gap: {formatGapClock(displayMs || (row.removed ? 0 : row.gapMs))}
-                {row.removed ? t(' · 已删除') : ''}
+                {row.removed ? t(' · deleted') : ''}
               </button>
               {!row.removed ? (
                 <button
                   type="button"
                   className="cc-tx-gap-del"
-                  title={t('删除气口（压掉这段静音）')}
+                  title={t('Delete this gap (squeeze out the silence)')}
                   onClick={(e) => {
                     e.stopPropagation();
                     onDeleteGap(row.afterWordGi);
@@ -214,23 +214,23 @@ export function ScriptView({
                 <button
                   type="button"
                   className="cc-tx-gap-del"
-                  title={t('恢复原始气口')}
+                  title={t('Restore the original gap')}
                   onClick={(e) => {
                     e.stopPropagation();
                     onCapGap(row.afterWordGi, null);
                   }}
                 >
-                  {t('恢复')}
+                  {t('Restore')}
                 </button>
               )}
             </div>
             {open && !row.removed && (
               <div className="cc-tx-gap-adjust">
-                <span className="cc-tx-muted">{t('原始 {clock}', { clock: formatGapClock(row.gapMs) })}</span>
-                <button type="button" className="cc-tx-btn sm" onClick={() => onCapGap(row.afterWordGi, 200)}>{t('压到 0.2s')}</button>
-                <button type="button" className="cc-tx-btn sm" onClick={() => onCapGap(row.afterWordGi, 500)}>{t('压到 0.5s')}</button>
-                <button type="button" className="cc-tx-btn sm" onClick={() => onDeleteGap(row.afterWordGi)}>{t('删气口')}</button>
-                <button type="button" className="cc-tx-btn sm ghost" onClick={() => onCapGap(row.afterWordGi, null)}>{t('还原')}</button>
+                <span className="cc-tx-muted">{t('Original {clock}', { clock: formatGapClock(row.gapMs) })}</span>
+                <button type="button" className="cc-tx-btn sm" onClick={() => onCapGap(row.afterWordGi, 200)}>{t('Cap at 0.2s')}</button>
+                <button type="button" className="cc-tx-btn sm" onClick={() => onCapGap(row.afterWordGi, 500)}>{t('Cap at 0.5s')}</button>
+                <button type="button" className="cc-tx-btn sm" onClick={() => onDeleteGap(row.afterWordGi)}>{t('Delete gap')}</button>
+                <button type="button" className="cc-tx-btn sm ghost" onClick={() => onCapGap(row.afterWordGi, null)}>{t('Reset')}</button>
               </div>
             )}
           </div>

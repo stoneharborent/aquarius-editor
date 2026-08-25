@@ -85,9 +85,9 @@ interface ResourceCardProps {
 }
 
 function resourceCardTitle(item: ResourceItem, clickable: boolean, canDrag: boolean, t: Translate): string {
-  if (clickable) return t('点击应用 / 拖到时间线：{name}', { name: item.name });
-  if (canDrag) return t('拖到时间线片段：{name}', { name: item.name });
-  return t('预览：{name}（选中片段后可应用）', { name: item.name });
+  if (clickable) return t('Click to apply / drag to timeline: {name}', { name: item.name });
+  if (canDrag) return t('Drag onto a timeline clip: {name}', { name: item.name });
+  return t('Preview: {name} (select a clip to apply)', { name: item.name });
 }
 
 const ResourceCard = memo(function ResourceCard(props: ResourceCardProps) {
@@ -184,8 +184,8 @@ interface ResourceListItemProps {
 const ResourceListItem = memo(function ResourceListItem({ item, clickable, canDrag, thumb, onApply, onDragStart, onDragChange, t }: ResourceListItemProps) {
   const src = thumb?.(item.id) ?? '';
   const title = clickable
-    ? t('应用到选中片段：{name}', { name: item.name })
-    : canDrag ? t('拖到时间线：{name}', { name: item.name }) : undefined;
+    ? t('Apply to selected clip: {name}', { name: item.name })
+    : canDrag ? t('Drag to timeline: {name}', { name: item.name }) : undefined;
   return (
     <button
       className="cc-resource-list-item"
@@ -259,8 +259,8 @@ export function ResourceBrowser({
   const hintText = disabledNote
     ? t(disabledNote)
     : applicable
-      ? `${t(hint)}${canDrag ? t(' · 也可拖到时间线片段上') : ''}`
-      : `${t(hint)}${t('（先在时间线选中，或直接拖到片段上）')}`;
+      ? `${t(hint)}${canDrag ? t(' · You can also drag it onto a timeline clip') : ''}`
+      : `${t(hint)}${t(' (select a clip on the timeline first, or drag straight onto a clip)')}`;
   const onDragStart = useCallback((event: DragEvent<HTMLButtonElement>, item: ResourceItem) => {
     if (!canDrag || !dragKind) return;
     setLibraryDrag(event, {

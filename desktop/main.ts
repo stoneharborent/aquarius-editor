@@ -137,7 +137,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
       ? requestedPath
       : app.getPath('videos');
     const options: OpenDialogOptions = {
-      title: '选择素材保存目录',
+      title: 'Choose media storage directory',
       defaultPath: requested,
       properties: ['openDirectory', 'createDirectory'],
     };
@@ -186,7 +186,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
       : await dialog.showSaveDialog(options);
     if (result.canceled || !result.filePath) return null;
     const filename = basename(result.filePath);
-    if (!validDesktopExportFilename(filename)) throw new Error('导出文件名无效');
+    if (!validDesktopExportFilename(filename)) throw new Error('The export filename is invalid.');
     const directory = await validatedDirectory(dirname(result.filePath));
     if (!directory) throw new Error('所选导出目录不可用');
     const grant = createExportDirectoryGrant(directory);
@@ -227,7 +227,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
       minWidth: 300,
       minHeight: 220,
       backgroundColor: '#16161a',
-      title: '文字稿',
+      title: 'Transcript',
       show: false,
       webPreferences: {
         preload: PRELOAD_PATH,

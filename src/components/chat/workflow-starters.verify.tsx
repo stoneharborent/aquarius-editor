@@ -21,7 +21,6 @@ const vite = await createServer({
       if (id !== localeModuleId) return null;
       return `
         export const getLocale = () => 'zh';
-        export const localizedCatalogText = (_english, chinese) => chinese;
         export const t = (text) => text;
         export const useT = () => t;
       `;

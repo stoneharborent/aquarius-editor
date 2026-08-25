@@ -60,7 +60,7 @@ export function SliderRow({
       />
       <span className="cc-insp-val">
         <ScalarControl
-          ariaLabel={t('输入{name}的精确值', { name: label })}
+          ariaLabel={t('Enter an exact {name} value', { name: label })}
           disabled={disabled}
           formatValue={fmt}
           inputScale={inputScale}
@@ -71,15 +71,15 @@ export function SliderRow({
           onGestureEnd={gesture.onKeyUp}
           onGestureStart={gesture.onKeyDown}
           step={step}
-          title={t('点击输入精确值；左右拖动调整；Shift ×10；⌘ ×0.1')}
+          title={t('Click for exact input; drag horizontally to adjust; Shift ×10; ⌘ ×0.1')}
           value={val}
         />
         {onReset && (
           <button
-            aria-label={t('重置{name}', { name: label })}
+            aria-label={t('Reset {name}', { name: label })}
             className="cc-insp-reset"
             disabled={resetDisabled}
-            title={t('重置{name}', { name: label })}
+            title={t('Reset {name}', { name: label })}
             type="button"
             onClick={onReset}
           >
@@ -106,8 +106,8 @@ interface KfApi {
 }
 
 const EASING_OPTIONS: { value: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'; label: string }[] = [
-  { value: 'linear', label: '线性' }, { value: 'easeIn', label: '缓入' },
-  { value: 'easeOut', label: '缓出' }, { value: 'easeInOut', label: '缓入出' },
+  { value: 'linear', label: 'Linear' }, { value: 'easeIn', label: 'Ease In' },
+  { value: 'easeOut', label: 'Ease Out' }, { value: 'easeInOut', label: 'Ease In-Out' },
 ];
 
 // end-of-row keyframe rail (PRD §4.5; UI imitates reframe keyframe mode, custom layout):
@@ -127,9 +127,9 @@ function KfCell({ kfs, localFrame, inRange, punchValue, onSet, onRemove, onSeekL
   const at = inRange ? kfs?.find((k) => k.frame === localFrame) : undefined;
   const prev = inRange && kfs ? [...kfs].reverse().find((k) => k.frame < localFrame) : undefined;
   const next = inRange ? kfs?.find((k) => k.frame > localFrame) : undefined;
-  const outside = t('把播放头移进这个片段才能打关键帧');
-  const previousTitle = prev ? t('上一关键帧') : t('没有更早的关键帧');
-  const nextTitle = next ? t('下一关键帧') : t('没有更晚的关键帧');
+  const outside = t('Move the playhead into this clip to set keyframes');
+  const previousTitle = prev ? t('Previous keyframe') : t('No earlier keyframe');
+  const nextTitle = next ? t('Next keyframe') : t('No later keyframe');
   return (
     <span className="cc-insp-kf">
       <button className="cc-insp-kf-btn" type="button" disabled={!prev} title={previousTitle} aria-label={previousTitle} onClick={() => prev && onSeekLocal(prev.frame)}>
@@ -139,8 +139,8 @@ function KfCell({ kfs, localFrame, inRange, punchValue, onSet, onRemove, onSeekL
         className={`cc-insp-kf-btn key${at ? ' active' : kfs?.length ? ' keyed' : ''}`}
         type="button"
         disabled={!inRange}
-        title={!inRange ? outside : at ? t('更新播放头处的关键帧') : t('在播放头打关键帧')}
-        aria-label={!inRange ? outside : at ? t('更新播放头处的关键帧') : t('在播放头打关键帧')}
+        title={!inRange ? outside : at ? t('Update the keyframe at the playhead') : t('Add a keyframe at the playhead')}
+        aria-label={!inRange ? outside : at ? t('Update the keyframe at the playhead') : t('Add a keyframe at the playhead')}
         onClick={() => inRange && onSet(localFrame, punchValue, at?.easing)}
       >
         <Icon name="diamond" size={9} filled={!!at} />
@@ -148,14 +148,14 @@ function KfCell({ kfs, localFrame, inRange, punchValue, onSet, onRemove, onSeekL
       <button className="cc-insp-kf-btn" type="button" disabled={!next} title={nextTitle} aria-label={nextTitle} onClick={() => next && onSeekLocal(next.frame)}>
         <Icon name="next" size={10} />
       </button>
-      <button className="cc-insp-kf-btn danger" type="button" disabled={!at} title={t('删除播放头处的关键帧')} aria-label={t('删除播放头处的关键帧')} onClick={() => at && onRemove(localFrame)}>
+      <button className="cc-insp-kf-btn danger" type="button" disabled={!at} title={t('Delete the keyframe at the playhead')} aria-label={t('Delete the keyframe at the playhead')} onClick={() => at && onRemove(localFrame)}>
         <Icon name="trash" size={10} />
       </button>
       {at && (
         <select
           className="cc-insp-kf-easing"
           value={Array.isArray(at.easing) ? 'bezier' : at.easing ?? 'linear'}
-          title={t('缓动（此关键帧到下一帧的曲线）')}
+          title={t('Easing (curve from this keyframe to the next)')}
           onChange={(e) => {
             const v = e.target.value;
             if (v === 'bezier') return;
@@ -163,7 +163,7 @@ function KfCell({ kfs, localFrame, inRange, punchValue, onSet, onRemove, onSeekL
           }}
         >
           {EASING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
-          {Array.isArray(at.easing) && <option value="bezier">{t('贝塞尔')}</option>}
+          {Array.isArray(at.easing) && <option value="bezier">{t('Bezier')}</option>}
         </select>
       )}
     </span>
@@ -200,7 +200,7 @@ export function TransformControl({
                 inputScale={r.id === 'scale' || r.id === 'scaleX' || r.id === 'scaleY' || r.id === 'opacity' ? 100 : 1}
                 mixed={mixed?.(r.id)}
                 disabled={!!kfs?.length && !kf.inRange}
-                disabledReason={t('把播放头移进这个片段才能改这里的关键帧')}
+                disabledReason={t('Move the playhead into this clip to edit its keyframes')}
                 onReset={() => onReset([r.id])}
                 resetDisabled={!mixed?.(r.id) && !kfs?.length && Math.abs(r.getBaseValue(item) - r.defaultValue) < 1e-6}
                 onChange={(next) => {
@@ -242,11 +242,11 @@ export function VolumeControl({
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <SliderRow label={t('音量')} val={vol} min={0} max={2} step={0.05} fmt={`${Math.round(vol * 100)}%`}
+          <SliderRow label={t('Volume')} val={vol} min={0} max={2} step={0.05} fmt={`${Math.round(vol * 100)}%`}
             inputScale={100}
             mixed={mixed}
             disabled={!!kfs?.length && !kf.inRange}
-            disabledReason={t('把播放头移进这个片段才能改这里的关键帧')}
+            disabledReason={t('Move the playhead into this clip to edit its keyframes')}
             onReset={() => onReset(['volume'])}
             resetDisabled={!mixed && !kfs?.length && Math.abs((item.volume ?? 1) - 1) < 1e-6}
             onChange={(next) => {
@@ -263,14 +263,14 @@ export function VolumeControl({
           type="button"
           className="cc-insp-btn"
           disabled={busy || !item.src}
-          title={t('分析并归一到 -14 LUFS')}
+          title={t('Analyze & normalize to -14 LUFS')}
           style={{ marginTop: 6, width: '100%', fontSize: 11 }}
           onClick={() => {
             setBusy(true);
             void Promise.resolve(onNormalize()).finally(() => setBusy(false));
           }}
         >
-          {busy ? t('分析中…') : t('响度归一 (-14 LUFS)')}
+          {busy ? t('Analyzing…') : t('Normalize Loudness (-14 LUFS)')}
         </button>
       )}
     </div>

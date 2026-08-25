@@ -59,9 +59,9 @@ function MenuItem({ label, icon, checked, disabled, danger, chevron, onClick }: 
 const Separator = () => <div className="cc-caption-cue-menu-separator" role="separator" />;
 
 function insertMenuItem(kind: TrackKind, t: (text: string) => string): { label: string; icon: IconName } {
-  if (kind === 'audio') return { label: t('插入音频'), icon: 'music' };
-  if (kind === 'caption') return { label: t('插入字幕'), icon: 'captions' };
-  return { label: t('插入素材'), icon: 'insert' };
+  if (kind === 'audio') return { label: t('Insert audio'), icon: 'music' };
+  if (kind === 'caption') return { label: t('Insert captions'), icon: 'captions' };
+  return { label: t('Insert assets'), icon: 'insert' };
 }
 
 export function TrackContextMenu({
@@ -107,31 +107,31 @@ export function TrackContextMenu({
       ref={ref}
       className="cc-caption-cue-menu cc-track-context-menu"
       role="menu"
-      aria-label={t('轨道菜单')}
+      aria-label={t('Track menu')}
       style={{ left: pos.left, top: pos.top }}
       onPointerDown={(event) => event.stopPropagation()}
     >
       <MenuItem label={insert.label} icon={insert.icon} disabled={locked} onClick={run(onInsert)} />
-      <MenuItem label={t('闭合缝隙')} icon="magnet" disabled={locked || !canTighten} onClick={run(onTighten)} />
+      <MenuItem label={t('Close gaps')} icon="magnet" disabled={locked || !canTighten} onClick={run(onTighten)} />
       <Separator />
-      <MenuItem label={t('全选')} icon="check" disabled={!hasSelectable} onClick={run(onSelectAll)} />
-      <MenuItem label={t('清空')} icon="x" disabled={locked || !hasContents} onClick={run(onClear)} danger />
+      <MenuItem label={t('Select all')} icon="check" disabled={!hasSelectable} onClick={run(onSelectAll)} />
+      <MenuItem label={t('Clear')} icon="x" disabled={locked || !hasContents} onClick={run(onClear)} danger />
       <Separator />
-      <MenuItem label={t(hidden ? '显示轨道' : '隐藏轨道')} icon={hidden ? 'eyeOff' : 'eye'} checked={hidden} onClick={run(onToggleHidden)} />
-      {kind !== 'caption' && <MenuItem label={t(muted ? '取消静音' : '静音轨道')} icon={muted ? 'volumeOff' : 'volume'} checked={muted} onClick={run(onToggleMuted)} />}
-      <MenuItem label={t(locked ? '解锁轨道' : '锁定轨道')} icon={locked ? 'lock' : 'unlock'} checked={locked} onClick={run(onToggleLocked)} />
-      <MenuItem label={t('重命名轨道')} icon="pencil" onClick={run(onRename)} />
+      <MenuItem label={t(hidden ? 'Show track' : 'Hide track')} icon={hidden ? 'eyeOff' : 'eye'} checked={hidden} onClick={run(onToggleHidden)} />
+      {kind !== 'caption' && <MenuItem label={t(muted ? 'Unmute' : 'Mute track')} icon={muted ? 'volumeOff' : 'volume'} checked={muted} onClick={run(onToggleMuted)} />}
+      <MenuItem label={t(locked ? 'Unlock track' : '锁定轨道')} icon={locked ? 'lock' : 'unlock'} checked={locked} onClick={run(onToggleLocked)} />
+      <MenuItem label={t('Rename track')} icon="pencil" onClick={run(onRename)} />
       <Separator />
       {kind === 'caption' ? (
         <>
-          <MenuItem label={t('字幕样式')} icon="palette" chevron onClick={open(onOpenCaptionStyle)} />
-          <MenuItem label={t('翻译全部')} icon="text" chevron onClick={open(onOpenTranslate)} />
+          <MenuItem label={t('Caption styles')} icon="palette" chevron onClick={open(onOpenCaptionStyle)} />
+          <MenuItem label={t('Translate all')} icon="text" chevron onClick={open(onOpenTranslate)} />
         </>
       ) : (
-        <MenuItem label={t('自动闪避')} icon="sliders" chevron onClick={open(onOpenDuck)} />
+        <MenuItem label={t('Auto duck')} icon="sliders" chevron onClick={open(onOpenDuck)} />
       )}
       <Separator />
-      <MenuItem label={t('删除轨道')} icon="trash" disabled={deleteBlockedReason !== null} danger onClick={run(onDelete)} />
+      <MenuItem label={t('Delete track')} icon="trash" disabled={deleteBlockedReason !== null} danger onClick={run(onDelete)} />
     </div>
   );
 }

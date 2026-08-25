@@ -11,7 +11,7 @@ assert.equal(compactToolResultForModel(small), small);
 const large = {
   items: Array.from({ length: 200 }, (_, index) => ({
     id: `item-${index}`,
-    transcript: '字'.repeat(2_000),
+    transcript: 'A'.repeat(2_000),
   })),
 };
 const compacted = compactToolResultForModel(large);

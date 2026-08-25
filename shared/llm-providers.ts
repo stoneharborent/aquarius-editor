@@ -109,7 +109,7 @@ export const LLM_PROVIDER_PRESETS = [
   },
   {
     id: 'xai-oauth',
-    label: 'xAI · Grok (订阅登录)',
+    label: 'xAI · Grok (Subscription sign-in)',
     protocol: 'openai',
     baseUrl: 'https://api.x.ai/v1',
     defaultModel: 'grok-4.6',

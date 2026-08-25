@@ -8,19 +8,19 @@ interface RoutingGroup {
 const EDIT_VERBS = [
   'edit', 'add', 'insert', 'create', 'update', 'modify', 'adjust', 'apply', 'reorder',
   'delete', 'remove', 'trim', 'split', 'move', 'retime', 'slip',
-  '编辑', '加', '添加', '新增', '插入', '创建', '修改', '调整', '设置', '应用', '排列', '排序', '重排',
-  '删除', '移除', '裁剪', '分割', '移动', '变速', '滑动',
+  'Edit', '加', '添加', '新增', '插入', '创建', '修改', '调整', 'Settings', 'Apply', '排列', 'Sort', '重排',
+  'Delete', 'Remove', '裁剪', '分割', '移动', 'Speed', '滑动',
 ];
 const EDIT_TARGETS = [
   'clip', 'item', 'track', 'timeline', 'sequence', 'title', 'text',
-  '片段', '轨道', '时间线', '序列', '标题', '文字',
+  'Clip', '轨道', 'Timeline', 'Sequences', '标题', 'Text',
 ];
 const GENERATE_VERBS = [
   'generate', 'create', 'make', 'synthesize', '生成', '创建', '制作', '合成',
 ];
 const GENERATE_TARGETS = [
   'image', 'picture', 'photo', 'poster', 'video', 'music', 'sound', 'voiceover', 'shader',
-  '图片', '图像', '照片', '海报', '视频', '音乐', '音效', '配音', '着色器',
+  'Image', '图像', '照片', '海报', 'Video', 'Music', 'Sound Effects', '配音', '着色器',
 ];
 
 const ROUTING_GROUPS: readonly RoutingGroup[] = [
@@ -29,8 +29,8 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
     requestKeywords: [
       'trim', 'split', 'move clip', 'delete clip', 'remove clip', 'retime', 'slip edit',
       'background fill', 'blur background', 'edit timeline',
-      '剪辑', '裁剪', '分割', '移动片段', '删除片段', '移除片段', '变速', '滑动编辑',
-      '背景填充', '模糊背景', '虚化背景',
+      '剪辑', '裁剪', '分割', '移动片段', '删除片段', '移除片段', 'Speed', '滑动编辑',
+      'Background fill', '模糊背景', '虚化背景',
     ],
     requestContext: [EDIT_VERBS, EDIT_TARGETS],
     tools: [
@@ -42,44 +42,44 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
   {
     requestKeywords: [
       'aspect ratio', 'canvas ratio', 'vertical video', 'landscape video',
-      '画幅', '横转竖', '竖转横', '视频比例', '画布比例',
+      '画幅', 'Landscape to portrait', '竖转横', '视频比例', '画布比例',
     ],
     tools: ['set_aspect_ratio', 'apply_layout', 'auto_reframe'],
   },
   {
     requestContext: [
       ['elevenlabs', 'doubao', 'minimax', 'inworld', 'fish audio', 'fishaudio', 'speechify', 'openai', 'gemini', 'mistral', 'cartesia'],
-      ['tts', 'text-to-speech', 'speech synthesis', 'voice generation', 'voiceover generation', '配音', '语音合成'],
+      ['tts', 'text-to-speech', 'speech synthesis', 'voice generation', 'voiceover generation', '配音', 'Voice'],
     ],
     tools: ['submit_voice', 'track_progress', 'rerun_generation'],
   },
   {
     requestContext: [
       ['assemblyai', 'local', 'openai', 'mistral', 'deepgram', 'groq', 'elevenlabs', 'cartesia'],
-      ['transcribe', 'transcription', 'speech-to-text', 'stt', 'asr', '转写', '语音识别'],
+      ['transcribe', 'transcription', 'speech-to-text', 'stt', 'asr', 'Transcription', '语音识别'],
     ],
     tools: ['transcribe_track', 'read_transcript', 'find_transcript'],
   },
   {
-    requestKeywords: ['caption', 'subtitle', 'captions', 'subtitles', '字幕'],
+    requestKeywords: ['caption', 'subtitle', 'captions', 'subtitles', 'Captions'],
     tools: [
       'read_captions', 'edit_captions', 'edit_item',
       'apply_caption_avoidance', 'place_graphics_in_safe_zone',
     ],
   },
   {
-    requestKeywords: ['transcript', 'script', 'speech', '文字稿', '台词', '口播', '讲稿'],
+    requestKeywords: ['transcript', 'script', 'speech', 'Transcript', '台词', '口播', '讲稿'],
     tools: [
       'read_transcript', 'find_transcript', 'clean_script', 'edit_gap', 'delete_text',
       'manage_transcript', 'read_script', 'apply_script',
     ],
   },
   {
-    requestKeywords: ['silence', 'pause', 'filler word', '静音', '停顿', '填充词', '赘词'],
+    requestKeywords: ['silence', 'pause', 'filler word', '静音', 'Pauses', '填充词', '赘词'],
     tools: ['read_transcript', 'find_transcript', 'clean_script', 'edit_gap', 'delete_text', 'remove_silence'],
   },
   {
-    requestKeywords: ['audio', 'music', 'sound', 'loudness', 'bgm', '音频', '声音', '音乐', '音效', '响度', '背景音乐'],
+    requestKeywords: ['audio', 'music', 'sound', 'loudness', 'bgm', 'Audio', '声音', 'Music', 'Sound Effects', '响度', '背景音乐'],
     tools: [
       'list_audio', 'add_audio', 'normalize_loudness', 'isolate_voice', 'detect_beats',
       'analyze_music', 'inspect_music', 'music_edit_plan', 'sync_cuts_to_music',
@@ -89,7 +89,7 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
   {
     requestKeywords: [
       'library', 'template', 'effect', 'transition', 'zoom', 'lut', 'graphic', 'watermark',
-      '素材库', '模板', '特效', '转场', '动效', '水印',
+      '素材库', 'Template', 'Effects', 'Transitions', '动效', '水印',
     ],
     tools: [
       'list_templates', 'search_templates', 'browse_library', 'manage_effects', 'manage_template',
@@ -105,7 +105,7 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
     ],
   },
   {
-    requestKeywords: ['import', 'upload', 'download', 'media', 'asset', 'stock', '素材', '导入', '上传', '下载', '媒体', '版权'],
+    requestKeywords: ['import', 'upload', 'download', 'media', 'asset', 'stock', '素材', '导入', '上传', 'Download', '媒体', '版权'],
     tools: [
       'search_media', 'manage_media_pool', 'download_media', 'push_asset', 'import_url_asset',
       'search_stock_media', 'edit_asset', 'import_media', 'finalize_uploaded_asset',
@@ -113,14 +113,14 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
     ],
   },
   {
-    requestKeywords: ['export', 'render', 'xml', 'prores', 'premiere', 'resolve', '导出', '渲染', '成片'],
+    requestKeywords: ['export', 'render', 'xml', 'prores', 'premiere', 'resolve', 'Export', '渲染', 'Final video'],
     tools: [
       'submit_export', 'submit_render_job', 'track_export', 'read_export_history',
       'verify_export', 'download_media', 'export_motion_graphic_prores',
     ],
   },
   {
-    requestKeywords: ['project', 'sequence', 'version', 'marker', 'design style', '项目', '工程', '序列', '版本', '标记', '设计风格'],
+    requestKeywords: ['project', 'sequence', 'version', 'marker', 'design style', '项目', 'Projects', 'Sequences', '版本', 'Marker', 'Design Style'],
     tools: [
       'manage_timelines', 'manage_versions', 'manage_markers', 'manage_design_style', 'list_projects',
       'create_project', 'delete_project', 'restore_project', 'duplicate_project', 'edit_project',
@@ -140,7 +140,7 @@ const ROUTING_GROUPS: readonly RoutingGroup[] = [
     ],
   },
   {
-    requestKeywords: ['web', 'search', 'crawl', 'website', 'skill', 'code', '网页', '搜索', '抓取', '网站', '技能', '脚本'],
+    requestKeywords: ['web', 'search', 'crawl', 'website', 'skill', 'code', '网页', 'Search', '抓取', '网站', 'Skill', '脚本'],
     tools: [
       'web_browser', 'web_search', 'web_map', 'web_crawl', 'web_batch_scrape', 'manage_skill',
       'install_skill', 'run_skill_script', 'run_code', 'search_fonts',

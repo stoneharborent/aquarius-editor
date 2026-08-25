@@ -37,7 +37,7 @@ const compacted = compactOperations([
 assert.equal(compacted.length, 1);
 assert.equal(compacted[0].callCount, 4);
 assert.equal(compacted[0].actions.length, 4);
-assert.equal(compacted[0].action, '人声隔离');
+assert.equal(compacted[0].action, 'Voice Isolation');
 assert.equal(compacted[0].impact, '4 处改动');
 
 const distinctArguments = compactOperations([

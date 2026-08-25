@@ -1,12 +1,12 @@
 export type ModelPackId = 'rhythm-lite' | 'music-semantics-lite' | 'visual-semantics-lite';
 
 export type ModelPackCapability =
-  | '节拍定位'
-  | '下拍定位'
-  | 'BPM 与拍号'
-  | '节拍能量'
-  | '音乐语义向量'
-  | '音乐相似度'
+  | 'Beat tracking'
+  | 'Downbeat tracking'
+  | 'BPM and meter'
+  | 'Beat energy'
+  | 'Music-semantic embeddings'
+  | 'Music similarity'
   | '画面语义向量'
   | '中文画面检索'
   | '重复镜头检测';
@@ -54,14 +54,14 @@ const GIB = 1024 * 1024 * 1024;
 export const MODEL_PACKS = [
   {
     id: 'rhythm-lite',
-    label: '节奏分析轻量包',
-    description: '本地分析节拍、下拍、速度、拍号与节拍能量。',
+    label: 'Rhythm Lite',
+    description: 'Analyze beats, downbeats, tempo, meter, and beat energy locally.',
     modelId: 'musetric/beat-this-onnx',
     revision: '4e971bd43753023e1bf961c34a0cb74985cfcb88',
     license: 'MIT',
     sizeBytes: 83_407_111,
     recommendedMemoryBytes: 1 * GIB,
-    capabilities: ['节拍定位', '下拍定位', 'BPM 与拍号', '节拍能量'],
+    capabilities: ['Beat tracking', 'Downbeat tracking', 'BPM and meter', 'Beat energy'],
     files: [
       {
         path: 'beat_this.onnx',
@@ -82,14 +82,14 @@ export const MODEL_PACKS = [
   },
   {
     id: 'music-semantics-lite',
-    label: '音乐语义轻量包',
-    description: '在本机生成音乐语义向量，用于检索与相似度匹配。',
+    label: 'Music Semantics Lite',
+    description: 'Generate music-semantic embeddings locally for search and similarity matching.',
     modelId: 'Xenova/clap-htsat-unfused',
     revision: 'c28f2883575e590e04d3146ff0713c2448d691ba',
     license: 'Apache-2.0',
     sizeBytes: 34_302_907,
     recommendedMemoryBytes: 2 * GIB,
-    capabilities: ['音乐语义向量', '音乐相似度'],
+    capabilities: ['Music-semantic embeddings', 'Music similarity'],
     files: [
       {
         path: 'config.json',

@@ -1,6 +1,6 @@
-// EN dictionary assembly (single source of truth): files are divided into fields, key=Chinese original text, value=English.
-// Each field file is filled exclusively by the corresponding scanning and swapping work line and does not touch each other to avoid merge conflicts.
+// ZH UI dictionary assembly (key = English source string, value = Chinese).
 import audio from './audio';
+import catalogs from './catalogs';
 import captions from './captions';
 import chat from './chat';
 import components from './components';
@@ -18,8 +18,7 @@ import timeline from './timeline';
 import topbar from './topbar';
 import transcript from './transcript';
 
-export const EN: Record<string, string> = Object.assign(
+export const ZH: Record<string, string> = Object.assign(
   {},
-  audio, captions, chat, components, editor, exportPanel, fx, generate,
-  library, media, progress, review, script, settings, timeline, topbar, transcript,
+  audio, catalogs, captions, chat, components, editor, exportPanel, fx, generate, library, media, progress, review, script, settings, timeline, topbar, transcript,
 );

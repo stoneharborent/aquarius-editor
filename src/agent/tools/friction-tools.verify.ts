@@ -45,6 +45,6 @@ assert.ok(ok.id);
 assert.strictEqual(ok.localDev, true);
 
 const list = listFrictionReports();
-assert.ok(list.some((e) => e.summary.includes('导出') && e.projectId === 'proj_test' && e.category === 'blocked'));
+assert.ok(list.some((e) => e.summary.includes('Export') && e.projectId === 'proj_test' && e.category === 'blocked'));
 
 console.log('friction-tools.check: ok');

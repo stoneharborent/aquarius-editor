@@ -32,17 +32,17 @@ interface CaptionsControlsProps {
 }
 
 const PACINGS: { v: CaptionPacing; label: string; hint: string }[] = [
-  { v: 'phrase', label: '按句/短语', hint: '一次显示一句话，适合纪录片口播' },
-  { v: 'word', label: '逐词高亮', hint: '当前说到的词会变色，像卡拉 OK' },
+  { v: 'phrase', label: 'By sentence/phrase', hint: 'One sentence at a time — suits documentary voiceover' },
+  { v: 'word', label: 'Word-by-word highlight', hint: 'The word being spoken lights up, karaoke-style' },
 ];
 
 /** Translation target = second line language. When the spoken broadcast is in Chinese, it will be translated into English by default. Do not select "Chinese" again. */
 const TRANSLATE_TO: { id: string; label: string }[] = [
-  { id: 'English', label: '英文' },
-  { id: '日本語', label: '日文' },
-  { id: 'Español', label: '西班牙文' },
-  { id: 'Français', label: '法文' },
-  { id: '한국어', label: '韩文' },
+  { id: 'English', label: 'English' },
+  { id: '日本語', label: 'Japanese' },
+  { id: 'Español', label: 'Spanish' },
+  { id: 'Français', label: 'French' },
+  { id: '한국어', label: 'Korean' },
 ];
 
 // Independent caption workspace: style, rhythm, manual captions and translation are all edited here.
@@ -66,9 +66,9 @@ export function CaptionsControls({
       {!captions && (
         <div className="cc-cap-empty">
           <div className="cc-cap-empty-actions">
-            <button type="button" className="cc-cap-btn primary" onClick={onCreateManual}>{t('手动添加字幕')}</button>
+            <button type="button" className="cc-cap-btn primary" onClick={onCreateManual}>{t('Add captions manually')}</button>
           </div>
-          <p className="cc-cap-hint">{t('从文字稿打开「字幕样式」，或在这里手动添加独立字幕。')}</p>
+          <p className="cc-cap-hint">{t('Open "Caption styles" from Transcript, or add independent captions manually here.')}</p>
         </div>
       )}
 
@@ -82,39 +82,39 @@ export function CaptionsControls({
                 checked={captions.enabled}
                 onChange={(e) => onUpdate({ enabled: e.target.checked })}
               />
-              <span>{captions.enabled ? t('预览中显示字幕') : t('字幕已隐藏')}</span>
+              <span>{captions.enabled ? t('Captions showing in preview') : t('Captions hidden')}</span>
             </label>
             <div className="cc-cap-row-actions">
               {!captions.enabled && (
                 <button type="button" className="cc-cap-btn sm" onClick={() => onUpdate({ enabled: true })}>
-                  {t('显示')}
+                  {t('Show')}
                 </button>
               )}
               {captions.enabled && (
                 <button type="button" className="cc-cap-btn sm" onClick={() => onUpdate({ enabled: false })}>
-                  {t('隐藏')}
+                  {t('Hide')}
                 </button>
               )}
               {onRemove && (
                 <button
                   type="button"
                   className="cc-cap-btn sm ghost"
-                  title={t('从工程里移除字幕')}
+                  title={t('Remove captions from the project')}
                   onClick={onRemove}
                 >
-                  {t('移除')}
+                  {t('Remove')}
                 </button>
               )}
             </div>
           </div>
           {!captions.enabled && (
-            <p className="cc-cap-hint warn">{t('字幕已关闭，预览/导出都不会烧录。再点「显示」或勾选即可恢复。')}</p>
+            <p className="cc-cap-hint warn">{t('Captions are off — neither preview nor export will burn them in. Click "Show" or tick the box to bring them back.')}</p>
           )}
 
           {/* Style: color block + Chinese name */}
           <div className="cc-cap-field">
-            <div className="cc-cap-label">{t('样式外观')}</div>
-            <div className="cc-cap-styles" role="listbox" aria-label={t('字幕样式')}>
+            <div className="cc-cap-label">{t('Style')}</div>
+            <div className="cc-cap-styles" role="listbox" aria-label={t('Caption styles')}>
               {CAPTION_STYLES.map((s) => {
                 const active = captions.template === s.id;
                 return (
@@ -124,7 +124,7 @@ export function CaptionsControls({
                     role="option"
                     aria-selected={active}
                     className={`cc-cap-style${active ? ' selected' : ''}`}
-                    title={`${t(s.labelZh)} — ${t(s.hint)} · ${t('拖到预览画面任意位置新建字幕')}`}
+                    title={`${t(s.labelZh)} — ${t(s.hint)} · ${t('Drag onto the preview to create a caption anywhere')}`}
                     onClick={() => onUpdate(captionTemplatePatch(captions, s.id as CaptionTemplate))}
                     onPointerDown={(event) => {
                       if (!captionTrackId) return;
@@ -139,19 +139,19 @@ export function CaptionsControls({
                         borderColor: s.strokeWidth > 0 ? s.strokeColor : theme.border,
                       }}
                     >
-                      {t('字')}
+                      {t('A')}
                     </span>
                     <span className="cc-cap-style-name">{t(s.labelZh)}</span>
                   </button>
                 );
               })}
             </div>
-            {style && <p className="cc-cap-hint">{t(style.labelZh)}：{t(style.hint)} · {t('可拖到预览画面任意位置新建并编辑字幕')}</p>}
+            {style && <p className="cc-cap-hint">{t(style.labelZh)}：{t(style.hint)} · {t('Drag onto the preview to create and edit a caption anywhere')}</p>}
           </div>
 
           {/* Rhythm*/}
           <div className="cc-cap-field">
-            <div className="cc-cap-label">{t('显示节奏')}</div>
+            <div className="cc-cap-label">{t('Pacing')}</div>
             <div className="cc-cap-pills">
               {PACINGS.map((p) => (
                 <button
@@ -178,18 +178,18 @@ export function CaptionsControls({
 Variants are generated by Agent's manage_transcript translate. Here you only select which one to display.*/}
           {sourceVariants.length > 0 && (
             <div className="cc-cap-field">
-              <div className="cc-cap-label">{t('字幕语言（文本变体）')}</div>
+              <div className="cc-cap-label">{t('Caption language (text variant)')}</div>
               <select
                 value={captions.captionVariantId ?? ''}
                 onChange={(e) => onUpdate({ captionVariantId: e.target.value || undefined })}
                 className="cc-cap-select"
               >
-                <option value="">{t('原文（source）')}</option>
+                <option value="">{t('Original (source)')}</option>
                 {sourceVariants.map((v) => (
                   <option key={v.id} value={v.id}>{v.label}</option>
                 ))}
               </select>
-              <p className="cc-cap-hint">{t('切换主字幕行显示的语言。译文只换文本，词的时间/帧位仍取自源。')}</p>
+              <p className="cc-cap-hint">{t('Switch the language of the main caption line. Translations swap text only — word timing/frames still come from the source.')}</p>
             </div>
           )}
 
@@ -201,13 +201,13 @@ Variants are generated by Agent's manage_transcript translate. Here you only sel
               onClick={() => setBilingualOpen((v) => !v)}
               aria-expanded={bilingualOpen}
             >
-              <span>{t('双语第二行（可选）')}</span>
-              <span className="cc-cap-hint">{bilingualOpen ? t('收起') : t('展开')}</span>
+              <span>{t('Bilingual second line (optional)')}</span>
+              <span className="cc-cap-hint">{bilingualOpen ? t('Collapse') : t('Expand')}</span>
             </button>
             {bilingualOpen && (
               <div className="cc-cap-bilingual-body">
                 <p className="cc-cap-hint">
-                  {t('第一行仍是原文（中文口播）。第二行是')}<strong>{t('翻译')}</strong>{t('，请选目标语言（不要选中文）。')}
+                  {t('The first line stays the original (Chinese voiceover). The second line is a ')}<strong>{t('translation')}</strong>{t(' — pick a target language (not Chinese).')}
                 </p>
                 <div className="cc-cap-translate-row">
                   <select
@@ -226,7 +226,7 @@ Variants are generated by Agent's manage_transcript translate. Here you only sel
                     disabled={translating}
                     onClick={() => onTranslate(translateLang)}
                   >
-                    {translating ? t('翻译中…') : captions.translation ? t('重新翻译') : t('生成翻译')}
+                    {translating ? t('Translating…') : captions.translation ? t('Re-translate') : t('Generate translation')}
                   </button>
                 </div>
                 {captions.translation && (
@@ -236,7 +236,7 @@ Variants are generated by Agent's manage_transcript translate. Here you only sel
                       checked={!!captions.bilingual}
                       onChange={(e) => onUpdate({ bilingual: e.target.checked })}
                     />
-                    <span>{t('显示翻译第二行（{lang}）', { lang: captions.translationLang ?? translateLang })}</span>
+                    <span>{t('Show translated second line ({lang})', { lang: captions.translationLang ?? translateLang })}</span>
                   </label>
                 )}
                 {translateError && <div className="cc-cap-error">{translateError}</div>}

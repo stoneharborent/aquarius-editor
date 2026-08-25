@@ -35,7 +35,7 @@ export function UpstreamUpdateNotice() {
       message={upstreamUpdateMessage(update, desktopUpdate)}
       actionLabel={showAction ? action.label : undefined}
       actionDisabled={action.disabled}
-      closeLabel={t('关闭')}
+      closeLabel={t('Close')}
       onAction={showAction ? () => { runUpstreamUpdateCommand(action.command); } : undefined}
       onDismiss={dismissUpstreamUpdate}
     />

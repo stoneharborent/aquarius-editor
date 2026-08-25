@@ -92,7 +92,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
       duplicateTimeline: (id, opts) => {
         const src = getDoc().timelines.find((t) => t.id === id);
         const newId = uid('tl');
-        dispatch({ type: 'tl.duplicate', id, newId, name: opts?.name ?? `${src?.name ?? '序列'} 副本`, retarget: opts?.retarget, activate: opts?.activate });
+        dispatch({ type: 'tl.duplicate', id, newId, name: opts?.name ?? `${src?.name ?? 'Sequences'} 副本`, retarget: opts?.retarget, activate: opts?.activate });
         return newId;
       },
       deleteTimeline: (id) => dispatch({ type: 'tl.delete', id }),
@@ -150,7 +150,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
             track: pickTrack(at?.track, 'video'),
             durationInFrames: at?.durationInFrames ?? Math.round(5 * 30),
             kind: 'solid',
-            name: at?.name ?? '纯色',
+            name: at?.name ?? 'Solid',
             width: 1920,
             height: 1080,
             props: { color: at?.color ?? '#1a1a1a' },
@@ -217,7 +217,7 @@ export function buildCommands(dispatch: ProjectDispatch, getDoc: () => ProjectDo
             track: pickTrack(at?.track ?? 'V2', 'video'), // titles default to the top video track
             durationInFrames: at?.durationInFrames ?? 90,
             kind: 'text',
-            name: at?.name?.trim() || '文字',
+            name: at?.name?.trim() || 'Text',
             width: 1920,
             height: 1080,
             props: {

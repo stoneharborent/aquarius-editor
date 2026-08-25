@@ -6,7 +6,7 @@ const reference: AgentReference = { id: 'asset-1', name: '素材', kind: 'video'
 const options = { askOnly: true, references: [reference] };
 const retry = createAgentRetry('  生成字幕  ', options);
 assert.deepEqual(retry, {
-  text: '生成字幕',
+  text: 'Generate captions',
   askOnly: true,
   references: [reference],
 }, 'retry payload preserves the original prompt, mode, and references');

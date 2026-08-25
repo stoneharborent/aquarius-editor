@@ -44,7 +44,7 @@ function usePendingSaveQueue(): {
   const observeSave = useCallback((result: ProjectSaveResult): void => {
     if (result.status === 'failed') {
       if (!saveFailureShownRef.current) {
-        showAppToast(t('工程保存失败。请重试；在保存成功前不会关闭或切换工程。'), { error: true });
+        showAppToast(t('Project save failed. Retry before closing or switching projects.'), { error: true });
         saveFailureShownRef.current = true;
       }
       return;
@@ -92,7 +92,7 @@ function useEditorAutosave(projectId: string, doc: ProjectDoc): () => Promise<bo
     enqueuePendingSave();
     const result = await flushProjectSaves(projectId);
     if (!result.ok) {
-      showAppToast(t('工程仍未保存，已阻止离开。请继续编辑以重试保存。'), { error: true });
+      showAppToast(t('The project is still unsaved, so navigation was blocked. Keep editing to retry.'), { error: true });
       return false;
     }
     return true;

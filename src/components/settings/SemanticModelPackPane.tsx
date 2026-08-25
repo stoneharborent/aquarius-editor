@@ -72,19 +72,19 @@ export function SemanticModelPackPane() {
     <section style={sectionStyle} aria-labelledby="semantic-pack-heading">
       <div>
         <div id="semantic-pack-heading" style={{ fontSize: 12.5, fontWeight: 650 }}>
-          {t('画面语义搜索模型包')}
+          {t('Visual semantic search model pack')}
         </div>
         <div style={{ marginTop: 3, fontSize: 11.5, color: theme.textDim }}>
-          {t('按画面内容搜索素材的本地向量模型（约 178MB）。模型在本机运行，素材不会上传。')}
+          {t('A local vector model for searching media by visual content (~178 MB). It runs on this device and never uploads your media.')}
         </div>
       </div>
-      {error && <div role="alert" style={errorStyle}>{t('操作失败：{err}', { err: error })}</div>}
-      {status === 'checking' && <div style={hintStyle}>{t('读取中…')}</div>}
-      {status === 'skipped' && <div style={hintStyle}>{t('未检测到模型包服务。')}</div>}
+      {error && <div role="alert" style={errorStyle}>{t('Operation failed: {err}', { err: error })}</div>}
+      {status === 'checking' && <div style={hintStyle}>{t('Loading…')}</div>}
+      {status === 'skipped' && <div style={hintStyle}>{t('The model-pack service is unavailable.')}</div>}
       {absent && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
           <button type="button" style={{ ...smallBtn, ...primaryBtn }} disabled={busy} onClick={() => void install()}>
-            {t('下载并启用')}
+            {t('Download and enable')}
           </button>
         </div>
       )}
@@ -92,13 +92,13 @@ export function SemanticModelPackPane() {
         <div style={{ marginTop: 8 }}>
           <progress max={100} value={progress} style={{ width: '100%', height: 5, accentColor: theme.accent }} />
           <div style={{ marginTop: 4, fontSize: 11, color: theme.textDim }}>
-            {Math.round(progress)}% · {t('下载中…')}
+            {Math.round(progress)}% · {t('Downloading…')}
           </div>
         </div>
       )}
       {ready && (
         <div style={hintStyle}>
-          {t('已安装。打开媒体池 → 语义搜索面板即可索引素材并按画面搜索。')}
+          {t('Installed. Open Media Pool → Semantic Search to index media and search by visual content.')}
         </div>
       )}
     </section>

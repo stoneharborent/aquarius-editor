@@ -12,7 +12,7 @@ const def = {
   id: 'custom:tr-swirl-ab12cd34',
   label: '漩涡转场',
   frag: '#version 300 es\nprecision highp float;\nuniform sampler2D u_outgoing;\nuniform sampler2D u_incoming;\nuniform float u_progress;\nin vec2 v_texCoord; out vec4 fragColor;\nvoid main(){ fragColor = mix(texture(u_outgoing,v_texCoord), texture(u_incoming,v_texCoord), u_progress); }',
-  props: [{ key: 'swirl', label: '强度', default: 0.7, min: 0, max: 1, step: 0.01 }],
+  props: [{ key: 'swirl', label: 'Intensity', default: 0.7, min: 0, max: 1, step: 0.01 }],
 };
 registerCustomTransition(def);
 assert.deepEqual(getCustomTransition(def.id), def, 'registered def round-trips');

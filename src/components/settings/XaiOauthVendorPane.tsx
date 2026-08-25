@@ -48,7 +48,7 @@ function capabilityOverrides(ctx: FieldCtx): string {
 }
 
 const CAPABILITY_OVERRIDE_FIELD: SettingsField = {
-  name: MODEL_CAPABILITY_OVERRIDES_KEY, label: '模型能力', kind: 'text', defaultLabel: '',
+  name: MODEL_CAPABILITY_OVERRIDES_KEY, label: 'Model capabilities', kind: 'text', defaultLabel: '',
 };
 
 export function XaiOauthVendorPane({ page, hint, ctx }: {
@@ -94,7 +94,7 @@ export function XaiOauthVendorPane({ page, hint, ctx }: {
   };
   const loggedIn = status?.found === true;
   const expiryText = loggedIn && status.expiresAt > 0
-    ? `${t('会话有效期至')} ${new Date(status.expiresAt).toLocaleString()}`
+    ? `${t('Session valid until')} ${new Date(status.expiresAt).toLocaleString()}`
     : '';
   const modelId = (ctx.values.LLM_XAI_OAUTH_MODEL
     ?? modelValue(ctx.status, 'LLM_XAI_OAUTH_MODEL')) || 'grok-4.6';
@@ -106,7 +106,7 @@ export function XaiOauthVendorPane({ page, hint, ctx }: {
           <VendorIcon vendor={page.vendor} size={18} />
           <b style={{ fontSize: 13 }}>{t(page.title)}</b>
           <span style={{ fontSize: 11, color: loggedIn ? ON : theme.textDim }}>
-            {loggedIn ? t('已登录') : t('未登录')}
+            {loggedIn ? t('Signed in') : t('Signed out')}
           </span>
         </div>
         <div style={{ fontSize: 11.5, color: theme.textDim, marginTop: 3, paddingLeft: 26 }}>{t(hint)}</div>
@@ -119,9 +119,9 @@ export function XaiOauthVendorPane({ page, hint, ctx }: {
           {actionError && <span style={{ color: '#f77' }}>{actionError}</span>}
           {!loggedIn && (
             <>
-              <span>{t('请先在终端运行官方 Grok CLI 登录，再回到这里导入登录状态：')}</span>
+              <span>{t('Sign in with the official Grok CLI in a terminal first, then import the login here:')}</span>
               <span><span style={code}>npm i -g @xai-official/grok && grok login</span></span>
-              <span style={note}>{t('订阅（SuperGrok 或 X Premium+）登录成功后，grok login 会把会话写入本机。')}</span>
+              <span style={note}>{t('After signing in with your subscription (SuperGrok or X Premium+), grok login stores the session locally.')}</span>
             </>
           )}
         </div>
@@ -140,17 +140,17 @@ export function XaiOauthVendorPane({ page, hint, ctx }: {
           <>
             <button type="button" style={primary} disabled={busy !== ''}
               onClick={() => { void run('import'); }}>
-              {busy === 'import' ? t('处理中…') : t('重新导入')}
+              {busy === 'import' ? t('Processing…') : t('Re-import')}
             </button>
             <button type="button" style={danger} disabled={busy !== ''}
               onClick={() => { void run('logout'); }}>
-              {busy === 'logout' ? t('处理中…') : t('注销')}
+              {busy === 'logout' ? t('Processing…') : t('Sign out')}
             </button>
           </>
         ) : (
           <button type="button" style={primary} disabled={busy !== ''}
             onClick={() => { void run('import'); }}>
-            {busy === 'import' ? t('处理中…') : t('导入登录状态')}
+            {busy === 'import' ? t('Processing…') : t('Import login')}
           </button>
         )}
       </div>

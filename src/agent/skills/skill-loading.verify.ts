@@ -96,7 +96,6 @@ try {
     id: 'skill_contract_check',
     slug: 'explainer-video',
     name: 'Prompt Contract Check',
-    nameZh: '提示词契约检查',
     description: 'Verify progressive skill disclosure.',
     summary: 'Verify progressive skill disclosure.',
     scenarios: ['verification'],
@@ -116,7 +115,6 @@ try {
   const migrated = store.normalizeStoredCustomSkill({
     id: 'skill_legacy',
     name: 'Legacy Skill',
-    nameZh: '旧技能',
     summary: 'Legacy summary',
     scenarios: ['legacy'],
     body: '---\nname: legacy-skill\ndescription: Legacy route\n---\n\n# Workflow',

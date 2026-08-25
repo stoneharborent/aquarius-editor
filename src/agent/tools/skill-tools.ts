@@ -18,7 +18,6 @@ const brief = (skill: SkillDefinition) => ({
   id: skill.id,
   slug: skill.slug,
   name: skill.name,
-  nameZh: skill.nameZh,
   summary: skill.summary,
   scenarios: skill.scenarios,
 });
@@ -81,7 +80,6 @@ async function doCreate(args: Args): Promise<unknown> {
     id,
     slug: /^[A-Za-z0-9_-]+$/.test(parsed.name) ? parsed.name : id,
     name,
-    nameZh: name,
     description: summary,
     summary,
     scenarios: strArr(args.scenarios),
@@ -116,7 +114,7 @@ async function doUpdate(args: Args): Promise<unknown> {
   // Immutable: Returns a new object, overwriting only explicitly given fields
   const next: CustomSkill = {
     ...existing,
-    ...(name ? { name, nameZh: name } : {}),
+    ...(name ? { name } : {}),
     ...(body ? { body, slug } : {}),
     ...(summary ? { summary, description: summary } : {}),
     ...(args.scenarios !== undefined ? { scenarios: strArr(args.scenarios) } : {}),

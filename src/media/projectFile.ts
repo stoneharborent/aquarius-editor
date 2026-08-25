@@ -32,17 +32,17 @@ export function projectFileAssetKind(file: Pick<File, 'name' | 'type'>): 'docume
 }
 
 export function assertProjectDocumentSize(byteLength: number): void {
-  if (byteLength > PROJECT_DOCUMENT_MAX_BYTES) throw new Error('文档大小不能超过 10 MB');
+  if (byteLength > PROJECT_DOCUMENT_MAX_BYTES) throw new Error('Documents must be 10 MB or smaller');
 }
 
 export function assertProjectDocumentPageCount(pageCount: number): void {
-  if (pageCount > PROJECT_PDF_MAX_PAGES) throw new Error('PDF 页数不能超过 100 页');
+  if (pageCount > PROJECT_PDF_MAX_PAGES) throw new Error('PDF documents must contain at most 100 pages');
 }
 
 export function validatedProjectDocumentText(text: string): string {
   const trimmed = text.trim();
   if (trimmed.length > PROJECT_DOCUMENT_MAX_TEXT_CHARS) {
-    throw new Error('文档文本不能超过 100,000 个字符');
+    throw new Error('Document text must contain at most 100,000 characters');
   }
   return trimmed;
 }
@@ -107,7 +107,7 @@ async function collectProjectDocumentBlocks<T>(
     try {
       const block = await read(item);
       if (promptChars + block.length > PROJECT_DOCUMENT_MAX_TOTAL_PROMPT_CHARS) {
-        errors.push('文档文本总量不能超过 200,000 个字符');
+        errors.push('Combined document text must contain at most 200,000 characters');
         break;
       }
       promptChars += block.length;

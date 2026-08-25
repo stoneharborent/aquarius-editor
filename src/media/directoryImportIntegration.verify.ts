@@ -41,11 +41,11 @@ assert.doesNotMatch(
 assert.match(converter, /compatibilityNormalized !== true/, 'ordinary videos require a backend-ready descriptor');
 assert.ok(panel.split('\n').length <= 500, 'MediaPoolPanel must stay below the source-file line cap');
 for (const key of [
-  '导入文件夹…',
-  '监听文件夹（自动导入新素材）…',
-  '停止监听文件夹「{dir}」',
-  '监听文件夹导入失败：{error}',
-  '监听目录中的视频尚未完成兼容性处理',
+  'Import folder…',
+  'Watch folder (automatically import new media)…',
+  'Stop watching “{dir}”',
+  'Watch folder import failed: {error}',
+  'A watched video was published before compatibility processing completed.',
 ]) {
   assert.ok(dictionary.includes(`'${key}'`), `English media dictionary must contain: ${key}`);
 }

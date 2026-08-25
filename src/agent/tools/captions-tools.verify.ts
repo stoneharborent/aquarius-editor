@@ -322,13 +322,13 @@ assert.ok(!supd.unsupported && supd.ok === true, `source_update is a real implem
 assert.equal(draft3.getState().captions?.sourceEntries?.[0]?.anchor, 'bottom-center', 'per-source anchor persisted');
 // user style presets (preset_save/list/apply/rename/delete) — IDB memory-fallback here
 __resetCaptionPresetMemory();
-const psave = await execCaptionsTool('edit_captions', { action: 'preset_save', presetName: '我的风格' }, ctx3) as { ok?: boolean; presetId?: string };
+const psave = await execCaptionsTool('edit_captions', { action: 'preset_save', presetName: 'My styles' }, ctx3) as { ok?: boolean; presetId?: string };
 assert.equal(psave.ok, true, 'preset_save succeeds with a name');
 assert.ok(psave.presetId, 'preset_save returns an id');
 const pnoName = await execCaptionsTool('edit_captions', { action: 'preset_save', json: {} }, ctx3) as { error?: string };
 assert.ok(pnoName.error, 'preset_save without a name errors (not a silent save)');
 const plist = await execCaptionsTool('edit_captions', { action: 'preset_list' }, ctx3) as { presets: { id: string; name: string }[] };
-assert.ok(plist.presets.some((p) => p.id === psave.presetId && p.name === '我的风格'), 'preset_list shows the saved preset');
+assert.ok(plist.presets.some((p) => p.id === psave.presetId && p.name === 'My styles'), 'preset_list shows the saved preset');
 const papply = await execCaptionsTool('edit_captions', { action: 'preset_apply', presetId: psave.presetId }, ctx3) as { ok?: boolean; applied?: string };
 assert.equal(papply.ok, true, 'preset_apply by id succeeds');
 const pdel = await execCaptionsTool('edit_captions', { action: 'preset_delete', presetId: psave.presetId }, ctx3) as { ok?: boolean };

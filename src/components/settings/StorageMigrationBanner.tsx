@@ -55,10 +55,10 @@ export function StorageMigrationBanner({ onOpenDialog }: { onOpenDialog: () => v
   return (
     <div style={bannerStyle} role="status">
       <span style={bannerText}>
-        {t('可将工程数据迁移到 SQLite：写入更可靠、加载更快、支持全文搜索。原始 JSON 文件只读保留，随时可回滚。')}
+        {t('Migrate project data to SQLite: more reliable writes, faster loading, full-text search. Original JSON files stay read-only, so you can always roll back.')}
       </span>
-      <button type="button" style={primaryBtn} onClick={onOpenDialog}>{t('迁移到 SQLite')}</button>
-      <button type="button" style={dismissBtn} onClick={dismiss}>{t('忽略')}</button>
+      <button type="button" style={primaryBtn} onClick={onOpenDialog}>{t('Migrate to SQLite')}</button>
+      <button type="button" style={dismissBtn} onClick={dismiss}>{t('Dismiss')}</button>
     </div>
   );
 }

@@ -35,9 +35,9 @@ function EditorLoader({ meta, onHome, onRename }: EditorLoaderProps) {
     loadProject(meta.id).then((document) => { if (alive) setInitial(document ?? emptyProjectDoc()); });
     return () => { alive = false; };
   }, [meta.id]);
-  if (!initial) return <AppSplash text={t('加载工程…')} />;
+  if (!initial) return <AppSplash text={t('Loading project…')} />;
   return (
-    <Suspense fallback={<AppSplash text={t('加载编辑器…')} />}>
+    <Suspense fallback={<AppSplash text={t('Loading editor…')} />}>
       <Editor initial={initial} project={meta} onHome={onHome} onRename={onRename} />
     </Suspense>
   );
@@ -54,7 +54,7 @@ export function EditorRoute({ route, projects, refresh }: EditorRouteProps) {
   const meta = projects.find((project) => project.id === route.id);
   if (!meta) {
     navigateTo('#/');
-    return <AppSplash text={t('工程不存在，返回…')} />;
+    return <AppSplash text={t('Project not found, going back…')} />;
   }
   return (
     <EditorLoader

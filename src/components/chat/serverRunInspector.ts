@@ -77,6 +77,6 @@ export function serverEventDetail(event: ServerRunInspectorEvent): string | unde
   if (typeof data.error === 'string') return data.error;
   if (typeof data.reason === 'string') return data.reason;
   if (event.type === 'acceptance' && typeof data.status === 'string') return data.status;
-  if (event.type === 'text-end' || event.type === 'finish') return '完成';
+  if (event.type === 'text-end' || event.type === 'finish') return 'Done';
   return undefined;
 }

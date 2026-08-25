@@ -2,8 +2,8 @@ import type { CSSProperties } from 'react';
 import type { InstalledPack } from '../plugins/store';
 import { theme } from '../theme';
 
-export type CenterTab = '发现' | '已安装';
-export type Category = '全部' | 'MG' | '转场' | '特效' | 'LUT' | '缩放';
+export type CenterTab = 'Discover' | 'Installed';
+export type Category = 'All' | 'MG' | 'Transitions' | 'Effects' | 'LUT' | 'Zoom';
 
 export interface RegistryEntry {
   id: string;
@@ -17,26 +17,26 @@ export interface RegistryEntry {
   categories: Category[];
 }
 
-export const CENTER_TABS: CenterTab[] = ['发现', '已安装'];
-export const EXTENSION_CATEGORIES: Category[] = ['全部', 'MG', '转场', '特效', 'LUT', '缩放'];
+export const CENTER_TABS: CenterTab[] = ['Discover', 'Installed'];
+export const EXTENSION_CATEGORIES: Category[] = ['All', 'MG', 'Transitions', 'Effects', 'LUT', 'Zoom'];
 export const EXTENSION_TYPE_LABEL: Record<string, string> = {
   'mg-template': 'MG',
-  transition: '转场',
-  fx: '特效',
+  transition: 'Transitions',
+  fx: 'Effects',
   lut: 'LUT',
-  zoom: '缩放',
+  zoom: 'Zoom',
 };
-const REGISTRY_CATEGORY_LABEL: Record<string, Exclude<Category, '全部'>> = {
+const REGISTRY_CATEGORY_LABEL: Record<string, Exclude<Category, 'All'>> = {
   mg: 'MG',
   MG: 'MG',
-  transition: '转场',
-  转场: '转场',
-  fx: '特效',
-  特效: '特效',
+  transition: 'Transitions',
+  转场: 'Transitions',
+  fx: 'Effects',
+  特效: 'Effects',
   lut: 'LUT',
   LUT: 'LUT',
-  zoom: '缩放',
-  缩放: '缩放',
+  zoom: 'Zoom',
+  缩放: 'Zoom',
 };
 
 export function parseRegistry(value: unknown): RegistryEntry[] {

@@ -73,7 +73,7 @@ assert.ok(md.includes(`script-stamp:${stamp}`), 'stamp comment');
   const r = applyScript(d.getState, d.commands, edited);
   const it = d.getState().items.find((x) => x.id === 'it_speech')!;
   assert.deepStrictEqual(it.deletedWordIdx ?? [], [], 'words restored');
-  assert.ok(r.changes.some((c) => c.includes('恢复')), 'restore audited');
+  assert.ok(r.changes.some((c) => c.includes('Restore')), 'restore audited');
 }
 
 // ── 5. clip row deletion + gap close + repack ──

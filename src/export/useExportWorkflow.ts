@@ -167,7 +167,7 @@ export function useExportWorkflow(options: UseExportWorkflowOptions, exportJobs:
       try {
         const retired = await retirePersistedServerExport(retainedRenderId);
         if (!retired) {
-          setSetupError(t('此导出正在由另一个窗口恢复，请稍后重试'));
+          setSetupError(t('This export is being recovered in another window. Please try again shortly.'));
           return;
         }
       } catch (error) {

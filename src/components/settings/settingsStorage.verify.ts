@@ -4,7 +4,7 @@ import { SETTINGS_CATEGORIES } from './settingsSchema.ts';
 const storageCategory = SETTINGS_CATEGORIES.find((category) => category.key === 'cloud');
 const storageGroup = storageCategory?.groups.find((group) => group.key === 'storage');
 assert.ok(storageGroup, 'storage settings group must exist');
-assert.equal(storageGroup.title, '默认工程位置');
+assert.equal(storageGroup.title, 'Default project location');
 assert.deepEqual(
   storageGroup.vendors.filter((vendor) => vendor.vendor === 'localdisk')
     .flatMap((vendor) => vendor.fields.map((field) => field.name)),

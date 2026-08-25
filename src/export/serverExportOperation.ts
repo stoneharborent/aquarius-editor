@@ -93,12 +93,12 @@ async function saveCompleted(
   signal?: AbortSignal,
 ): Promise<boolean> {
   signal?.throwIfAborted();
-  context.setBusy(context.t('正在保存…'));
+  context.setBusy(context.t('Saving…'));
   context.setProgress((current) => current ? {
     ...current,
     phase: 'downloading',
     percent: 99,
-    detail: context.t('正在写入所选位置'),
+    detail: context.t('Writing to the selected destination'),
   } : current);
   const renewed = await renewServerExportDelivery(renderId, claim);
   if (!renewed || !await checkServerExportDelivery(renderId, renewed)) {
@@ -177,7 +177,7 @@ async function exportMedia(
       signal?.throwIfAborted();
     }
     claim = await claimServerExportDelivery(renderId);
-    if (!claim) throw new ExportDestinationError('此导出正在由另一个窗口恢复，请稍后重试');
+    if (!claim) throw new ExportDestinationError('This export is being recovered in another window. Please try again shortly.');
     targetCommitted = await saveCompleted(context, format, codec, completed, renderId, claim, signal);
     if (format === 'video') recordServerPerformance(context, completed, startedAt);
     return completed;
@@ -249,7 +249,7 @@ async function runRecoveredServerExport(
   let claim = initialClaim;
   let targetCommitted = record.stage === 'target-committed';
   setters.setClock(Date.now());
-  setters.setBusy(t('正在恢复导出…'));
+  setters.setBusy(t('Resuming export…'));
   setters.setRenderEngine(record.format === 'video' ? 'server' : 'idle');
   try {
     if (targetCommitted) {
@@ -279,7 +279,7 @@ async function runRecoveredServerExport(
         signal.throwIfAborted();
       }
       claim ??= await claimServerExportDelivery(record.renderId);
-      if (!claim) throw new ExportDestinationError('此导出正在由另一个窗口恢复，请稍后重试');
+      if (!claim) throw new ExportDestinationError('This export is being recovered in another window. Please try again shortly.');
       targetCommitted = await saveCompleted(
         context,
         record.format,
@@ -309,7 +309,7 @@ async function runRecoveredServerExport(
         : reason instanceof ExportDestinationError ? 'export_destination_failed' : 'export_failed',
       retryable: !cancelled,
       targetPath: record.targetPath,
-      message: cancelled ? t('已取消导出') : message,
+      message: cancelled ? t('Export cancelled') : message,
     });
     setters.setFailure(failure);
     setters.setError(failure.message);
@@ -361,7 +361,7 @@ export async function rebindAndResumePersistedServerExport({
   targetPath,
 }: RebindPersistedServerExportOptions): Promise<string> {
   const claim = await claimServerExportDelivery(renderId);
-  if (!claim) throw new ExportDestinationError('此导出正在由另一个窗口恢复，请稍后重试');
+  if (!claim) throw new ExportDestinationError('This export is being recovered in another window. Please try again shortly.');
   let rebound: PersistedServerExportJob;
   try {
     rebound = await rebindServerExportJob(renderId, destination, targetPath, claim);

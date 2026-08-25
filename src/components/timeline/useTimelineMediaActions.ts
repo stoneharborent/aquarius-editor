@@ -49,23 +49,23 @@ export function useTimelineMediaActions({
     const liveItem = liveState.items.find((candidate) => candidate.id === item.id);
     if (!liveItem) return;
     try {
-      if (liveState.tracks?.[liveItem.track]?.locked) throw new Error(t('轨道已锁定'));
+      if (liveState.tracks?.[liveItem.track]?.locked) throw new Error(t('Track locked'));
       // Validate against the picked file BEFORE importing it into the media
       // pool, otherwise a failed relink leaves an orphan duplicate asset.
       const relinkKind = kindOf(file);
-      if (relinkKind !== liveItem.kind) throw new Error(t('请重新选择同类型文件'));
+      if (relinkKind !== liveItem.kind) throw new Error(t('Re-choose a file of the same type'));
       const media = await importMedia(file, state.fps);
       const liveAssets = liveState.assets ?? [];
       const poolAssetId = timelineItemAssetId(liveItem, liveAssets);
       const result = poolAssetId
         ? commands.relinkMediaAsset(poolAssetId, mediaAssetRelinkPatch(media))
         : commands.relinkTimelineItem(liveItem.id, mediaAssetRelinkPatch(media));
-      if (!result.changed) throw new Error(t('重新链接文件失败'));
-      const msg = t('已重新链接文件');
+      if (!result.changed) throw new Error(t('Failed to relink files'));
+      const msg = t('Files relinked');
       setClipJob({ msg });
       window.setTimeout(() => setClipJob((current) => current?.msg === msg && !current.error ? null : current), 5_000);
     } catch (error) {
-      setClipJob({ msg: error instanceof Error ? error.message : t('重新链接文件失败'), error: true });
+      setClipJob({ msg: error instanceof Error ? error.message : t('Failed to relink files'), error: true });
     }
   };
 
@@ -89,23 +89,23 @@ export function useTimelineMediaActions({
   };
 
   const exportMg = async (item: TimelineItem) => {
-    setClipJob({ msg: t('导出 MG 动画中（ProRes 4444）…') });
+    setClipJob({ msg: t('Exporting MG animation (ProRes 4444)…') });
     try {
       await exportClipMov(state, item);
       setClipJob(null);
     } catch (error) {
-      setClipJob({ msg: error instanceof Error ? error.message : t('导出失败'), error: true });
+      setClipJob({ msg: error instanceof Error ? error.message : t('Export failed'), error: true });
     }
   };
 
   const convertToVideo = async (item: TimelineItem) => {
-    setClipJob({ msg: t('转为视频中…') });
+    setClipJob({ msg: t('Converting to video…') });
     try {
       const src = await bakeClipToVideo(state, item);
       commands.replaceItemMedia(item.id, src);
       setClipJob(null);
     } catch (error) {
-      setClipJob({ msg: error instanceof Error ? error.message : t('转换失败'), error: true });
+      setClipJob({ msg: error instanceof Error ? error.message : t('Conversion failed'), error: true });
     }
   };
 

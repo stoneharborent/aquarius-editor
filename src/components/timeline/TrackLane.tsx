@@ -59,7 +59,7 @@ function ClipEffectBadges({
     const n = fxNames.length + otherFx.length;
     chips.push({
       key: 'fx',
-      label: n > 1 ? t('特效×{n}', { n }) : (fxNames[0] ?? t(ALL_FX[otherFx[0]?.assetId]?.name ?? '特效')),
+      label: n > 1 ? t('FX ×{n}', { n }) : (fxNames[0] ?? t(ALL_FX[otherFx[0]?.assetId]?.name ?? 'Effects')),
       title: [...fxNames, ...otherFx.map((e) => t(ALL_FX[e.assetId]?.name ?? e.assetId))].join(' · '),
       className: 'fx',
     });
@@ -78,17 +78,17 @@ function ClipEffectBadges({
     const name = shape ? t(ZOOM_SHAPE_LABELS[shape] ?? shape) : item.zoom?.label;
     chips.push({
       key: 'zoom',
-      label: name ?? t('缩放'),
-      title: name ? t('缩放 · {name}', { name }) : t('关键帧缩放'),
+      label: name ?? t('Zoom'),
+      title: name ? t('Zoom · {name}', { name }) : t('Keyframe zoom'),
       className: 'zoom',
     });
   }
   if (item.denoisedSrc) {
-    chips.push({ key: 'iso', label: t('人声'), title: t('已应用人声隔离'), className: 'iso' });
+    chips.push({ key: 'iso', label: t('Voice'), title: t('Voice isolation applied'), className: 'iso' });
   }
   if (inTransition) {
     const trName = t(TRANSITION_LABELS[inTransition.type] ?? inTransition.type);
-    chips.push({ key: 'tr', label: trName, title: t('入场转场 · {name}', { name: trName }), className: 'tr' });
+    chips.push({ key: 'tr', label: trName, title: t('Incoming transition · {name}', { name: trName }), className: 'tr' });
   }
   if (!chips.length) return null;
   return (
@@ -284,8 +284,8 @@ export function TrackLane({
         const itemIndex = itemIndexById.get(it.id) ?? 0;
         const overlapSpans = topClipOverlapSpans(start, dur, items.slice(0, itemIndex));
         let clipTitle = it.name;
-        if (editMode === 'slip' && !canSlip) clipTitle = t('此类型没有可滑移的源区间');
-        else if (audioMuted) clipTitle = `${it.name} · ${t('轨道已静音')}`;
+        if (editMode === 'slip' && !canSlip) clipTitle = t('This type has no slip-able source range');
+        else if (audioMuted) clipTitle = `${it.name} · ${t('Track muted')}`;
         return (
           <div
             key={it.id}
@@ -391,7 +391,7 @@ export function TrackLane({
               />
             ))}
             {audioMuted && (
-              <span className="cc-clip-muted-indicator" title={t('轨道已静音')} aria-label={t('轨道已静音')}>
+              <span className="cc-clip-muted-indicator" title={t('Track muted')} aria-label={t('Track muted')}>
                 <Icon name="volumeOff" size={11} />
               </span>
             )}
@@ -430,7 +430,7 @@ export function TrackLane({
                   {kfs.map((k) => (
                     <div
                       key={k.frame}
-                      title={t(prop === 'volume' ? '音量 {pct}% @ {sec}s — 拖动改帧/值 · 右键删除' : '透明度 {pct}% @ {sec}s — 拖动改帧/值 · 右键删除', { pct: Math.round(k.value * 100), sec: (k.frame / state.fps).toFixed(2) })}
+                      title={t(prop === 'volume' ? 'Volume {pct}% @ {sec}s — drag to change frame/value · right-click to delete' : 'Opacity {pct}% @ {sec}s — drag to change frame/value · right-click to delete', { pct: Math.round(k.value * 100), sec: (k.frame / state.fps).toFixed(2) })}
                       onPointerDown={(e) => {
                         e.stopPropagation();
                         if (e.button !== 0 || locked) return;

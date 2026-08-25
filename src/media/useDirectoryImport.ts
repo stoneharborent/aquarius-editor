@@ -351,7 +351,7 @@ export function useDirectoryImport(options: UseDirectoryImportOptions): UseDirec
       onBusyChange: (next) => { if (live) setBusy(next); },
       onError: (reason) => {
         if (!live) return;
-        optionsRef.current.onError(optionsRef.current.t('监听文件夹导入失败：{error}', {
+        optionsRef.current.onError(optionsRef.current.t('Watch folder import failed: {error}', {
           error: reason instanceof Error ? reason.message : String(reason),
         }));
       },

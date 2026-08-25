@@ -448,7 +448,7 @@ function useExternalGuard(
       await bridge.confirmRealTool(id, allow);
       setPendingGuard((current) => (current?.id === id ? null : current));
     } catch (confirmationError) {
-      setError(t('工具确认未保存，请重试：{message}', { message: errorMessage(confirmationError) }));
+      setError(t('The tool confirmation could not be saved. Please retry: {message}', { message: errorMessage(confirmationError) }));
     }
   }, [runtime.runtimeRef, setError, t]);
   useEffect(() => {

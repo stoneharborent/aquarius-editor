@@ -126,7 +126,7 @@ export function createExportJobStore(now: () => number = Date.now): ExportJobSto
       code: 'export_cancelled',
       retryable: false,
       targetPath: existing.targetPath,
-      message: '已取消导出',
+      message: 'Export cancelled',
     });
     update(jobId, (job) => ({
       ...job,
@@ -170,7 +170,7 @@ export function createExportJobStore(now: () => number = Date.now): ExportJobSto
       code: aborted ? 'export_cancelled' : 'unexpected_export_failure',
       retryable: !aborted,
       targetPath: existing.targetPath,
-      message: aborted ? '已取消导出' : reason instanceof Error ? reason.message : String(reason),
+      message: aborted ? 'Export cancelled' : reason instanceof Error ? reason.message : String(reason),
     });
     update(jobId, (job) => ({
       ...job,

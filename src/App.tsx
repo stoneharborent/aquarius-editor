@@ -17,7 +17,7 @@ export default function App() {
   useUiScaleShortcuts();
   const { projects, refresh } = useProjects();
 
-  if (!projects) return <AppSplash text={t('加载中…')} />;
+  if (!projects) return <AppSplash text={t('Loading…')} />;
   if (route.name === 'editor') {
     return <EditorRoute route={route} projects={projects} refresh={refresh} />;
   }

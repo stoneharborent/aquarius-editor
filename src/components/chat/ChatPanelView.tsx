@@ -38,7 +38,7 @@ function CollapsedPanel({ controller }: { controller: ChatPanelController }) {
     <ChangeLogPortal controller={controller} />
     <aside className="cc-chat-panel collapsed" data-cc-shortcut-surface="agent-chat" tabIndex={-1}
       style={{ gridColumn: 1, gridRow: '2 / 5', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '10px 0', borderRight: `0.5px solid ${theme.border}`, background: theme.panel }}>
-      <button type="button" onClick={props.onToggleCollapse} title={t('展开 OpenChatCut Agent')}
+      <button type="button" onClick={props.onToggleCollapse} title={t('Expand OpenChatCut Agent')}
         style={{ background: 'none', border: 'none', color: theme.textDim, cursor: 'pointer', fontSize: 14 }}>
         <span style={{ transform: 'rotate(-90deg)', display: 'inline-flex' }}><Icon name="chevronDown" size={14} /></span>
       </button>
@@ -54,15 +54,15 @@ function ChatHeader({ controller }: { controller: ChatPanelController }) {
       <BrandMark size={20} />
       <span className="cc-chat-brand-copy">
         <OpenChatCutWordmark width={102} />
-        <small>{t('Agent 工作台')}</small>
+        <small>{t('Agent workspace')}</small>
       </span>
     </div>
     <AgentRunInspector projectId={props.projectId} />
-    <button type="button" onClick={agent.clearHistory} disabled={agent.running} title={t('清空对话')}
+    <button type="button" onClick={agent.clearHistory} disabled={agent.running} title={t('Clear chat')}
       style={{ background: 'none', border: 'none', color: theme.textDim, cursor: agent.running ? 'default' : 'pointer', opacity: agent.running ? 0.4 : 1, padding: 2, lineHeight: 0 }}>
       <Icon name="trash" size={14} />
     </button>
-    <button type="button" onClick={props.onToggleCollapse} title={t('收起 OpenChatCut Agent')}
+    <button type="button" onClick={props.onToggleCollapse} title={t('Collapse OpenChatCut Agent')}
       style={{ background: 'none', border: 'none', color: theme.textDim, cursor: 'pointer', fontSize: 13 }}>
       <span style={{ transform: 'rotate(90deg)', display: 'inline-flex' }}><Icon name="chevronDown" size={14} /></span>
     </button>
@@ -72,9 +72,9 @@ function ChatHeader({ controller }: { controller: ChatPanelController }) {
 function ChatOnboarding({ controller }: { controller: ChatPanelController }) {
   const { composer, t } = controller;
   return <div className="cc-chat-onboarding">
-    <div className="cc-chat-onboarding-kicker">{t('从这里开工')}</div>
-    <h2>{t('从一个剪辑目标开始')}</h2>
-    <p>{t('选择工作流，或直接描述你想得到的成片。')}</p>
+    <div className="cc-chat-onboarding-kicker">{t('Start here')}</div>
+    <h2>{t('Start with an editing goal')}</h2>
+    <p>{t('Choose a workflow, or describe the finished video you want.')}</p>
     <div className="cc-chat-starter-list">
       {EMPTY_PROJECT_STARTERS.map((starter) => (
         <button type="button" key={starter.label} onClick={() => {
@@ -107,7 +107,7 @@ function EarlierMessagesButton({ controller }: { controller: ChatPanelController
       }));
     }}
     style={{ display: 'block', margin: '4px auto 12px', padding: '5px 10px', border: `0.5px solid ${theme.border}`, borderRadius: 6, background: 'transparent', color: theme.textDim, cursor: 'pointer', fontSize: 12 }}>
-    {t('加载更早消息')}（{visibleFrom}）
+    {t('Load earlier messages')}（{visibleFrom}）
   </button>;
 }
 
@@ -129,7 +129,7 @@ function MessageEntries({ controller }: { controller: ChatPanelController }) {
         widgetSubmitted={agent.messages.slice(item.index + 1).some((message) => message.role === 'user')}
         onRetry={onRetry}
         onContinue={item.msg.role === 'continue' && item.index === agent.messages.length - 1 && !agent.running
-          ? () => { void agent.send('继续'); } : null}
+          ? () => { void agent.send('Continue'); } : null}
         onWidgetSubmit={(answer) => {
           if (!agent.running) void agent.send(answer, { askOnly: composer.mode === 'ask' });
         }} />
@@ -158,9 +158,9 @@ function ScrollNavigation({ controller }: { controller: ChatPanelController }) {
   const { scroll, t } = controller;
   const target = scroll.target;
   if (!target) return null;
-  const label = t(target === 'top' ? '快速到顶部' : '快速到底部');
+  const label = t(target === 'top' ? 'Jump to top' : 'Jump to bottom');
   return <div className={`cc-chat-scroll-navigation cc-chat-scroll-navigation--${target}`}
-    aria-label={t('聊天滚动快捷操作')}>
+    aria-label={t('Chat scroll shortcuts')}>
     <button type="button"
       className={`cc-chat-scroll-navigation-button cc-tip${target === 'bottom' ? ' cc-chat-scroll-navigation-button--bottom cc-tip-up' : ''}`}
       data-tip={label} aria-label={label} onClick={() => scroll.scrollTo(target)}>
@@ -185,7 +185,7 @@ function MessageWorkspace({ controller }: { controller: ChatPanelController }) {
 
 function QuickActionSelect({ controller }: { controller: ChatPanelController }) {
   const { agent, composer, t } = controller;
-  return <select aria-label={t('快速操作')} value="" disabled={agent.running}
+  return <select aria-label={t('Quick actions')} value="" disabled={agent.running}
     onChange={(event) => {
       if (!event.target.value) return;
       const action = QUICK_ACTIONS[Number(event.target.value)];
@@ -194,7 +194,7 @@ function QuickActionSelect({ controller }: { controller: ChatPanelController }) 
       requestAnimationFrame(() => composer.taRef.current?.focus());
     }}
     style={{ width: '100%', marginBottom: 8, border: `0.5px solid ${theme.border}`, borderRadius: 6, padding: '6px 8px', background: theme.panelAlt, color: theme.text, fontSize: 12 }}>
-    <option value="">{t('快速操作…')}</option>
+    <option value="">{t('Quick actions…')}</option>
     {QUICK_ACTIONS.map((action, index) => (
       <option key={action.label} value={index}>{t(action.label)}</option>
     ))}
@@ -221,7 +221,7 @@ function ComposerInput({ controller }: { controller: ChatPanelController }) {
     pasteError={composer.pasteError} onDismissPasteError={() => composer.setPasteError(null)}
     onDropEditorItem={actions.onDropEditorItem} taRef={composer.taRef}
     placeholder={agent.messages.length === 0
-      ? t('描述你想要创建的内容...') : t('告诉 AI 要做哪些修改 - @ 引用素材')} />;
+      ? t('Describe what you want to create...') : t('Tell the AI what to change — @ to reference assets')} />;
 }
 
 function ComposerSection({ controller }: { controller: ChatPanelController }) {

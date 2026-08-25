@@ -5,7 +5,6 @@ interface CreativeSkillMetadata {
   id: string;
   slug: string;
   name: string;
-  nameZh: string;
   summary: string;
   scenarios: string[];
 }
@@ -15,7 +14,6 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000015',
     slug: 'livestream-to-clips',
     name: 'Livestream to Clips',
-    nameZh: '直播智能切片',
     summary: '把带货、游戏、访谈、教学、娱乐、体育、音乐或混合直播录屏剪成有证据、可发布的高光切片。',
     scenarios: [
       'livestream-to-clips',
@@ -30,8 +28,7 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000004',
     slug: 'long-video-to-shorts',
     name: 'Long Video to Shorts',
-    nameZh: '长视频转短视频',
-    summary: '把一条长播客、访谈、课程或直播剪成适合社媒发布的短视频和高光。',
+    summary: 'Cut one long podcast, interview, course, or livestream into social-ready shorts and highlights.',
     scenarios: [
       'long-video-to-shorts',
       'reels',
@@ -45,8 +42,7 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000012',
     slug: 'multi-clips-to-reels',
     name: 'Multi Clips to Reels',
-    nameZh: '多素材剪 Reels',
-    summary: '把产品、活动、旅行或游戏素材剪成适合社媒发布的 Reels。',
+    summary: 'Turn product, event, travel, or gameplay footage into social-ready reels.',
     scenarios: [
       'multi-clips-to-reels',
       'multi-clips-to-shorts',
@@ -60,8 +56,7 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000005',
     slug: 'ai-cinematic-short-film',
     name: 'AI Cinematic Short Film',
-    nameZh: 'AI 电影感短片',
-    summary: '规划并制作 AI 电影感短片，覆盖故事、镜头、提示词、连续性和最终检查。',
+    summary: 'Plan and produce AI cinematic shorts — story, shots, prompts, continuity, and final checks.',
     scenarios: [
       'ai-film',
       'cinematic',
@@ -75,8 +70,7 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000006',
     slug: 'product-ad-video-script',
     name: 'Product Ad Video Script',
-    nameZh: '产品广告脚本',
-    summary: '把产品或页面转成广告角度、开头钩子、分镜、字幕、CTA 和视觉方向。',
+    summary: 'Turn a product or page into ad angles, hooks, storyboards, captions, CTAs, and visual direction.',
     scenarios: [
       'ad',
       'e-commerce',
@@ -90,8 +84,7 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000011',
     slug: 'explainer-video',
     name: 'Explainer Video',
-    nameZh: '解说视频制作',
-    summary: '把主题、脚本、配音、产品逻辑或数据做成完整解说视频。',
+    summary: 'Turn a topic, script, voiceover, product logic, or data into a complete explainer video.',
     scenarios: [
       'concept',
       'course',
@@ -105,8 +98,7 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000008',
     slug: 'motion-graphic-placement',
     name: 'Motion Graphic Placement',
-    nameZh: '动效点缀指南',
-    summary: '在合适时机添加动效，强化表达且不遮挡内容。',
+    summary: 'Add motion graphics at the right moments — reinforcing the message without blocking content.',
     scenarios: [
       'creator-video',
       'interview',
@@ -120,8 +112,7 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000009',
     slug: 'storyboard-shot-breakdown',
     name: 'Storyboard Shot Breakdown',
-    nameZh: '拉片分镜图',
-    summary: '逐镜拆解镜头语言，并生成分镜参考图。',
+    summary: 'Break down shot language shot by shot and generate storyboard reference images.',
     scenarios: [
       'cinematography',
       'director-logic',
@@ -135,8 +126,7 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000010',
     slug: 'video-thumbnail-generator',
     name: 'Video Thumbnail Generator',
-    nameZh: '视频封面生成',
-    summary: '基于视频内容和真实画面生成适合平台的封面图。',
+    summary: 'Generate platform-ready thumbnails from the video content and real frames.',
     scenarios: [
       'bilibili-cover',
       'cover-image',
@@ -150,7 +140,6 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000014',
     slug: 'news-rough-cut',
     name: 'News Rough Cut',
-    nameZh: '新闻智能粗剪',
     summary: '把新闻素材粗剪为一条内容完整、逻辑清晰、节奏紧凑的新闻短视频，不加任何外部声音。',
     scenarios: [
       'news-rough-cut',
@@ -165,7 +154,6 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000013',
     slug: 'skill-creator',
     name: 'Skill Creator',
-    nameZh: '技能创作器',
     summary: '把重复流程或想法做成可复用的自定义技能（SKILL.md），并安装到本机技能目录。',
     scenarios: [
       'create-skill',

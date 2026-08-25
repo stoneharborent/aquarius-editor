@@ -239,10 +239,10 @@ function withCaptionTrack(timeline: Timeline): Timeline {
     const { name, ...rest } = config ?? {};
     const nextConfig = {
       ...rest,
-      ...(name && name !== '字幕' ? { name } : {}),
+      ...(name && name !== 'Captions' ? { name } : {}),
       ...(config?.captions === undefined && timeline.captions ? { captions: timeline.captions } : {}),
     };
-    if (config?.name !== '字幕' && config?.captions !== undefined) return timeline;
+    if (config?.name !== 'Captions' && config?.captions !== undefined) return timeline;
     return { ...timeline, tracks: { ...timeline.tracks, [existingId]: nextConfig } };
   }
   if (!timeline.captions) return timeline;

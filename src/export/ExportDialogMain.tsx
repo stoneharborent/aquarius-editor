@@ -14,9 +14,9 @@ function RenderBadge({ tab, renderEngine, engine, reason }: {
   reason: string | null;
 }) {
   const t = useT();
-  const label = tab !== 'video' ? t('本机渲染')
+  const label = tab !== 'video' ? t('Local render')
     : engine ? t(engine.label)
-      : renderEngine === 'checking' ? t('正在检测本机') : t('本机自适应');
+      : renderEngine === 'checking' ? t('Checking this device') : t('Adaptive local');
   const accelerated = tab !== 'video' || engine?.hardware;
   return <span className={`cc-export-local-badge${accelerated ? ' accelerated' : ''}`} title={reason ? t(reason) : undefined}><i />{label}</span>;
 }
@@ -38,9 +38,9 @@ function BackgroundExportJobs({ model }: { model: ExportDialogModel }) {
   const { jobs, selectedJobId, viewJob, cancelJob } = model.workflow;
   if (jobs.length === 0) return null;
   return (
-    <section className="cc-export-progress" aria-label={t('后台导出任务')}>
+    <section className="cc-export-progress" aria-label={t('Background export tasks')}>
       <div className="cc-export-progress-head">
-        <strong>{t('后台导出')}</strong>
+        <strong>{t('Background export')}</strong>
         <span>{jobs.length}</span>
       </div>
       {jobs.map((job) => {
@@ -54,7 +54,7 @@ function BackgroundExportJobs({ model }: { model: ExportDialogModel }) {
               {job.label} · {job.progress.phase} · {job.progress.percent}%
             </button>
             {!terminal && (
-              <button type="button" onClick={() => cancelJob(job.id)}>{t('取消')}</button>
+              <button type="button" onClick={() => cancelJob(job.id)}>{t('Cancel')}</button>
             )}
           </div>
         );

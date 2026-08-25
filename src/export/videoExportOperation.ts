@@ -66,14 +66,14 @@ function browserProgress(context: VideoExportContext): NonNullable<BrowserExport
   return (snapshot) => {
     context.setRenderEngine('browser');
     const percent = Math.min(98, Math.max(1, Math.round(snapshot.progress * 98)));
-    context.setBusy(context.t('浏览器渲染中…'));
+    context.setBusy(context.t('Rendering in browser…'));
     context.setProgress((current) => current ? {
       ...current,
       phase: 'rendering',
       percent: Math.max(current.percent, percent),
       processedFrames: snapshot.encodedFrames,
       totalFrames: Math.max(1, exportDuration(context.options)),
-      detail: context.t('WebCodecs 浏览器加速'),
+      detail: context.t('WebCodecs browser acceleration'),
     } : current);
   };
 }
@@ -104,14 +104,14 @@ function switchToServer(context: VideoExportContext, engine: ExportEngineInfo, r
   context.setRenderEngine('server');
   context.setEngineInfo(engine);
   context.setEngineReason(reason);
-  context.setBusy(context.t('切换兼容渲染…'));
+  context.setBusy(context.t('Switching to compatibility renderer…'));
   context.setProgress((current) => current ? {
     ...current,
     phase: 'preparing',
     percent: 0,
     processedFrames: undefined,
     totalFrames: undefined,
-    detail: context.t('浏览器快导不可用：{reason}，已切换兼容渲染', { reason: context.t(reason) }),
+    detail: context.t('Browser fast export unavailable: {reason}. Switched to compatibility rendering.', { reason: context.t(reason) }),
   } : current);
 }
 
@@ -126,7 +126,7 @@ function switchToBrowser(context: VideoExportContext, engine: ExportEngineInfo, 
     percent: 0,
     processedFrames: undefined,
     totalFrames: undefined,
-    detail: context.t('本机渲染失败：{reason}，已切换 WebCodecs', { reason }),
+    detail: context.t('Local rendering failed: {reason}. Switched to WebCodecs.', { reason }),
   } : current);
 }
 
@@ -190,13 +190,13 @@ export async function saveBrowserResult(
   const filename = `${base}.${exportMediaExtension('video', codec)}`;
   await verifyBrowserResult(context, attempt.blob, filename, engine, signal);
   signal?.throwIfAborted();
-  context.setBusy(context.t('正在保存…'));
+  context.setBusy(context.t('Saving…'));
   context.setProgress((current) => current ? {
     ...current,
     phase: 'downloading',
     percent: 99,
     outputSize: attempt.blob.size,
-    detail: context.t('正在写入所选位置'),
+    detail: context.t('Writing to the selected destination'),
   } : current);
   signal?.throwIfAborted();
   context.beginTargetCommit();
@@ -250,7 +250,7 @@ async function runBrowserThenServer(
     attempt = await runBrowserRoute(context, controller, plan.browserEngine);
   } catch (error) {
     if (isAbortError(error)) throw error;
-    switchToServer(context, plan.serverEngine, error instanceof Error ? error.message : '浏览器快导失败');
+    switchToServer(context, plan.serverEngine, error instanceof Error ? error.message : 'Browser fast export failed');
     await context.exportServerVideo(controller.signal);
     return;
   }

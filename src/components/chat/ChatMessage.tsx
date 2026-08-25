@@ -33,10 +33,10 @@ function ThinkingBlock({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ marginBottom: 6 }}>
-      <button onClick={() => setOpen((v) => !v)} title={open ? t('收起思考过程') : t('展开思考过程')}
+      <button onClick={() => setOpen((v) => !v)} title={open ? t('Collapse thinking') : t('Expand thinking')}
         style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.textDim, fontSize: 11.5, padding: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
         <span style={{ display: 'inline-flex', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }}>▸</span>
-        {t('思考过程')}
+        {t('Thinking')}
       </button>
       {open && (
         <Markdown text={text} style={{ marginTop: 4, maxHeight: 180, overflowY: 'auto', padding: '6px 8px', fontFamily: 'Geist Mono, ui-monospace, SFMono-Regular, Menlo, monospace', fontStyle: 'italic', fontSize: 11.5, lineHeight: 1.55, color: theme.textDim, whiteSpace: 'pre-wrap', background: theme.panelAlt, border: `0.5px solid ${theme.border}`, borderRadius: 4 }} />
@@ -73,9 +73,9 @@ export function ChatMessage({ msg, streaming, running = false, retry, onRetry, o
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', margin: '16px 0' }}>
         <div style={{ maxWidth: '86%', background: theme.hover, color: theme.text, borderRadius: 6, padding: '9px 14px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.5 }}>{msg.text}</div>
         {retry && onRetry && (
-          <button type="button" onClick={() => onRetry(retry)} title={t('重试请求')} disabled={running}
+          <button type="button" onClick={() => onRetry(retry)} title={t('Retry this request')} disabled={running}
             style={{ marginTop: 5, border: 'none', background: 'transparent', color: theme.textDim, borderRadius: 6, padding: '3px 6px', fontSize: 12, cursor: running ? 'default' : 'pointer', opacity: running ? 0.4 : 1, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <span aria-hidden="true">↻</span>{t('重试')}
+            <span aria-hidden="true">↻</span>{t('Retry')}
           </button>
         )}
       </div>
@@ -118,11 +118,11 @@ overflowWrap:anywhere breaks long tokens - long errors/summaries are wrapped in 
         display: 'flex', alignItems: 'center', gap: 10, margin: '10px 0', padding: '9px 12px',
         border: `0.5px solid ${theme.border}`, borderRadius: 4, background: theme.panelAlt, fontSize: 12.5, color: theme.textDim,
       }}>
-        <span style={{ flex: 1 }}>{t('已连续执行 {n} 轮工具，先停一下确认方向。', { n: msg.text })}</span>
+        <span style={{ flex: 1 }}>{t('Ran {n} consecutive tool turns — pausing to confirm direction.', { n: msg.text })}</span>
         {onContinue && (
           <button type="button" onClick={onContinue}
             style={{ border: `0.5px solid ${theme.accent}`, background: 'transparent', color: theme.accent, borderRadius: 6, padding: '4px 14px', fontSize: 12.5, cursor: 'pointer', flexShrink: 0 }}>
-            {t('继续')}
+            {t('Continue')}
           </button>
         )}
       </div>
@@ -153,7 +153,7 @@ overflowWrap:anywhere breaks long tokens - long errors/summaries are wrapped in 
       )}
       {!streaming && segments.some((segment) => segment.type === 'text' && !!segment.text.trim()) && (
         <div style={{ marginTop: 6, marginLeft: -5 }}>
-          <button title={copied ? t('已复制') : t('复制文本')} onClick={copy}
+          <button title={copied ? t('Copied') : t('Copy')} onClick={copy}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 5, borderRadius: 6, lineHeight: 0, color: copied ? theme.text : theme.textDim, display: 'grid', placeItems: 'center' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = theme.panelAlt; e.currentTarget.style.color = theme.text; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = copied ? theme.text : theme.textDim; }}>

@@ -36,8 +36,8 @@ async function exportProject(t: Translate, id: string, name: string): Promise<st
   const result = await buildProjectExport(id, name);
   downloadBlob(result.blob, result.filename);
   return result.mediaMissing.length
-    ? t('已导出「{name}」;{n} 个素材两端都取不到,未随包', { name, n: result.mediaMissing.length })
-    : t('已导出「{name}」(含 {n} 个素材)', { name, n: result.mediaTotal });
+    ? t('Exported "{name}"; {n} asset(s) unavailable on both ends, not bundled', { name, n: result.mediaMissing.length })
+    : t('Exported "{name}" ({n} assets included)', { name, n: result.mediaTotal });
 }
 
 async function importProject(t: Translate, file: File, refresh: () => Promise<void>): Promise<string> {
@@ -45,18 +45,18 @@ async function importProject(t: Translate, file: File, refresh: () => Promise<vo
     const result = await importProjectPackage(file);
     await refresh();
     return result.mediaMissing.length
-      ? t('已导入「{name}」;缺 {n} 个素材({list})', {
+      ? t('Imported "{name}"; {n} asset(s) missing ({list})', {
         name: result.meta.name,
         n: result.mediaMissing.length,
         list: result.mediaMissing.map((source: string) => source.split('/').pop()).join('、'),
       })
-      : t('已导入「{name}」(素材 {a}/{b})', {
+      : t('Imported "{name}" (assets {a}/{b})', {
         name: result.meta.name,
         a: result.mediaRestored,
         b: result.mediaTotal,
       });
   } catch (error) {
-    return t('导入失败:{error}', { error: error instanceof Error ? error.message : String(error) });
+    return t('Import failed: {error}', { error: error instanceof Error ? error.message : String(error) });
   }
 }
 

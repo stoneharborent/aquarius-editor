@@ -395,10 +395,10 @@ export function PreviewTransformOverlay({
 
   const edgeMidpoints = selection ? previewEdgeMidpoints(selection.corners) : null;
   const edgeHandles: Array<{ edge: PreviewScaleEdge; label: string; className: string }> = [
-    { edge: 'n', label: t('裁切上边（拖入则遮住上方）'), className: 'cc-preview-transform-crop-n' },
-    { edge: 's', label: t('裁切下边（拖入则遮住下方）'), className: 'cc-preview-transform-crop-s' },
-    { edge: 'e', label: t('裁切右边（拖入则遮住右侧）'), className: 'cc-preview-transform-crop-e' },
-    { edge: 'w', label: t('裁切左边（拖入则遮住左侧）'), className: 'cc-preview-transform-crop-w' },
+    { edge: 'n', label: t('Crop top edge (drag in to cover the top)'), className: 'cc-preview-transform-crop-n' },
+    { edge: 's', label: t('Crop bottom edge (drag in to cover the bottom)'), className: 'cc-preview-transform-crop-s' },
+    { edge: 'e', label: t('Crop right edge (drag in to cover the right side)'), className: 'cc-preview-transform-crop-e' },
+    { edge: 'w', label: t('Crop left edge (drag in to cover the left side)'), className: 'cc-preview-transform-crop-w' },
   ];
 
   return (
@@ -406,7 +406,7 @@ export function PreviewTransformOverlay({
       ref={rootRef}
       className="cc-preview-transform-overlay"
       role="group"
-      aria-label={t('预览画布片段变换')}
+      aria-label={t('Preview canvas clip transform')}
       tabIndex={0}
       onPointerDown={onPointerDown}
       onPointerMove={updateGesture}
@@ -446,7 +446,7 @@ export function PreviewTransformOverlay({
               type="button"
               className={`cc-preview-transform-handle cc-preview-transform-scale cc-preview-transform-scale-${index}`}
               data-preview-handle={`scale-${index}`}
-              aria-label={t('从角点 {n} 等比缩放片段', { n: index + 1 })}
+              aria-label={t('Scale clip proportionally from corner {n}', { n: index + 1 })}
               style={percentPosition(point)}
             />
           ))}
@@ -464,7 +464,7 @@ export function PreviewTransformOverlay({
             type="button"
             className="cc-preview-transform-handle cc-preview-transform-rotate"
             data-preview-handle="rotate"
-            aria-label={t('旋转片段')}
+            aria-label={t('Rotate clip')}
             style={percentPosition(rotateHandle.handle)}
           />
           {onItemPropChange

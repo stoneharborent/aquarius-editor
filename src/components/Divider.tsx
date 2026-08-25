@@ -18,7 +18,7 @@ export function Divider({ onResize, orientation = 'vertical' }: { onResize: (del
       role="separator"
       tabIndex={0}
       aria-orientation={horiz ? 'horizontal' : 'vertical'}
-      aria-label={t('拖动调整大小')}
+      aria-label={t('Drag to resize')}
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
         last.current = axis(e);
@@ -45,7 +45,7 @@ export function Divider({ onResize, orientation = 'vertical' }: { onResize: (del
         event.preventDefault();
         onResize(delta);
       }}
-      title={t('拖动调整大小')}
+      title={t('Drag to resize')}
       style={{
         position: 'relative', zIndex: 20,
         width: horiz ? '100%' : 9, height: horiz ? 9 : '100%',

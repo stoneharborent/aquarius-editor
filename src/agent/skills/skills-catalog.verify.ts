@@ -24,17 +24,17 @@ for (const slug of slugs) {
   assert.ok(body.trim().length > 500, `${slug}: 创作技能正文有实质内容`);
 }
 for (const s of CREATIVE_SKILL_METADATA) {
-  assert.ok(s.id && s.name && s.nameZh, `skill ${s.name} is well-formed`);
+  assert.ok(s.id && s.name && s.slug, `skill ${s.name} is well-formed`);
   assert.ok(Array.isArray(s.scenarios), 'scenarios is an array');
 }
 
-// a known real skill is present with its zh name
+// a known real skill is present
 const shorts = CREATIVE_SKILL_METADATA.find((s) => s.name === 'Long Video to Shorts');
 assert.ok(shorts, 'Long Video to Shorts present');
-assert.strictEqual(shorts!.nameZh, '长视频转短视频');
+assert.strictEqual(shorts!.slug, 'long-video-to-shorts');
 const livestream = CREATIVE_SKILL_METADATA.find((s) => s.name === 'Livestream to Clips');
 assert.ok(livestream, 'Livestream to Clips present');
-assert.strictEqual(livestream!.nameZh, '直播智能切片');
+assert.strictEqual(livestream!.slug, 'livestream-to-clips');
 
 // findSkill: null/undefined/unknown → undefined (id-hit lookups are covered in
 // skill-loading.verify.ts where the Vite glob is available).
@@ -48,7 +48,6 @@ const prompt = creativeModePrompt({
   id: shorts!.id,
   slug: shorts!.slug,
   name: shorts!.name,
-  nameZh: shorts!.nameZh,
   summary: shorts!.summary,
   scenarios: shorts!.scenarios,
   description: 'desc',

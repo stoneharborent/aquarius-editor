@@ -84,7 +84,7 @@ export function TransitionContextMenu({
       ref={ref}
       className="cc-caption-cue-menu cc-track-context-menu"
       role="menu"
-      aria-label={t('转场菜单')}
+      aria-label={t('Transition menu')}
       style={{ left: pos.left, top: pos.top }}
       onPointerDown={(event) => event.stopPropagation()}
     >
@@ -93,7 +93,7 @@ export function TransitionContextMenu({
       {TRANSITION_DURATION_PRESETS.map((seconds) => (
         <MenuItem
           key={seconds}
-          label={t('{n} 秒', { n: seconds })}
+          label={t('{n}s', { n: seconds })}
           icon="clock"
           checked={active === seconds}
           disabled={locked}
@@ -101,7 +101,7 @@ export function TransitionContextMenu({
         />
       ))}
       <Separator />
-      <MenuItem label={t('删除转场')} icon="trash" danger disabled={locked} onClick={run(onRemove)} />
+      <MenuItem label={t('Remove transition')} icon="trash" danger disabled={locked} onClick={run(onRemove)} />
     </div>
   );
 }

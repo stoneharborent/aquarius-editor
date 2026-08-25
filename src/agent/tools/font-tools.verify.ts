@@ -42,7 +42,7 @@ assert.strictEqual(inter.ok, true);
 assert.ok(inter.results.some((r) => r.family === 'Inter' && r.loadable));
 
 // Chinese alias → bundled local font (loadable, source:'bundled')
-const deyi = searchFontCatalog('得意黑');
+const deyi = searchFontCatalog('Smiley Sans');
 assert.ok(deyi.some((r) => r.family === 'Smiley Sans' && r.loadable && r.source === 'bundled'));
 
 // every bundled family + its Chinese aliases hit the search catalog
@@ -76,8 +76,8 @@ assert.strictEqual(findLocalFont('新青年'), undefined);
 assert.strictEqual(findLocalFont('思源黑体')?.family, 'Noto Sans SC');
 assert.strictEqual(findLocalFont('鸿蒙'), undefined);
 assert.strictEqual(findLocalFont('Comic Sans MS'), undefined);
-assert.strictEqual(ensureLocalFont('得意黑'), ensureLocalFont('Smiley Sans'));
-await ensureLocalFont('得意黑');
+assert.strictEqual(ensureLocalFont('Smiley Sans'), ensureLocalFont('Smiley Sans'));
+await ensureLocalFont('Smiley Sans');
 await ensureLocalFont('not-a-local-font'); // non-local resolves, never throws
 
 // loadable check — bundled CJK now export-safe

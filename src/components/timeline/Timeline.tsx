@@ -95,7 +95,7 @@ export function Timeline(props: TimelineProps) {
       {pickMode && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 12px', fontSize: 11, color: theme.accent, borderBottom: `0.5px solid ${theme.border}`, background: theme.panelAlt, flexShrink: 0 }}>
           <Icon name="cursor" size={12} />
-          {t('选择模式：点片段引用 · 拖过标尺/空白选时间段 · 单击标尺打时间点 — 引用会加进聊天输入框')}
+          {t('Selection mode: click a clip for an item reference · drag across the ruler/empty space for a time range · click the ruler for a timepoint — references are added to the chat input')}
         </div>
       )}
 
@@ -111,7 +111,7 @@ export function Timeline(props: TimelineProps) {
         }}
         onPointerLeave={clearHoverPreview}
         onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerCancel}
-        title={t('Ctrl/⌘+滚轮 缩放时间轴 · Alt+滚轮 缩放轨道高度')}>
+        title={t('Ctrl/⌘+wheel to zoom the timeline · Alt+wheel to zoom track height')}>
         <div ref={innerRef} style={{ position: 'relative', width: innerW }}>
           {/* ruler (click to seek, hold to scrub; selection mode: click = timepoint, drag = timerange).
 The playhead line/triangle is pointerEvents:none, click it to click the ruler - scrub the same path to take effect.*/}
@@ -136,7 +136,7 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
             const hidden = meta.kind === 'caption' ? !trackCaptions?.enabled : config.hidden ?? false;
             const headConfig = meta.kind === 'caption' ? { ...config, hidden } : config;
             const locked = config.locked ?? false;
-            const kindLabel = meta.kind === 'video' ? '视频' : meta.kind === 'audio' ? '音乐' : '字幕';
+            const kindLabel = meta.kind === 'video' ? 'Video' : meta.kind === 'audio' ? 'Music' : 'Captions';
             // Stable title (类型+序号) plus optional custom name as a second row,
             // so track naming never drifts when AI creates tracks with its own labels.
             const titleName = locale === 'en' ? alias : `${t(kindLabel)}${alias.slice(1)}`;
@@ -149,8 +149,8 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
                   deleteBlockedReason={deletePlan.blockedReason}
                   onDelete={() => {
                     if (deletePlan.requiresConfirmation
-                      && !window.confirm(t('删除轨道会同时删除其中的片段、字幕和转场，确认继续吗？'))) return;
-                    if (deletePlan.actions.length) commands.batch(deletePlan.actions, t('删除轨道'));
+                      && !window.confirm(t('Deleting this track also deletes its clips, captions, and transitions. Continue?'))) return;
+                    if (deletePlan.actions.length) commands.batch(deletePlan.actions, t('Delete track'));
                   }}
                   menuElevated={captionMenu?.id === trackId || duckMenu?.id === trackId}
                   width={HEADER_W} commands={commands}
@@ -393,8 +393,8 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
             }}
             onClear={() => {
               if (clearPlan.blockedReason || !clearPlan.hasContents) return;
-              if (!window.confirm(t('清空轨道会删除其中的片段、字幕和转场，确认继续吗？'))) return;
-              commands.batch(clearPlan.actions, t('清空轨道'));
+              if (!window.confirm(t('Clearing the track deletes its clips, captions, and transitions. Continue?'))) return;
+              commands.batch(clearPlan.actions, t('Clear track'));
               onMarqueeCaptionSelect([], { additive: false, preserveWithItems: false });
             }}
             onToggleHidden={() => {
@@ -405,7 +405,7 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
             onToggleLocked={() => commands.toggleTrackFlag(trackId, 'locked')}
             onRename={() => {
               const current = state.tracks?.[trackId]?.name ?? '';
-              const next = window.prompt(t('轨道名称（留空恢复默认）'), current) ?? null;
+              const next = window.prompt(t('Track name (leave empty to reset to default)'), current) ?? null;
               if (next === null) return;
               commands.updateTrack(trackId, { name: next.trim() ? next.trim() : undefined });
             }}
@@ -415,8 +415,8 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
             onDelete={() => {
               if (deletePlan.blockedReason) return;
               if (deletePlan.requiresConfirmation
-                && !window.confirm(t('删除轨道会同时删除其中的片段、字幕和转场，确认继续吗？'))) return;
-              commands.batch(deletePlan.actions, t('删除轨道'));
+                && !window.confirm(t('Deleting this track also deletes its clips, captions, and transitions. Continue?'))) return;
+              commands.batch(deletePlan.actions, t('Delete track'));
               onMarqueeCaptionSelect([], { additive: false, preserveWithItems: false });
             }}
             onClose={() => setTrackMenu(null)}

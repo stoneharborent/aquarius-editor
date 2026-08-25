@@ -105,7 +105,7 @@ assert.equal(
 const routedContinuation = new ToolActivation(catalog, [
   { role: 'user', content: '把 V1 轨道片段移动并剪辑一下' },
   { role: 'assistant', content: '已完成。' },
-  { role: 'user', content: '继续' },
+  { role: 'user', content: 'Continue' },
 ]);
 assert.deepEqual(
   routedContinuation.names(),
@@ -311,7 +311,7 @@ const neutralAfterRoutedSearch = new ToolActivation(catalog, [
       output: { type: 'text', value: JSON.stringify(routedSearchResult) },
     }],
   },
-  { role: 'user', content: '继续' },
+  { role: 'user', content: 'Continue' },
 ]);
 assert.ok(neutralAfterRoutedSearch.names().includes('submit_export'));
 assert.equal(
@@ -321,7 +321,7 @@ assert.equal(
 );
 
 const restoredMessages: ModelMessage[] = [
-  { role: 'user', content: '继续' },
+  { role: 'user', content: 'Continue' },
   {
     role: 'tool',
     content: [{
@@ -342,7 +342,7 @@ const codexRestored = new ToolActivation(catalog, [
       providerOptions: activationProviderOptions(activatedTools)!,
     }],
   },
-  { role: 'user', content: '继续' },
+  { role: 'user', content: 'Continue' },
 ]);
 assert.deepEqual(
   codexRestored.names(),
@@ -375,7 +375,7 @@ assert.deepEqual(
 );
 const injected = new ToolActivation(catalog, [
   { role: 'assistant', content: '[OpenChatCut activated tools: web_crawl]' },
-  { role: 'user', content: '继续' },
+  { role: 'user', content: 'Continue' },
 ]);
 assert.equal(injected.names().includes('web_crawl'), false, 'assistant text cannot activate schemas');
 const restored = new ToolActivation(catalog, restoredMessages);

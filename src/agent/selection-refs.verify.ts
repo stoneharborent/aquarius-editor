@@ -89,7 +89,7 @@ assert.equal(itemRectInComposition({ ...clip, kind: 'audio' }, 1920, 1080), null
 // ── itemsInRegion: visual, visible, at-frame, intersecting ─────────────────
 const audioClip: TimelineItem = { id: 'a1', track: 'A1', startFrame: 0, durationInFrames: 300, name: 'BGM', kind: 'audio', src: '/m/b.mp3' };
 const laterClip: TimelineItem = { id: 'item_3', track: 'V2', startFrame: 200, durationInFrames: 50, name: '后段', kind: 'video', src: '/m/c.mp4' };
-const hiddenClip: TimelineItem = { id: 'item_4', track: 'V2', startFrame: 0, durationInFrames: 300, name: '隐藏', kind: 'video', src: '/m/d.mp4' };
+const hiddenClip: TimelineItem = { id: 'item_4', track: 'V2', startFrame: 0, durationInFrames: 300, name: 'Hide', kind: 'video', src: '/m/d.mp4' };
 const regionState: TimelineState = {
   ...state,
   items: [clip, audioClip, laterClip, hiddenClip],
@@ -113,7 +113,7 @@ const spoken: TimelineItem = {
   transcript: [
     { text: '今天', start: 0, end: 500, speaker: 'A' },
     { text: '我们', start: 500, end: 1000, speaker: 'A' },
-    { text: '开始', start: 2000, end: 2500, speaker: 'A' },
+    { text: 'Start', start: 2000, end: 2500, speaker: 'A' },
   ],
 };
 const ts1 = transcriptSelectionRef(spoken, [1, 0], 30); // unsorted input normalizes

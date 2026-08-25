@@ -65,7 +65,7 @@ for (const file of ['Sony_Slog3_s709.cube', 'CinemaGamut_CanonLog3-to-Canon709_3
 // ── 5. fxPasses 挂载语义:未就绪→intensity 压 0;就绪→lut3d 附上 ─────────
 const def: FxDef = {
   id: 'builtin:test-lut', name: 't', desc: 't', frag: 'FRAG', cube: 'test://lut',
-  props: [{ key: 'intensity', label: '强度', default: 1, min: 0, max: 1, step: 0.01 }],
+  props: [{ key: 'intensity', label: 'Intensity', default: 1, min: 0, max: 1, step: 0.01 }],
 };
 {
   assert.equal(cubeSettled('test://lut'), false);

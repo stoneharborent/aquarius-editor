@@ -15,11 +15,11 @@ interface ExportBitrateControlProps {
 }
 
 const MODES: Array<{ value: VideoBitrateMode; label: string }> = [
-  { value: 'auto', label: '自动' },
-  { value: 'compact', label: '小文件' },
-  { value: 'recommended', label: '推荐' },
-  { value: 'high', label: '高质量' },
-  { value: 'custom', label: '自定义' },
+  { value: 'auto', label: 'Auto' },
+  { value: 'compact', label: 'Smaller file' },
+  { value: 'recommended', label: 'Recommended' },
+  { value: 'high', label: 'High quality' },
+  { value: 'custom', label: 'Custom' },
 ];
 
 export function ExportBitrateControl({
@@ -35,7 +35,7 @@ export function ExportBitrateControl({
     <div className="cc-export-bitrate">
       <select
         className="cc-export-select"
-        aria-label={t('码率模式')}
+        aria-label={t('Bitrate mode')}
         value={mode}
         disabled={disabled}
         onChange={(event) => onModeChange(event.target.value as VideoBitrateMode)}
@@ -51,13 +51,13 @@ export function ExportBitrateControl({
             step={0.5}
             value={customMbps}
             disabled={disabled}
-            aria-label={t('自定义码率')}
+            aria-label={t('Custom bitrate')}
             onChange={(event) => onCustomMbpsChange(Number(event.target.value))}
           />
           <span>Mbps</span>
         </label>
       )}
-      <small>{t('预计视频码率：{value} Mbps', { value: (resolvedBps / 1_000_000).toFixed(1) })}</small>
+      <small>{t('Estimated video bitrate: {value} Mbps', { value: (resolvedBps / 1_000_000).toFixed(1) })}</small>
     </div>
   );
 }

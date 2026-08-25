@@ -263,7 +263,7 @@ export function lutDefOf(pack: PluginPack, item: PluginLutItem, cubeUrl: string,
     name: item.name,
     desc: item.desc ?? `${pack.name} 插件 LUT`,
     frag: lutFrag,
-    props: [{ key: 'intensity', label: '强度', default: 1, min: 0, max: 1, step: 0.01 }],
+    props: [{ key: 'intensity', label: 'Intensity', default: 1, min: 0, max: 1, step: 0.01 }],
     cube: cubeUrl,
   };
 }

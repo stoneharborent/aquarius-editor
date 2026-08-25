@@ -463,7 +463,7 @@ export async function runProbe(page: string, overrides: Record<string, unknown>)
   // writability check reads the panel's raw value directly.
   if (page === 'storage/projects') return runDataDirProbe(overrides);
   const probe = PROBES[page];
-  if (!probe) return { ok: false, message: '该厂商暂不支持连接测试' };
+  if (!probe) return { ok: false, message: 'This provider does not support connection testing yet' };
   const get = makeGetter(overrides);
   const ready = probe.needs.some((group) => group.every((n) => get(n).length > 0));
   if (!ready) return { ok: false, message: '尚未填写 API Key · 填好后再点测试' };

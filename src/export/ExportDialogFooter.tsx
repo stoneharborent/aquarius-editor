@@ -17,15 +17,15 @@ function formatBytes(bytes: number): string {
 }
 
 const PHASE_LABELS: Record<ExportPhase, string> = {
-  queued: '等待渲染',
-  preparing: '准备素材',
-  rendering: '正在渲染',
-  finalizing: '正在封装',
-  verifying: '正在质量检查',
-  downloading: '正在下载',
-  completed: '导出完成',
-  failed: '导出失败',
-  cancelled: '已取消',
+  queued: 'Waiting to render',
+  preparing: 'Preparing media',
+  rendering: 'Rendering',
+  finalizing: 'Finalizing file',
+  verifying: 'Running quality checks',
+  downloading: 'Downloading',
+  completed: 'Export complete',
+  failed: 'Export failed',
+  cancelled: 'Cancelled',
 };
 
 function exportEta(progress: ExportProgress, elapsedMs: number): number | null {
@@ -49,14 +49,14 @@ function ExportProgressView({ progress, clock }: { progress: ExportProgress; clo
       </div>
       <div className="cc-export-progress-meta">
         {progress.processedFrames !== undefined && progress.totalFrames !== undefined && (
-          <span>{t('已渲染 {done}/{total} 帧', { done: progress.processedFrames, total: progress.totalFrames })}</span>
+          <span>{t('Rendered {done}/{total} frames', { done: progress.processedFrames, total: progress.totalFrames })}</span>
         )}
         {progress.detail && <span>{progress.detail}</span>}
-        <span>{t('已用 {time}', { time: formatDuration(elapsedMs) })}</span>
+        <span>{t('Elapsed {time}', { time: formatDuration(elapsedMs) })}</span>
         {etaMs !== null && etaMs < 24 * 60 * 60_000 && (
-          <span>{t('预计剩余 {time}', { time: formatDuration(etaMs) })}</span>
+          <span>{t('About {time} remaining', { time: formatDuration(etaMs) })}</span>
         )}
-        {progress.outputSize !== undefined && <span>{t('文件大小 {size}', { size: formatBytes(progress.outputSize) })}</span>}
+        {progress.outputSize !== undefined && <span>{t('File size {size}', { size: formatBytes(progress.outputSize) })}</span>}
       </div>
     </div>
   );
@@ -82,18 +82,18 @@ export function ExportFooter({ tab, outputName, videoSummary, disabled, workflow
     <footer className={`cc-export-footer${progress ? ' has-progress' : ''}`}>
       {progress && <ExportProgressView progress={progress} clock={clock} />}
       <div className="cc-export-output">
-        <span>{progress?.phase === 'completed' ? t('已生成') : tab === 'video' ? t('输出规格') : t('即将生成')}</span>
+        <span>{progress?.phase === 'completed' ? t('Created') : tab === 'video' ? t('Output settings') : t('Output')}</span>
         <strong>{tab === 'video' ? videoSummary : outputName}</strong>
         {tab === 'video' && <small title={outputName}>{outputName}</small>}
       </div>
       {cancellable && (
-        <button type="button" className="cc-export-cancel" onClick={cancelExport}>{t('取消')}</button>
+        <button type="button" className="cc-export-cancel" onClick={cancelExport}>{t('Cancel')}</button>
       )}
       {tab !== 'jianying' && (
         <button type="button" className="cc-export-cta" onClick={() => void run()} disabled={disabled}>
           {!busy && <Icon name={progress?.phase === 'completed' ? 'check' : 'download'} size={17} />}
-          {busy ? `${progress?.percent ?? 0}%` : progress?.phase === 'completed' ? t('完成')
-            : progress?.phase === 'failed' ? t('重试') : t(EXPORT_ACTION_LABELS[tab])}
+          {busy ? `${progress?.percent ?? 0}%` : progress?.phase === 'completed' ? t('Done')
+            : progress?.phase === 'failed' ? t('Retry') : t(EXPORT_ACTION_LABELS[tab])}
         </button>
       )}
     </footer>

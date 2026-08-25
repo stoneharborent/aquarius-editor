@@ -14,7 +14,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // 镜像 effects.ts 里的 'builtin:fx-chroma-key' 条目
 const chromaKey: FxDef = {
-  id: 'builtin:fx-chroma-key', name: '色度键/绿幕', desc: '', frag: '',
+  id: 'builtin:fx-chroma-key', name: 'Chroma Key / Green Screen', desc: '', frag: '',
   props: [
     { key: 'keyColor', label: '', kind: 'color', default: [0, 1, 0], uniform: 'u_keyColor' },
     { key: 'similarity', label: '', default: 0.18, min: 0, max: 0.6 },

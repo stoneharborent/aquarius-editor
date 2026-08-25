@@ -167,7 +167,7 @@ function mobilePage(locale: MobilePageLocale): string {
       waiting: 'Ожидание загрузки', sent: 'Отправлено', failed: 'Ошибка загрузки', interrupted: 'Соединение прервано',
     },
     zh: {
-      pageTitle: '手机传素材', title: '发送素材到 OpenChatCut',
+      pageTitle: 'Upload from phone', title: '发送素材到 OpenChatCut',
       hint: '选择手机里的视频、图片或音频。电脑和手机需连接同一局域网。',
       choose: '选择素材', multiple: '支持多选，页面保持打开直到全部完成',
       waiting: '等待上传', sent: '已发送', failed: '上传失败', interrupted: '网络中断',

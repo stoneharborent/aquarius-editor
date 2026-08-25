@@ -283,9 +283,9 @@ export function useTimelineController({
     if (!captions) return false;
     const trackId = `track_${crypto.randomUUID()}`;
     commands.batch([
-      { type: 'track.create', track: { id: trackId, kind: 'caption', name: t('复制字幕') } },
+      { type: 'track.create', track: { id: trackId, kind: 'caption', name: t('Copy captions') } },
       { type: 'setCaptions', captions, track: trackId },
-    ], t('粘贴字幕'));
+    ], t('Paste captions'));
     return true;
   };
 

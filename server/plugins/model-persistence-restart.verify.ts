@@ -84,7 +84,7 @@ function fixtureConfig(cacheDir: string): {
     license: 'Apache-2.0',
     sizeBytes: semantic.length,
     recommendedMemoryBytes: 1,
-    capabilities: ['音乐语义向量'],
+    capabilities: ['Music-semantic embeddings'],
     files: [{ path: 'onnx/model.onnx', sizeBytes: semantic.length, sha256: sha256(semantic) }],
   };
   return {

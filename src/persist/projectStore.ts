@@ -365,7 +365,7 @@ export async function duplicateProject(id: string, name?: string): Promise<Proje
   if (!doc) return null;
   // Allow duplicating soft-deleted sources too (copy is active).
   const src = (await readIndex()).find((m) => m.id === id);
-  const copyName = (name?.trim() || `[Copy] ${src?.name ?? '工程'}`);
+  const copyName = (name?.trim() || `[Copy] ${src?.name ?? 'Projects'}`);
   return createProject(copyName, doc, src?.description ? { description: src.description } : undefined);
 }
 
@@ -455,7 +455,7 @@ const newId = () =>
     : `p_${now().toString(36)}_${Math.floor(Math.random() * 1e6).toString(36)}`;
 
 // Auto-name new empty projects with a generated adjective/noun combination.
-const ADJ = ['流光', '静默', '暖阳', '深蓝', '轻盈', '锋利', '柔和', '斑斓', '清冽', '灼热', '朦胧', '澄澈'];
+const ADJ = ['流光', '静默', '暖阳', '深蓝', '轻盈', '锋利', 'Softness', '斑斓', '清冽', '灼热', '朦胧', '澄澈'];
 const NOUN = ['序曲', '航迹', '棱镜', '潮汐', '织机', '回响', '飞羽', '砂丘', '苔原', '穹顶', '流域', '星图'];
 export function randomProjectName(): string {
   const pick = (a: string[]) => a[Math.floor(Math.random() * a.length)];

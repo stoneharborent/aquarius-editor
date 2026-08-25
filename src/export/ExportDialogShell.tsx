@@ -17,10 +17,10 @@ function ExportDialogHeader({ base, state, onClose }: Omit<ExportDialogShellProp
   return (
     <header className="cc-export-header">
       <div>
-        <h2 id="cc-export-title">{t('导出')}</h2>
+        <h2 id="cc-export-title">{t('Export')}</h2>
         <p>{base} · {state.width}×{state.height} · {state.fps} fps</p>
       </div>
-      <button type="button" className="cc-export-close" onClick={onClose} title={t('关闭')}>
+      <button type="button" className="cc-export-close" onClick={onClose} title={t('Close')}>
         <Icon name="x" size={16} />
       </button>
     </header>
@@ -54,8 +54,8 @@ export function ExportSidebar({ tab, busy, onTabChange }: ExportSidebarProps) {
   const t = useT();
   return (
     <aside className="cc-export-sidebar">
-      <span className="cc-export-sidebar-label">{t('输出类型')}</span>
-      <div className="cc-export-tabs" role="tablist" aria-label={t('输出类型')}>
+      <span className="cc-export-sidebar-label">{t('Output type')}</span>
+      <div className="cc-export-tabs" role="tablist" aria-label={t('Output type')}>
         {EXPORT_TABS.map((entry) => (
           <button
             type="button"

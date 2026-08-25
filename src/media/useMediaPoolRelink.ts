@@ -53,15 +53,15 @@ function relinkResultMessage(
   t: typeof translate,
 ): string {
   if (relinked > 0 && unmatched.length === 0) {
-    return t('已从文件夹按文件名重链 {n} 个素材', { n: relinked });
+    return t('Relinked {n} assets from the folder by filename', { n: relinked });
   }
   if (relinked > 0) {
-    return t('已重链 {n} 个素材；未找到匹配的文件：{list}', {
+    return t('Relinked {n} assets; no matching files found: {list}', {
       n: relinked,
       list: unmatched.join('、'),
     });
   }
-  return t('未找到与丢失素材匹配的文件：{list}', { list: unmatched.join('、') });
+  return t('No files matching the lost assets: {list}', { list: unmatched.join('、') });
 }
 
 async function relinkMatches(

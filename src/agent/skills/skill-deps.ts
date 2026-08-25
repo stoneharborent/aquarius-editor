@@ -29,7 +29,7 @@ const RULES: Rule[] = [
     service: 'image generation (still keyframes / 图片生成)',
     keywords: [
       'dall-e', 'dalle', 'midjourney', 'stable diffusion', 'sdxl', 'flux',
-      'image generation', 'imagegen', 'text-to-image', '文生图', '生图', '图像生成', '图片生成',
+      'image generation', 'imagegen', 'text-to-image', '文生图', 'Image', 'Image generation', 'Image generation',
       'keyframe', 'keyframes', '关键帧画面',
     ],
   },
@@ -37,8 +37,8 @@ const RULES: Rule[] = [
     kind: 'video',
     service: 'video generation (视频生成)',
     keywords: [
-      'sora', 'kling', '可灵', 'seedance', 'runway', 'hailuo', '海螺', 'veo',
-      'gemini omni', 'text-to-video', '文生视频', '视频生成',
+      'sora', 'kling', 'Kling', 'seedance', 'runway', 'hailuo', '海螺', 'veo',
+      'gemini omni', 'text-to-video', '文生视频', 'Video generation',
     ],
   },
   {
@@ -47,26 +47,26 @@ const RULES: Rule[] = [
     keywords: [
       'elevenlabs', 'doubao tts', 'minimax tts', 'inworld tts', 'fish audio tts',
       'speechify tts', 'openai tts', 'gemini tts', 'mistral tts', 'cartesia tts',
-      'text-to-speech', 'tts ', '配音', '语音合成', 'voiceover', 'voice clone',
+      'text-to-speech', 'tts ', '配音', 'Voice', 'voiceover', 'voice clone',
       '语音克隆', 'indextts', 'narration voice',
     ],
   },
   {
     kind: 'music',
     service: 'music generation (音乐生成)',
-    keywords: ['suno', 'music generation', '作曲', '音乐生成', 'bgm generation'],
+    keywords: ['suno', 'music generation', '作曲', 'Music', 'bgm generation'],
   },
   {
     kind: 'sound',
     service: 'sound effects (音效)',
-    keywords: ['sound effects', 'sfx', '音效'],
+    keywords: ['sound effects', 'sfx', 'Sound Effects'],
   },
   {
     kind: 'transcription',
     service: 'transcription via the configured provider (语音转写)',
     keywords: [
       'assemblyai', 'whisper', 'openai transcription', 'deepgram', 'groq transcription',
-      'elevenlabs scribe', 'cartesia ink', 'transcription', '转写',
+      'elevenlabs scribe', 'cartesia ink', 'transcription', 'Transcription',
     ],
   },
   {

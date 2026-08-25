@@ -117,7 +117,7 @@ export async function editCaptions(args: Args, ctx: AgentContext): Promise<Resul
   // ── template: list built-ins (no arg) or apply one — works with captions off ──
   if (action === 'template') {
     const pick = str(args.templatePreset) || str(args.preset);
-    if (!pick) return { ok: true, presets: CAPTION_STYLES.map((p) => ({ id: p.id, name: p.label, nameZh: p.labelZh, styleProfile: p.hint })) };
+    if (!pick) return { ok: true, presets: CAPTION_STYLES.map((p) => ({ id: p.id, name: p.label, styleProfile: p.hint })) };
     if (!isTemplate(pick)) return { error: `unknown caption preset "${pick}"`, presets: CAPTION_STYLES.map((p) => p.id) };
     if (!c) return { error: 'captions are off; action=enable first' };
     ctx.commands.updateCaptions({ template: pick }); // size/position preserved (styleOverride/layout untouched)

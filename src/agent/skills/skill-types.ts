@@ -5,7 +5,6 @@ export interface SkillDefinition {
   id: string;
   slug: string;
   name: string;
-  nameZh: string;
   description: string;
   summary: string;
   scenarios: string[];

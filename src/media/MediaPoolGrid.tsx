@@ -159,8 +159,8 @@ export function MediaPoolGrid(props: MediaPoolGridProps) {
       <MediaVirtualRows {...props} {...windowState} />
       {props.entries.length === 0 && <div className="cc-media-empty">
         {props.assetsCount === 0
-          ? <><Icon name="folder" size={28} /><strong>{t('这个文件夹是空的')}</strong><span>{t('导入媒体或把素材拖到这里。')}</span></>
-          : <span>{t('当前筛选下没有素材')}</span>}
+          ? <><Icon name="folder" size={28} /><strong>{t('This folder is empty')}</strong><span>{t('Import media or drag files here.')}</span></>
+          : <span>{t('No assets match the current filter')}</span>}
       </div>}
     </div>
   );
@@ -181,11 +181,11 @@ function MediaVirtualRows(props: MediaPoolGridProps & ReturnType<typeof useMedia
         }}
       >
         {props.entries.slice(row.startIndex, row.endIndex).map((entry) => entry.kind === 'solid'
-          ? <AddSolidCanvasCard key="solid" label={t('添加纯色背景/画布')} onAdd={() => props.onAddSolid?.()} />
+          ? <AddSolidCanvasCard key="solid" label={t('Add solid background/canvas')} onAdd={() => props.onAddSolid?.()} />
           : entry.kind === 'favorites'
             ? <button key="favorites" type="button" className="cc-folder-card cc-favorites-folder" onClick={props.onOpenFavorites}>
                 <span className="cc-media-entry-thumb"><Icon name="star" size={20} strokeWidth={1.4} /></span>
-                <strong className="cc-media-entry-name">{t('收藏夹')}</strong>
+                <strong className="cc-media-entry-name">{t('Favorites')}</strong>
               </button>
             : entry.kind === 'parent'
               ? <MediaParentFolderCard

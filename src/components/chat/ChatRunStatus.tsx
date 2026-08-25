@@ -41,7 +41,7 @@ export function ChatRunStatus({
                 {liveTool.partial}
               </span>
             )
-            : <span style={{ opacity: 0.8 }}> · {t('正在执行…')}</span>}
+            : <span style={{ opacity: 0.8 }}> · {t('running…')}</span>}
         </span>
       </div>
     )}
@@ -51,7 +51,7 @@ export function ChatRunStatus({
         {streamingThinking ? (
           <>
             <style>{'@keyframes cc-think-glow{0%,100%{opacity:.4}50%{opacity:1}}'}</style>
-            <span style={{ animation: 'cc-think-glow 1.4s ease-in-out infinite' }}>{t('思考中…')}</span>
+            <span style={{ animation: 'cc-think-glow 1.4s ease-in-out infinite' }}>{t('Thinking…')}</span>
           </>
         ) : <>{t(thinkingPhrase(phraseSeed))}…</>}
         <ElapsedTimer startedAt={startedAt} />

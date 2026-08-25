@@ -87,7 +87,7 @@ function acceptFailure(binding: AttachmentImportBinding, token: ChatAttachmentIm
       .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     binding.updateInput((value) => value.replace(new RegExp(`${escaped}\\s?`, 'g'), '').trimStart());
   }
-  binding.setError(reason instanceof Error ? reason.message : binding.t('导入失败'));
+  binding.setError(reason instanceof Error ? reason.message : binding.t('Import failed'));
 }
 
 async function importOne(binding: AttachmentImportBinding, file: File): Promise<void> {
@@ -112,7 +112,7 @@ export function createChatAttachmentImporter(binding: AttachmentImportBinding): 
     const media = files.filter((file) => chatDocumentKind(file) === null && kindOf(file) !== null);
     const unsupported = files.length - documents.length - media.length;
     binding.setError(unsupported > 0
-      ? binding.t('已忽略不支持的文件（仅支持 视频 / 图片 / 音频 / GIF / SVG / md / txt / srt / csv / docx / pdf）')
+      ? binding.t('Unsupported files ignored (only video / image / audio / GIF / SVG / md / txt / srt / csv / docx / pdf)')
       : null);
     const parsed = await readProjectDocumentFiles(documents);
     if (parsed.blocks.length) {

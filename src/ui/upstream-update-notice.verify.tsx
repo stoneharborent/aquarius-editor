@@ -12,8 +12,8 @@ const markup = renderToStaticMarkup(
   <div data-dashboard-chrome>
     <UpstreamUpdateNoticeView
       message="发现 OpenChatCut 新版本 V0.2.0，当前版本 V0.1.9。可以直接下载并安装。"
-      actionLabel="下载更新"
-      closeLabel="关闭"
+      actionLabel="Download update"
+      closeLabel="Close"
       onAction={() => undefined}
       onDismiss={() => undefined}
     />

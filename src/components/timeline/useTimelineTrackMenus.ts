@@ -64,7 +64,7 @@ export function useTimelineTrackMenus({ state, commands, t }: UseTimelineTrackMe
     commands.batch([
       { type: 'updateCaptions', patch: removeManualCue(source, move.laneId, move.index), track: sourceTrackId },
       { type: 'setCaptions', captions: { ...target, ...targetPatch }, track: targetTrackId },
-    ], t('移动字幕'));
+    ], t('Move captions'));
   };
 
   useEffect(() => {

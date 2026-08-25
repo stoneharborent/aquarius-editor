@@ -41,11 +41,11 @@ function VideoSettings({ video, busy, qualityMode, setQualityMode }: VideoSettin
   const t = useT();
   return (
     <>
-      <Row label={t('画质策略')}>
+      <Row label={t('Quality policy')}>
         <Segmented
           options={[
-            { value: 'balanced', label: t('均衡') },
-            { value: 'master', label: t('画质优先') },
+            { value: 'balanced', label: t('Balanced') },
+            { value: 'master', label: t('Master quality') },
           ]}
           value={qualityMode}
           onChange={setQualityMode}
@@ -53,10 +53,10 @@ function VideoSettings({ video, busy, qualityMode, setQualityMode }: VideoSettin
       </Row>
       <p className="cc-export-footnote">
         {qualityMode === 'master'
-          ? t('高清优先预览；导出默认高码率，不主动压缩导入素材。')
-          : t('平衡流畅与体积；预览可用轻量副本，导出默认自动码率。')}
+          ? t('High-quality preview first; export defaults to high bitrate and never optimizes imports for size.')
+          : t('Balance smoothness and size; preview may use lightweight copies and export uses automatic bitrate.')}
       </p>
-      <Row label={t('格式 / 编码')}>
+      <Row label={t('Format / codec')}>
         <select
           className="cc-export-select"
           value={video.codec}
@@ -65,22 +65,22 @@ function VideoSettings({ video, busy, qualityMode, setQualityMode }: VideoSettin
         >
           <option value="h264">MP4 (H.264)</option>
           <option value="vp8">WebM (VP8)</option>
-          <option value="prores">{t('ProRes 422 HQ 母带 (.mov)')}</option>
+          <option value="prores">{t('ProRes 422 HQ mezzanine (.mov)')}</option>
         </select>
       </Row>
       {video.codec === 'prores' && (
         <p className="cc-export-footnote">
-          {t('ProRes 母带体积较大，仅本机渲染；适合调色或交给达芬奇继续剪。网发请用 H.264。')}
+          {t('ProRes mezzanine files are large and server-rendered only. Use them for grading or Resolve handoff; use H.264 for web delivery.')}
         </p>
       )}
-      <Row label={t('分辨率')}>
+      <Row label={t('Resolution')}>
         <Segmented options={EXPORT_RESOLUTION_OPTIONS.map((value) => ({ value, label: resolutionLabel(value) }))} value={video.resolution} onChange={video.setResolution} />
       </Row>
-      <Row label={t('帧率')}>
+      <Row label={t('Frame rate')}>
         <Segmented options={EXPORT_FPS.map((value) => ({ value, label: `${value} fps` }))} value={video.fps} onChange={video.setFps} />
       </Row>
       {video.codec !== 'prores' && (
-        <Row label={t('码率')}>
+        <Row label={t('Bitrate')}>
           <ExportBitrateControl
             mode={video.bitrateMode}
             customMbps={video.customBitrateMbps}
@@ -108,8 +108,8 @@ function QaSettings({ enabled, busy, qa, onToggle }: QaSettingsProps) {
     <>
       <label className="cc-export-toggle cc-export-qa-toggle">
         <span>
-          <strong>{t('导出后自动质量检查')}</strong>
-          <small>{t('检查画面、声音、剪辑点和字幕安全区；临时失败最多自动复检 3 轮。')}</small>
+          <strong>{t('Automatically quality-check after export')}</strong>
+          <small>{t('Checks video, audio, edit points, and caption safe areas; transient failures are retried up to three times.')}</small>
         </span>
         <input type="checkbox" checked={enabled} onChange={(event) => onToggle(event.target.checked)} disabled={busy} />
       </label>
@@ -131,7 +131,7 @@ function VideoTab({ video, busy, qualityMode, setQualityMode, enabled, qa, onTog
 
 function AudioTab() {
   const t = useT();
-  return <InfoCard icon="music" title={t('MP3 音轨')} text={t('提取时间线中的完整混音，视频画面不会写入文件。')} />;
+  return <InfoCard icon="music" title={t('MP3 audio mix')} text={t('Extracts the complete timeline mix without writing video frames.')} />;
 }
 
 function MotionGraphicsTab({ count }: { count: number }) {
@@ -139,10 +139,10 @@ function MotionGraphicsTab({ count }: { count: number }) {
   return (
     <InfoCard
       icon="sparkles"
-      title={count ? t('{n} 个动态图层', { n: count }) : t('没有可导出的动态图层')}
+      title={count ? t('{n} motion layers', { n: count }) : t('No motion layers to export')}
       text={count
-        ? t('逐个生成带透明通道的 ProRes 4444 MOV，方便在其他工程中复用。')
-        : t('先在时间线上添加 MG 动画，再从这里生成透明素材。')}
+        ? t('Creates an alpha ProRes 4444 MOV for each layer so it can be reused in other projects.')
+        : t('Add motion graphics to the timeline before creating transparent assets.')}
     />
   );
 }
@@ -152,17 +152,17 @@ function SubtitlesTab({ state, subtitles }: { state: TimelineState; subtitles: E
   return (
     <>
       {!subtitles.tracks.length && (
-        <InfoCard icon="captions" title={t('字幕轨尚未开启')} text={t('开启字幕并确认内容后，即可下载字幕稿。')} />
+        <InfoCard icon="captions" title={t('Caption track is off')} text={t('Turn captions on and confirm the content before downloading the caption file.')} />
       )}
-      <Row label={t('字幕轨道')}>
+      <Row label={t('Caption track')}>
         <select className="cc-export-select" value={subtitles.trackId} disabled={!subtitles.tracks.length} onChange={(event) => subtitles.setTrackId(event.target.value)}>
           {!subtitles.tracks.length && <option value="">—</option>}
           {subtitles.tracks.map((entry) => <option key={entry.id} value={entry.id}>{trackAlias(state, entry.id)}</option>)}
         </select>
       </Row>
-      <Row label={t('格式')}>
+      <Row label={t('Format')}>
         <Segmented
-          options={[{ value: 'srt', label: 'SubRip (.srt)' }, { value: 'txt', label: '纯文本 (.txt)' }] as const}
+          options={[{ value: 'srt', label: 'SubRip (.srt)' }, { value: 'txt', label: 'Plain text (.txt)' }] as const}
           value={subtitles.format}
           onChange={subtitles.setFormat}
         />
@@ -185,28 +185,28 @@ function XmlTab({ state, nleFormat, includeMg, mgCount, setNleFormat, setInclude
   const backgroundFillCount = fcpxmlBackgroundFillCount(state);
   return (
     <>
-      <InfoCard icon="clipboard" title={t('可继续编辑的工程')} text={t('生成带轨道与素材引用的 FCPXML，交给 Premiere Pro 或达芬奇继续制作。')} />
+      <InfoCard icon="clipboard" title={t('Editable project')} text={t('Creates FCPXML with tracks and media references for continued work in Premiere Pro or DaVinci Resolve.')} />
       {backgroundFillCount > 0 && (
         <InfoCard
           icon="film"
-          title={t('当前 FCPXML 会保留背景参数，但不生成图层')}
-          text={t('OpenChatCut 会把 {n} 个片段的背景填充开关与百分比写入 FCPXML 元数据，但目标剪辑软件不会据此还原模糊图层；如需完全一致，请同时导出成片。', {
+          title={t('FCPXML preserves background parameters but does not generate the layer')}
+          text={t('OpenChatCut writes the background-fill toggle and percentage for {n} clip(s) into FCPXML metadata, but the destination editor will not reconstruct the blurred layer from it. Export a video master as well for an exact visual match.', {
             n: backgroundFillCount,
           })}
         />
       )}
-      <Row label={t('目标软件')}>
+      <Row label={t('Target app')}>
         <Segmented
-          options={[{ value: 'fcp_xml', label: 'Premiere Pro' }, { value: 'fcp_xml_resolve', label: '达芬奇' }] as const}
+          options={[{ value: 'fcp_xml', label: 'Premiere Pro' }, { value: 'fcp_xml_resolve', label: 'DaVinci Resolve' }] as const}
           value={nleFormat}
           onChange={setNleFormat}
         />
       </Row>
       <label className="cc-export-toggle">
-        <span><strong>{t('同时打包动态图层')}</strong><small>{t('额外生成带透明通道的 ProRes 4444 MOV。')}</small></span>
+        <span><strong>{t('Bundle motion layers')}</strong><small>{t('Also creates alpha ProRes 4444 MOV files.')}</small></span>
         <input type="checkbox" checked={includeMg} onChange={(event) => setIncludeMg(event.target.checked)} disabled={mgCount === 0} />
       </label>
-      <p className="cc-export-footnote">{t('导入后，请在剪辑软件中指向原始素材所在文件夹，以重新链接离线片段。')}</p>
+      <p className="cc-export-footnote">{t('After importing, point your NLE at the original media folder to relink offline clips.')}</p>
     </>
   );
 }
@@ -261,7 +261,7 @@ function JianyingTab({ state, base }: { state: TimelineState; base: string }) {
       });
       const data = (await response.json().catch(() => null)) as (JianyingExportOutcome & { ok?: boolean; error?: string }) | null;
       if (!response.ok || !data?.ok) {
-        setError(data?.error ?? t('剪映草稿导出失败'));
+        setError(data?.error ?? t('Failed to create the JianYing draft'));
         return;
       }
       saveJianYingDraftPreference({ store, customDir, draftName: draftName.trim() });
@@ -274,18 +274,18 @@ function JianyingTab({ state, base }: { state: TimelineState; base: string }) {
   };
   return (
     <>
-      <InfoCard icon="video" title={t('生成剪映草稿')}
-        text={t('把时间线上的视频、音轨与字幕写入本地草稿库，用剪映或 CapCut 打开即可继续剪辑。')} />
-      <Row label={t('草稿名称')}>
+      <InfoCard icon="video" title={t('Create a JianYing draft')}
+        text={t('Writes the timeline video, audio and captions into a local draft; open it in JianYing or CapCut to continue editing.')} />
+      <Row label={t('Draft name')}>
         <input className="cc-export-select" value={draftName}
           onChange={(event) => setDraftName(event.target.value)} disabled={busy} />
       </Row>
-      <Row label={t('目标草稿库')}>
+      <Row label={t('Target draft store')}>
         <Segmented
           options={[
-            { value: 'capcut', label: 'CapCut 草稿库' },
-            { value: 'jianying', label: '剪映草稿库' },
-            { value: 'custom', label: t('自定义路径') },
+            { value: 'capcut', label: 'CapCut store' },
+            { value: 'jianying', label: 'JianYing store' },
+            { value: 'custom', label: t('Custom path') },
           ] as const}
           value={store}
           onChange={updateStore}
@@ -293,7 +293,7 @@ function JianyingTab({ state, base }: { state: TimelineState; base: string }) {
       </Row>
       {store === 'jianying' && <p className="cc-export-footnote">{JIANYING_STORE}</p>}
       {store === 'custom' && (
-        <Row label={t('草稿库路径')}>
+        <Row label={t('Draft store path')}>
           <input className="cc-export-select" placeholder="~/Movies/.../com.lveditor.draft"
             value={customDir}
             onChange={(event) => {
@@ -304,16 +304,16 @@ function JianyingTab({ state, base }: { state: TimelineState; base: string }) {
         </Row>
       )}
       <p className="cc-export-footnote">
-        {t('剪映 6.0 起草稿文件已加密，本工具生成明文草稿，建议使用剪映 5.9.0 或更早版本打开；CapCut 国际版不受此限制。')}
+        {t('Draft files are encrypted since JianYing 6.0 and this tool writes plaintext drafts, so use JianYing 5.9.0 or earlier; the international CapCut is unaffected.')}
       </p>
       {error && <p className="cc-export-error" role="alert">{error}</p>}
       {outcome && (
         <div className="cc-export-info">
           <span><Icon name="check" size={19} /></span>
           <div>
-            <strong>{t('草稿已生成')} · {outcome.draftName}</strong>
+            <strong>{t('Draft created')} · {outcome.draftName}</strong>
             <p>
-              {t('{videos} 个视频 · {audios} 个音轨 · {captions} 条字幕', {
+              {t('{videos} videos · {audios} audio tracks · {captions} captions', {
                 videos: outcome.addedVideos,
                 audios: outcome.addedAudios,
                 captions: outcome.captions,
@@ -329,7 +329,7 @@ function JianyingTab({ state, base }: { state: TimelineState; base: string }) {
       )}
       <button type="button" className="cc-export-cta" onClick={() => void run()} disabled={busy}>
         {!busy && <Icon name="download" size={17} />}
-        {busy ? t('正在生成草稿…') : t('导出到剪映')}
+        {busy ? t('Creating draft…') : t('Export to JianYing')}
       </button>
     </>
   );

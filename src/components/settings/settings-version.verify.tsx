@@ -11,7 +11,7 @@ let requested = false;
 const markup = renderToStaticMarkup(
   <SettingsVersionControl
     versionLabel="当前版本号：V0.1.9"
-    actionLabel="下载更新"
+    actionLabel="Download update"
     disabled={false}
     onAction={() => { requested = true; }}
   />,
@@ -23,7 +23,7 @@ assert.doesNotMatch(markup, /自动更新/, '下载必须保留用户确认，�
 
 const element = SettingsVersionControl({
   versionLabel: '当前版本号：V0.1.9',
-  actionLabel: '下载更新',
+  actionLabel: 'Download update',
   disabled: false,
   onAction: () => { requested = true; },
 });

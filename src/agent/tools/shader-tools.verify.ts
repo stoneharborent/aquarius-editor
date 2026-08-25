@@ -51,7 +51,7 @@ assert.strictEqual(stripCodeFences(VALID), VALID, 'no-fence passthrough');
 
 // ── raw properties → FxProperty[] ──
 const props = buildProps([
-  { key: 'amount', label: '强度', default: 5, min: 0, max: 2 }, // default out of range → clamped in
+  { key: 'amount', label: 'Intensity', default: 5, min: 0, max: 2 }, // default out of range → clamped in
   { key: 'bad key!', default: 1 },                              // invalid GLSL ident → filtered
   { key: 'amount', default: 0 },                                // duplicate key → dropped
   { key: 'speed' },                                             // bare → sane defaults
@@ -119,7 +119,7 @@ assert.ok(validateTransitionShaderSource(VALID), 'effect (u_input) shader reject
 assert.ok(validateShaderSource(VALID_TR), 'transition shader rejected by effect validator (unknown samplers)');
 
 // ── buildCustomTransitionDef: custom:tr-* id, verbatim frag, props ──
-const tdef = buildCustomTransitionDef('Swirl Wipe', VALID_TR, [{ key: 'swirl', label: '强度', default: 0.7, min: 0, max: 1 }]);
+const tdef = buildCustomTransitionDef('Swirl Wipe', VALID_TR, [{ key: 'swirl', label: 'Intensity', default: 0.7, min: 0, max: 1 }]);
 assert.ok(tdef.id.startsWith('custom:tr-'), 'custom transition id namespace');
 assert.ok(tdef.id.includes('swirl-wipe'), 'id carries a slug of the name');
 assert.strictEqual(tdef.frag, VALID_TR, 'frag embedded verbatim');

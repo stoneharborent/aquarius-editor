@@ -1,7 +1,7 @@
 import type { RefObject } from 'react';
 import { isSelectionRefKind } from '../../agent/selection-refs';
 import type { SkillDefinition } from '../../agent/skills/skill-types';
-import { localizedCatalogText, tData, useT } from '../../i18n/locale';
+import { tData, useT } from '../../i18n/locale';
 import { theme } from '../../theme';
 import { Icon } from '../icons';
 import { REF_ICON, type RefItem } from './ChatComposerContract';
@@ -17,15 +17,15 @@ function ActiveSkillBadge({ skill, onCancel }: {
   onCancel: () => void;
 }) {
   const t = useT();
-  const name = localizedCatalogText(skill.name, skill.nameZh);
+  const name = t(skill.name);
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 4 }} title={t('当前创作工作流，随消息发送')}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 4 }} title={t('Current creative workflow, sent with the message')}>
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%', fontSize: 11, lineHeight: 1.2, padding: '2px 6px', borderRadius: 999, background: theme.panel, border: `0.5px solid ${theme.accent}`, color: theme.text }}>
         <Icon name="wand" size={12} />
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {t('创作模式：{name}', { name })}
+          {t('Creative mode: {name}', { name })}
         </span>
-        <button type="button" title={t('取消创作模式')} onClick={onCancel}
+        <button type="button" title={t('Exit creative mode')} onClick={onCancel}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.textDim, padding: 0, lineHeight: 0, display: 'grid' }}>
           <Icon name="x" size={11} />
         </button>
@@ -41,13 +41,13 @@ function ReferenceBadges({ references, onRemove }: {
   const t = useT();
   if (references.length === 0) return null;
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 4 }} title={t('发送时以 chat_context_entry 结构化注入')}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 4 }} title={t('Injected as structured chat_context_entry on send')}>
       {references.map((reference) => (
         <span key={reference.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%', fontSize: 11, lineHeight: 1.2, padding: '2px 6px', borderRadius: 999, background: theme.panel, border: `0.5px solid ${theme.borderLight}`, color: theme.text }}>
           <Icon name={REF_ICON[reference.kind]} size={12} />
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{referenceChipText(reference)}</span>
           {onRemove && (
-            <button type="button" title={t('移除引用')} onClick={() => onRemove(reference.id)}
+            <button type="button" title={t('Remove reference')} onClick={() => onRemove(reference.id)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.textDim, padding: 0, lineHeight: 0, display: 'grid' }}>
               <Icon name="x" size={11} />
             </button>
@@ -78,7 +78,7 @@ function ImportStatus({ pending, reason, error, onDismiss }: {
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: theme.accent, minWidth: 0 }}>
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{error}</span>
           {onDismiss && (
-            <button type="button" title={t('关闭')} onClick={onDismiss}
+            <button type="button" title={t('Close')} onClick={onDismiss}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.accent, padding: 0, lineHeight: 0, display: 'grid', flexShrink: 0 }}>
               <Icon name="x" size={11} />
             </button>
@@ -118,7 +118,7 @@ function SlashSkillRow({ skill, index, activeIndex, selected, onActivate, onHove
   onHover: (index: number) => void;
 }) {
   const t = useT();
-  const name = localizedCatalogText(skill.name, skill.nameZh);
+  const name = t(skill.name);
   return (
     <button type="button" onClick={() => onActivate(skill)} onMouseEnter={() => onHover(index)}
       onMouseLeave={() => { if (activeIndex === index) onHover(-1); }}
@@ -152,8 +152,8 @@ function SlashResults(props: {
     return (
       <div style={{ fontSize: 12, color: theme.textDim, padding: '6px 10px' }}>
         {props.explicit
-          ? t('未知技能“{query}”，按 / 查看全部创作工作流', { query: props.query.trim() })
-          : t('没有匹配“{query}”的创作工作流', { query: props.query.trim() })}
+          ? t('Unknown skill “{query}” — type / to see all creative workflows', { query: props.query.trim() })
+          : t('No creative workflow matches “{query}”', { query: props.query.trim() })}
       </div>
     );
   }
@@ -180,16 +180,16 @@ export function ComposerSlashPopover(props: {
   const t = useT();
   return (
     <ComposerPopover width={props.width} className="cc-chat-popover--workflow"
-      ariaLabel={t('技能命令补全')} anchor={props.anchor} onClose={props.onClose}>
+      ariaLabel={t('Skill command completion')} anchor={props.anchor} onClose={props.onClose}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 12px 6px' }}>
         <Icon name="wand" size={14} />
-        <strong style={{ fontSize: 12.5 }}>{props.explicit ? t('技能命令') : t('创作工作流')}</strong>
+        <strong style={{ fontSize: 12.5 }}>{props.explicit ? t('Skill command') : t('Creative workflows')}</strong>
         <code style={{ marginLeft: 'auto', fontSize: 10.5, color: theme.textDim }}>{props.value}</code>
       </div>
       <div ref={props.listRef} style={{ maxHeight: 264, overflowY: 'auto', padding: '2px 6px 8px' }}>
         <SlashResults {...props} />
         <div style={{ fontSize: 10, color: theme.textDim, padding: '6px 10px 2px', letterSpacing: 0.4 }}>
-          {t('Tab / Enter 补全并激活 · Esc 退出')}
+          {t('Tab / Enter completes and activates · Esc exits')}
         </div>
       </div>
     </ComposerPopover>

@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { AddSolidCanvasCard } from './AddSolidCanvasCard';
 
 const markup = renderToStaticMarkup(
-  <AddSolidCanvasCard label="添加纯色背景/画布" onAdd={() => undefined} />,
+  <AddSolidCanvasCard label="Add solid background/canvas" onAdd={() => undefined} />,
 );
 
 assert.match(

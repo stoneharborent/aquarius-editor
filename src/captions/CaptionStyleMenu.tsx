@@ -51,7 +51,7 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
   /** Save current captions look as a user preset (edit_captions preset_save). */
   const confirmSave = async (name: string) => {
     const captions = current;
-    if (!captions) { onError(t('请先启用字幕并选择样式')); return; }
+    if (!captions) { onError(t('Enable captions and choose a style first')); return; }
     if (!name.trim()) return;
     try {
       const preset: CaptionPreset = {
@@ -67,7 +67,7 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
       onError(null);
       setNameDraft(null);
     } catch (e) {
-      onError(e instanceof Error ? e.message : t('保存样式失败'));
+      onError(e instanceof Error ? e.message : t('Failed to save style'));
     }
   };
   const removePreset = async (id: string) => {
@@ -75,7 +75,7 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
       await deleteCaptionPreset(id);
       setPresets(await listCaptionPresets());
     } catch (e) {
-      onError(e instanceof Error ? e.message : t('删除样式失败'));
+      onError(e instanceof Error ? e.message : t('Failed to delete style'));
     }
   };
   const applyPreset = (preset: CaptionPreset) => {
@@ -93,7 +93,7 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
   const translate = async (lang: string) => {
     if (busy) return;
     const captions = captionsForTrack(state, trackId);
-    if (!captions) { onError(t('该轨道还没有可翻译的文字稿，请先完成转写')); return; }
+    if (!captions) { onError(t('This track has no transcript to translate yet — finish transcription first')); return; }
     setBusy(true);
     onError(null);
     try {
@@ -103,25 +103,25 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
       else commands.setCaptions({ ...captions, ...patch }, trackId);
       onClose();
     } catch (err) {
-      onError(err instanceof Error ? err.message : t('字幕翻译失败'));
+      onError(err instanceof Error ? err.message : t('Caption translation failed'));
     } finally { setBusy(false); }
   };
 
   const backToParent = onBack ?? onClose;
   if (translateOpen) return (
     <div className="cc-caption-style-menu" style={{ position: 'fixed', left: pos.left, top: pos.top }} onPointerDown={(e) => e.stopPropagation()}>
-      <MenuDrillHeader title={t('翻译')} onBack={() => initialTranslateOpen ? backToParent() : setTranslateOpen(false)} />
+      <MenuDrillHeader title={t('translation')} onBack={() => initialTranslateOpen ? backToParent() : setTranslateOpen(false)} />
       <div className="cc-caption-language-menu is-drill">
         {CAPTION_LANGS.map((lang) => <button type="button" key={lang} disabled={busy} onClick={() => void translate(lang)}>{lang}</button>)}
       </div>
-      {busy && <div className="cc-caption-style-status">{t('翻译中...')}</div>}
+      {busy && <div className="cc-caption-style-status">{t('Translating...')}</div>}
       {error && <div className="cc-caption-style-error">{error}</div>}
     </div>
   );
 
   return (
     <div className="cc-caption-style-menu" style={{ position: 'fixed', left: pos.left, top: pos.top }} onPointerDown={(e) => e.stopPropagation()}>
-      <MenuDrillHeader title={t('字幕样式')} onBack={backToParent} />
+      <MenuDrillHeader title={t('Caption styles')} onBack={backToParent} />
       <div className="cc-caption-style-list">
         {CAPTION_STYLES.map((style) => {
           return (
@@ -133,7 +133,7 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
         })}
         {presets.length > 0 && (
           <>
-            <div className="cc-caption-style-title" style={{ marginTop: 4 }}>{t('我的样式')}</div>
+            <div className="cc-caption-style-title" style={{ marginTop: 4 }}>{t('My styles')}</div>
             {presets.map((p) => (
               <button key={p.id} type="button" onClick={() => applyPreset(p)}>
                 <span className="cc-caption-style-swatch" style={{ background: '#292929', color: '#fff' }}>★</span>
@@ -141,7 +141,7 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
                 <span
                   className="cc-caption-preset-del"
                   role="button"
-                  title={t('删除此预设')}
+                  title={t('Delete this preset')}
                   onClick={(e) => { e.stopPropagation(); void removePreset(p.id); }}
                 >✕</span>
               </button>
@@ -154,30 +154,30 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
           <input
             autoFocus
             value={nameDraft}
-            placeholder={t('预设名称')}
+            placeholder={t('Preset name')}
             onChange={(e) => setNameDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') void confirmSave(nameDraft);
               else if (e.key === 'Escape') setNameDraft(null);
             }}
           />
-          <button type="button" onClick={() => void confirmSave(nameDraft)}>{t('保存')}</button>
-          <button type="button" title={t('取消')} onClick={() => setNameDraft(null)}>✕</button>
+          <button type="button" onClick={() => void confirmSave(nameDraft)}>{t('Save')}</button>
+          <button type="button" title={t('Cancel')} onClick={() => setNameDraft(null)}>✕</button>
         </div>
       ) : (
         <button
           type="button"
           className="cc-caption-style-save"
           disabled={!current}
-          title={current ? t('把当前模板/覆盖样式保存为用户预设') : t('请先启用字幕')}
+          title={current ? t('Save the current template/style override as a user preset') : t('Enable captions first')}
           onClick={() => setNameDraft(`我的样式 ${new Date().toLocaleDateString()}`)}
         >
-          {t('＋ 保存当前样式...')}
+          {t('＋ Save current style...')}
         </button>
       )}
       <div className="cc-caption-translate-wrap">
         <button type="button" className="cc-caption-translate" disabled={busy} onClick={() => setTranslateOpen(true)} aria-expanded={translateOpen}>
-          <span>{t('文A')}</span><span>{busy ? t('翻译中...') : t('翻译字幕')}</span><span>›</span>
+          <span>{t('Aa')}</span><span>{busy ? t('Translating...') : t('Translate captions')}</span><span>›</span>
         </button>
       </div>
       {error && <div className="cc-caption-style-error">{error}</div>}

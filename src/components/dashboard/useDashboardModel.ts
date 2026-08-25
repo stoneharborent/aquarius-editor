@@ -57,10 +57,10 @@ const thumbKey = (project: ProjectMeta) => project.updatedAt + THUMB_RENDER_VERS
 
 export function relativeProjectTime(ms: number, translate: Translate): string {
   const seconds = Math.max(0, Math.floor((Date.now() - ms) / 1000));
-  if (seconds < 60) return translate('刚刚');
-  if (seconds < 3600) return translate('{n} 分钟前', { n: Math.floor(seconds / 60) });
-  if (seconds < 86400) return translate('{n} 小时前', { n: Math.floor(seconds / 3600) });
-  return translate('{n} 天前', { n: Math.floor(seconds / 86400) });
+  if (seconds < 60) return translate('Just now');
+  if (seconds < 3600) return translate('{n} min ago', { n: Math.floor(seconds / 60) });
+  if (seconds < 86400) return translate('{n} hr ago', { n: Math.floor(seconds / 3600) });
+  return translate('{n} d ago', { n: Math.floor(seconds / 86400) });
 }
 
 async function renderProjectPoster(project: ProjectMeta): Promise<string | null> {
@@ -150,9 +150,9 @@ function useProjectTransfer(onImport: DashboardProps['onImport']): TransferModel
   const fileRef = useRef<HTMLInputElement>(null);
   const run = async (work: Promise<string>) => {
     setBusy(true);
-    setNote(translate('处理中…'));
+    setNote(translate('Processing…'));
     try { setNote(await work); }
-    catch (error) { setNote(translate('失败:{error}', { error: error instanceof Error ? error.message : String(error) })); }
+    catch (error) { setNote(translate('Failed: {error}', { error: error instanceof Error ? error.message : String(error) })); }
     finally { setBusy(false); }
   };
   const pickImport = (event: ChangeEvent<HTMLInputElement>) => {

@@ -37,7 +37,7 @@ assert.equal(new Set(SKINS.map((s) => s.id)).size, SKINS.length, '皮肤 id 唯�
 assert.ok(SKINS.some((s) => s.id === DEFAULT_SKIN), '默认皮肤必须在注册表里');
 for (const s of SKINS) {
   assert.ok(/^[a-z]+$/.test(s.id), `${s.id}: id 小写字母`);
-  assert.ok(s.nameZh.trim().length > 0, `${s.id}: 有中文名`);
+  assert.ok(s.name.trim().length > 0, `${s.id}: 有中文名`);
   assert.match(s.tokens.accentRgb, /^\d{1,3},\d{1,3},\d{1,3}$/, `${s.id}: accentRgb 三元组`);
   assert.match(s.tokens.inkRgb, /^\d{1,3},\d{1,3},\d{1,3}$/, `${s.id}: inkRgb 三元组`);
   assert.match(s.tokens.shadowRgb, /^\d{1,3},\d{1,3},\d{1,3}$/, `${s.id}: shadowRgb 三元组`);

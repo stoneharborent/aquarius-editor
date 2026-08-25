@@ -136,7 +136,7 @@ async function verifyUnsupportedBrowserReportsPickerError(): Promise<void> {
   await assert.rejects(
     () => chooseExportDestination('clip.mp4'),
     (error) => error instanceof ExportDestinationError
-      && error.key === '当前浏览器不支持选择导出目录，请使用 Chrome、Edge 或桌面版',
+      && error.key === 'This browser does not support choosing an export folder. Use Chrome, Edge, or the desktop app.',
   );
 }
 
@@ -381,8 +381,8 @@ try {
   assert.equal(DEFAULT_EXPORT_DESTINATION.type, 'downloads');
   assert.equal(
     exportDestinationErrorMessage(
-      new ExportDestinationError('读取导出文件失败（HTTP {status}）', { status: 404 }),
-      (key, params) => key === '读取导出文件失败（HTTP {status}）'
+      new ExportDestinationError('Reading the exported file failed (HTTP {status}).', { status: 404 }),
+      (key, params) => key === 'Reading the exported file failed (HTTP {status}).'
         ? `Reading failed (${params?.status})`
         : key,
     ),

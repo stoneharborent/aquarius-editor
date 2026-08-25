@@ -27,12 +27,12 @@ export function ComposerModelPicker({ anchor, onClose, view }: {
   return (
     <ComposerPopover width={278} anchor={anchor} onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 10.5, color: theme.textDim, padding: '4px 8px 6px' }}>
-        <span>{t('本条对话使用的模型')}</span>
+        <span>{t('Model used for this chat')}</span>
         <span title={view.contextTitle} style={{ fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{view.contextLabel}</span>
       </div>
       {view.modelState.choices.length === 0 && (
         <div style={{ padding: '7px 9px 9px', color: theme.textDim, fontSize: 11.5, lineHeight: 1.5 }}>
-          {view.modelState.loaded ? t('请先在设置中配置一个模型厂商。') : t('正在读取模型配置…')}
+          {view.modelState.loaded ? t('Configure at least one model provider in Settings first.') : t('Loading model configuration…')}
         </div>
       )}
       {view.modelState.choices.map((choice) => {

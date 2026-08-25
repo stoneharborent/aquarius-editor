@@ -49,7 +49,7 @@ function markCancelled(context: ExportRunContext): void {
     retryable: false,
     cleanupStatus: 'succeeded',
     targetPath: context.targetPath,
-    message: context.t('已取消导出'),
+    message: context.t('Export cancelled'),
   });
   context.setFailure(failure);
   context.setError(failure.message);
@@ -57,7 +57,7 @@ function markCancelled(context: ExportRunContext): void {
     ...current,
     phase: 'cancelled',
     finishedAt: Date.now(),
-    detail: context.t('已取消导出'),
+    detail: context.t('Export cancelled'),
   } : current);
 }
 
@@ -73,7 +73,7 @@ async function runExport(context: ExportRunContext): Promise<void> {
   const startedAt = Date.now();
   context.setClock(startedAt);
   context.setProgress({ phase: 'preparing', percent: 0, startedAt });
-  context.setBusy(context.t('准备导出…'));
+  context.setBusy(context.t('Preparing export…'));
   try {
     context.signal.throwIfAborted();
     const mediaSnapshot = context.options.project

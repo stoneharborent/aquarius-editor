@@ -9,10 +9,10 @@ const txt = (t: string): DisplayMessage => ({ role: 'assistant', text: t });
 
 // 20× edit_gap 夹在文本与另一工具之间 → 折成一个 toolgroup,前后各自成行
 const msgs: DisplayMessage[] = [
-  txt('开始'),
+  txt('Start'),
   ...Array.from({ length: 20 }, (_, i) => tool('edit_gap', 'g' + i)),
   tool('read_timeline'),
-  txt('完成'),
+  txt('Done'),
 ];
 const items = groupMessages(msgs);
 assert.deepStrictEqual(items.map((it) => it.kind), ['single', 'toolgroup', 'single', 'single'], '20 连续 edit_gap 折成 1 组,文本/其它工具各自成行');

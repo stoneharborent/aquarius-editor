@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { SOUND_EFFECTS, SOUND_GROUPS } from '../audio/soundLibrary';
-import { EN } from '../i18n/dict/en';
+import { ZH } from '../i18n/dict/zh/ui';
 import { ZH_DATA } from '../i18n/dict/zh';
 
 const missingNames = SOUND_EFFECTS
@@ -14,20 +14,20 @@ assert.deepEqual(
   'every built-in sound effect must have a Chinese display name',
 );
 
-const mismatchedGroupNames = SOUND_GROUPS
-  .filter((group) => EN[group.name] !== group.nameEn)
+const untranslatedGroupNames = SOUND_GROUPS
+  .filter((group) => group.name !== group.nameEn || !ZH[group.name])
   .map((group) => group.name);
 
 assert.deepEqual(
-  mismatchedGroupNames,
+  untranslatedGroupNames,
   [],
-  'every sound group must have an English display name',
+  'every sound group name must be the English source string and have a Chinese translation',
 );
 
 const browserSource = readFileSync(new URL('./SoundBrowser.tsx', import.meta.url), 'utf8');
 
 assert.match(browserSource, /\{t\(g\.name\)\}/, 'sound group chips must render through the active locale');
-assert.doesNotMatch(browserSource, /\{g\.name\}/, 'sound group chips must not render the Chinese data name directly');
+assert.doesNotMatch(browserSource, /\{g\.name\}/, 'sound group chips must not render the raw data name directly');
 assert.match(browserSource, /tData\(s\.name\)/, 'Chinese sound names must participate in search');
 assert.match(browserSource, /const displayName = tData\(sound\.name\)/, 'sound rows must derive a localized display name');
 assert.match(browserSource, /cc-sound-name[^>]*>\{displayName\}/, 'sound rows must render the localized display name');

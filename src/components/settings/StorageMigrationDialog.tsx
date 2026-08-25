@@ -82,14 +82,14 @@ export function StorageMigrationDialog({ onClose }: { onClose: () => void }) {
     try {
       const body = await runStorageMigrationRequest();
       if (body.status?.phase !== 'complete' || !body.status.receipt || body.status.enabled !== true) {
-        setError(body.status?.error ?? t('迁移尚未完成，仍在使用 JSON 文件目录'));
+        setError(body.status?.error ?? t('Migration is not complete; the JSON file directory remains active'));
         setStatus(body.status ?? await loadMigrationStatus());
         return;
       }
-      setResult(t('已迁移 {imported} 个数据键，跳过 {skipped} 个', {
+      setResult(t('Migrated {imported} entries, skipped {skipped}', {
         imported: body.summary?.imported ?? 0,
         skipped: body.summary?.skipped ?? 0,
-      }) + t('，今后项目将默认使用 SQLite 存储工程数据'));
+      }) + t(', and new projects will now use SQLite by default'));
       setStatus(body.status);
       // Emit completion only after the authoritative SQLite receipt is visible.
       window.dispatchEvent(new Event(STORAGE_MIGRATED_EVENT));
@@ -107,7 +107,7 @@ export function StorageMigrationDialog({ onClose }: { onClose: () => void }) {
     setError(null);
     try {
       const body = await cleanupLegacyJson();
-      setResult(t('已清理 {removed} 个旧 JSON 文件', { removed: body.removed }));
+      setResult(t('Removed {removed} old JSON files', { removed: body.removed }));
       setCleanupOpen(false);
       setCleanupConfirmed(false);
       setStatus(await loadMigrationStatus());
@@ -123,33 +123,33 @@ export function StorageMigrationDialog({ onClose }: { onClose: () => void }) {
       <div style={panel} onMouseDown={(e) => e.stopPropagation()}>
         <div style={head}>
           <span style={{ color: theme.accent, display: 'inline-flex' }}><Icon name="database" size={15} /></span>
-          <b style={title}>{t('数据存储')}</b>
-          <span style={sub}>{t('工程数据存储方式')}</span>
-          <button type="button" onClick={onClose} style={miniBtn} title={t('关闭')}>✕</button>
+          <b style={title}>{t('Data storage')}</b>
+          <span style={sub}>{t('Project data storage')}</span>
+          <button type="button" onClick={onClose} style={miniBtn} title={t('Close')}>✕</button>
         </div>
 
         <div style={body}>
           {status && (
             <div>
               <div style={stateRow}>
-                <span style={stateLabel}>{t('当前存储')}</span>
+                <span style={stateLabel}>{t('Current storage')}</span>
                 <b style={{ ...stateValue, color: migrated ? theme.success : undefined }}>
-                  {migrated ? t('SQLite 数据库') : t('JSON 文件目录')}
+                  {migrated ? t('SQLite database') : t('JSON file directory')}
                 </b>
               </div>
               <div style={stateRow}>
-                <span style={stateLabel}>{t('本地数据键')}</span>
+                <span style={stateLabel}>{t('Local data entries')}</span>
                 <span style={stateValue}>{status.jsonKeyCount}</span>
               </div>
               {status.receipt && (
                 <div style={stateRow}>
-                  <span style={stateLabel}>{t('迁移时间')}</span>
+                  <span style={stateLabel}>{t('Migrated at')}</span>
                   <span>{new Date(status.receipt.importedAt).toLocaleString()}</span>
                 </div>
               )}
               {status.sqliteKeyCount > 0 && (
                 <div style={stateRow}>
-                  <span style={stateLabel}>{t('SQLite 键数')}</span>
+                  <span style={stateLabel}>{t('SQLite entries')}</span>
                   <span>{status.sqliteKeyCount}</span>
                 </div>
               )}
@@ -157,9 +157,9 @@ export function StorageMigrationDialog({ onClose }: { onClose: () => void }) {
           )}
 
           <div style={notice}>
-            {t('迁移后，工程数据保存到单一 SQLite 数据库文件：写入更可靠（事务）、加载更快、支持全文搜索。原始 JSON 文件将【只读保留】，旧版本、回滚与数据救援始终可用。')}
+            {t('After migration, project data lives in a single SQLite database: transactional writes, faster loads and full-text search. The original JSON files stay read-only, so older versions, rollbacks and data rescue always work.')}
             <div style={warnLine}>
-              {t('迁移后新编辑写入 SQLite；如需回滚到旧版本，迁移后新增的编辑不会出现在旧版本中。')}
+              {t('New edits go to SQLite after migration; if you roll back to an older version, edits made after migration will not appear there.')}
             </div>
           </div>
 
@@ -168,7 +168,7 @@ export function StorageMigrationDialog({ onClose }: { onClose: () => void }) {
         </div>
 
         <div style={footer}>
-          <button type="button" style={secondaryBtn} onClick={onClose}>{t('关闭')}</button>
+          <button type="button" style={secondaryBtn} onClick={onClose}>{t('Close')}</button>
           {!migrated && (
             <button
               type="button"
@@ -176,7 +176,7 @@ export function StorageMigrationDialog({ onClose }: { onClose: () => void }) {
               disabled={busy}
               onClick={() => { void migrate(); }}
             >
-              {busy ? t('迁移中…') : t('迁移到 SQLite')}
+              {busy ? t('Migrating…') : t('Migrate to SQLite')}
             </button>
           )}
           {migrated && (status?.jsonKeyCount ?? 0) > 0 && (
@@ -186,7 +186,7 @@ export function StorageMigrationDialog({ onClose }: { onClose: () => void }) {
                 style={secondaryBtn}
                 onClick={() => setCleanupOpen((open) => !open)}
               >
-                {t('清理旧 JSON 数据（{n} 个文件）', { n: status?.jsonKeyCount ?? 0 })}
+                {t('Clean up old JSON data ({n} files)', { n: status?.jsonKeyCount ?? 0 })}
               </button>
               {cleanupOpen && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -196,7 +196,7 @@ export function StorageMigrationDialog({ onClose }: { onClose: () => void }) {
                       checked={cleanupConfirmed}
                       onChange={(e) => setCleanupConfirmed(e.target.checked)}
                     />
-                    {t('我确认已迁移完成，且不需要回滚到旧版本（删除后旧版本软件将看到空数据）')}
+                    {t('I confirm the migration is complete and I do not need to roll back to the old version (old versions will see empty data after deletion)')}
                   </label>
                   <button
                     type="button"
@@ -204,7 +204,7 @@ export function StorageMigrationDialog({ onClose }: { onClose: () => void }) {
                     disabled={!cleanupConfirmed || cleanupBusy}
                     onClick={() => { void cleanup(); }}
                   >
-                    {cleanupBusy ? t('清理中…') : t('确认清理')}
+                    {cleanupBusy ? t('Cleaning up…') : t('Confirm cleanup')}
                   </button>
                 </div>
               )}

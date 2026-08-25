@@ -26,12 +26,12 @@ function ModelSetupCard({ onOpen }: { onOpen: () => void }) {
     <section role="status" style={modelSetupCard}>
       <span style={modelSetupIcon}><Icon name="sparkles" size={18} /></span>
       <span style={{ flex: 1, minWidth: 0 }}>
-        <strong style={{ display: 'block', color: theme.textStrong, fontSize: 13.5 }}>{t('配置模型后开始使用 Agent')}</strong>
+        <strong style={{ display: 'block', color: theme.textStrong, fontSize: 13.5 }}>{t('Configure a model to start using the Agent')}</strong>
         <span style={{ display: 'block', marginTop: 3, color: theme.textDim, fontSize: 11.5, lineHeight: 1.5 }}>
-          {t('配置任一云端或本地模型，即可在编辑器中使用对话式剪辑。')}
+          {t('Configure any cloud or local model to use conversational editing in the editor.')}
         </span>
       </span>
-      <button type="button" onClick={onOpen} style={modelSetupButton}>{t('配置模型')}</button>
+      <button type="button" onClick={onOpen} style={modelSetupButton}>{t('Configure Model')}</button>
     </section>
   );
 }
@@ -43,8 +43,8 @@ function ProjectSearch({ value, onChange }: { value: string; onChange: (value: s
       <span style={searchIcon}><Icon name="search" size={13} /></span>
       <input
         type="search"
-        aria-label={t('搜索工程')}
-        placeholder={t('搜索工程')}
+        aria-label={t('Search projects')}
+        placeholder={t('Search projects')}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={(event) => { if (event.key === 'Escape') onChange(''); }}
@@ -52,7 +52,7 @@ function ProjectSearch({ value, onChange }: { value: string; onChange: (value: s
         spellCheck={false}
         style={searchInput}
       />
-      {value && <button type="button" onClick={() => onChange('')} aria-label={t('清除搜索')} style={searchClear}><Icon name="x" size={12} /></button>}
+      {value && <button type="button" onClick={() => onChange('')} aria-label={t('Clear search')} style={searchClear}><Icon name="x" size={12} /></button>}
     </label>
   );
 }
@@ -63,15 +63,15 @@ export function DashboardTitlebarContent({ model }: { model: DashboardModel }) {
     <>
       <BrandMark size={20} />
       <OpenChatCutWordmark />
-      <span style={{ color: theme.textDim, fontSize: 13 }}>{t('· 我的工程')}</span>
+      <span style={{ color: theme.textDim, fontSize: 13 }}>{t('· My Projects')}</span>
       <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
         <DashboardHeaderLinks />
-        <button onClick={() => model.setDialog('mcp', true)} data-tip={t('外部 Agent 接入 (MCP)')} aria-label={t('外部 Agent 接入 (MCP)')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="plug" size={16} /></button>
-        <button onClick={() => model.setDialog('shortcuts', true)} data-tip={t('编辑快捷键')} aria-label={t('编辑快捷键')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="keyboard" size={16} /></button>
+        <button onClick={() => model.setDialog('mcp', true)} data-tip={t('External agents (MCP)')} aria-label={t('External agents (MCP)')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="plug" size={16} /></button>
+        <button onClick={() => model.setDialog('shortcuts', true)} data-tip={t('Edit keyboard shortcuts')} aria-label={t('Edit keyboard shortcuts')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="keyboard" size={16} /></button>
         <LocaleToggle />
         <SkinPicker />
-        <button onClick={() => model.setDialog('storage', true)} data-tip={t('数据存储')} aria-label={t('数据存储')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="database" size={16} /></button>
-        <button onClick={() => model.setDialog('settings', true)} data-tip={t('设置 · API 密钥')} aria-label={t('设置 · API 密钥')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="sliders" size={16} /></button>
+        <button onClick={() => model.setDialog('storage', true)} data-tip={t('Data storage')} aria-label={t('Data storage')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="database" size={16} /></button>
+        <button onClick={() => model.setDialog('settings', true)} data-tip={t('Settings · API Keys')} aria-label={t('Settings · API Keys')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="sliders" size={16} /></button>
       </span>
     </>
   );
@@ -81,17 +81,17 @@ function ProjectToolbar({ projects, model }: { projects: ProjectMeta[]; model: D
   const t = useT();
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-      <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>{t('工程')}</h1>
+      <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>{t('Projects')}</h1>
       {model.transfer.note && <span style={{ color: theme.textDim, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{model.transfer.note}</span>}
       <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
         <ProjectSearch value={model.query} onChange={model.setQuery} />
-        <button onClick={() => model.setDialog('cleanup', true)} style={importBtn} title={t('清理所有工程都不引用的上传素材(测试/已删工程残留)')}><Icon name="trash" size={13} /> {t('清理素材')}</button>
-        <button onClick={() => model.transfer.fileRef.current?.click()} disabled={model.transfer.busy} style={importBtn} title={t('导入 .ccproj 工程文件(兼容旧 .ccproj.json)')}><Icon name="upload" size={13} /> {t('导入工程')}</button>
+        <button onClick={() => model.setDialog('cleanup', true)} style={importBtn} title={t('Clean up uploaded assets no project references (leftovers from tests/deleted projects)')}><Icon name="trash" size={13} /> {t('Clean Up Media')}</button>
+        <button onClick={() => model.transfer.fileRef.current?.click()} disabled={model.transfer.busy} style={importBtn} title={t('Import a .ccproj project file (legacy .ccproj.json is also supported)')}><Icon name="upload" size={13} /> {t('Import Project')}</button>
         <input ref={model.transfer.fileRef} type="file" accept=".ccproj,.json,application/json,application/x-openchatcut-project" onChange={model.transfer.pickImport} style={{ display: 'none' }} />
         <span style={{ color: theme.textDim, fontSize: 12.5 }}>
           {model.normalizedQuery
-            ? t('{n} / {total} 个', { n: model.visibleProjects.length, total: projects.length })
-            : t('{n} 个', { n: projects.length })}
+            ? t('{n} of {total}', { n: model.visibleProjects.length, total: projects.length })
+            : t('{n} total', { n: projects.length })}
         </span>
       </span>
     </div>
@@ -113,7 +113,7 @@ function ProjectName({ project, model }: { project: ProjectMeta; model: Dashboar
       style={nameInput}
     />;
   }
-  return <div onDoubleClick={() => model.rename.start(project)} title={t('双击重命名')} style={{ fontSize: 13, fontWeight: 550, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.name}</div>;
+  return <div onDoubleClick={() => model.rename.start(project)} title={t('Double-click to rename')} style={{ fontSize: 13, fontWeight: 550, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.name}</div>;
 }
 
 function ProjectActions({ project, props, model }: { project: ProjectMeta; props: DashboardProps; model: DashboardModel }) {
@@ -121,20 +121,20 @@ function ProjectActions({ project, props, model }: { project: ProjectMeta; props
   if (model.rename.confirmId === project.id) {
     return <button
       onClick={() => {
-        void model.transfer.run(props.onDelete(project.id).then(() => t('已永久删除「{name}」', { name: project.name })));
+        void model.transfer.run(props.onDelete(project.id).then(() => t('Permanently deleted “{name}”', { name: project.name })));
         model.rename.setConfirmId(null);
       }}
       disabled={model.transfer.busy}
       style={{ ...miniBtn, color: theme.danger }}
-      title={t('彻底删除工程,并清掉只有它引用的素材文件')}
-    >{t('确认删除')}</button>;
+      title={t('Permanently delete this project and purge assets only it references')}
+    >{t('Confirm Delete')}</button>;
   }
   return (
     <>
-      <button onClick={() => model.rename.start(project)} style={miniBtn} title={t('重命名')}><Icon name="pencil" size={13} /></button>
-      <button onClick={() => props.onDuplicate(project.id)} style={miniBtn} title={t('复制')}><Icon name="copy" size={13} /></button>
-      <button onClick={() => void model.transfer.run(props.onExport(project.id, project.name))} disabled={model.transfer.busy} style={miniBtn} title={t('导出为流式 .ccproj(含素材,可在桌面版/其它机器导入)')}><Icon name="download" size={13} /></button>
-      <button onClick={() => model.rename.setConfirmId(project.id)} style={miniBtn} title={t('删除')}><Icon name="trash" size={13} /></button>
+      <button onClick={() => model.rename.start(project)} style={miniBtn} title={t('Rename')}><Icon name="pencil" size={13} /></button>
+      <button onClick={() => props.onDuplicate(project.id)} style={miniBtn} title={t('Copy')}><Icon name="copy" size={13} /></button>
+      <button onClick={() => void model.transfer.run(props.onExport(project.id, project.name))} disabled={model.transfer.busy} style={miniBtn} title={t('Export as streaming .ccproj (with assets; importable on another machine)')}><Icon name="download" size={13} /></button>
+      <button onClick={() => model.rename.setConfirmId(project.id)} style={miniBtn} title={t('Delete')}><Icon name="trash" size={13} /></button>
     </>
   );
 }
@@ -143,7 +143,7 @@ function ProjectCard({ project, props, model }: { project: ProjectMeta; props: D
   const t = useT();
   return (
     <div style={card}>
-      <button onClick={() => props.onOpen(project.id)} style={thumb} title={t('打开 {name}', { name: project.name })}>
+      <button onClick={() => props.onOpen(project.id)} style={thumb} title={t('Open {name}', { name: project.name })}>
         {model.thumbs[project.id]
           ? <img src={model.thumbs[project.id]} alt="" draggable={false} loading="lazy" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
           : <span style={{ color: theme.borderLight, display: 'inline-flex' }}><Icon name="play" size={26} /></span>}
@@ -164,14 +164,14 @@ function ProjectGrid({ props, model }: { props: DashboardProps; model: Dashboard
   return (
     <>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(232px, 1fr))', alignItems: 'start', gap: 16 }}>
-        <button onClick={props.onNew} style={newCard} title={t('新建工程')}>
+        <button onClick={props.onNew} style={newCard} title={t('New Project')}>
           <span style={{ fontSize: 30, color: theme.textDim, lineHeight: 1 }}>＋</span>
-          <span style={{ fontSize: 13, color: theme.textDim }}>{t('新建工程')}</span>
+          <span style={{ fontSize: 13, color: theme.textDim }}>{t('New Project')}</span>
         </button>
         {model.visibleProjects.map((project) => <ProjectCard key={project.id} project={project} props={props} model={model} />)}
       </div>
       {model.normalizedQuery && model.visibleProjects.length === 0 && (
-        <div role="status" style={searchEmpty}><Icon name="search" size={14} />{t('没有找到匹配“{query}”的工程', { query: model.query.trim() })}</div>
+        <div role="status" style={searchEmpty}><Icon name="search" size={14} />{t('No projects match “{query}”', { query: model.query.trim() })}</div>
       )}
     </>
   );

@@ -100,8 +100,8 @@ async function uploadFileSimple(
     onProgress(Math.min(1, event.loaded / event.total));
   };
   xhr.onload = () => settleSimpleUpload(xhr, file, plan, onProgress, resolve, reject);
-  xhr.onerror = () => reject(new Error(t('上传失败 ({status})', { status: 0 })));
-  xhr.onabort = () => reject(new Error(t('上传已取消')));
+  xhr.onerror = () => reject(new Error(t('Upload failed ({status})', { status: 0 })));
+  xhr.onabort = () => reject(new Error(t('Upload canceled')));
   xhr.send(file);
   return promise;
 }
@@ -125,8 +125,8 @@ function settleSimpleUpload(
   }
   const message = responseError(safeJson(xhr.responseText));
   reject(new Error(message ?? (xhr.status === 413
-    ? t('文件过大，无法上传')
-    : t('上传失败 ({status})', { status: xhr.status }))));
+    ? t('File too large to upload')
+    : t('Upload failed ({status})', { status: xhr.status }))));
 }
 
 function safeJson(value: string): unknown {
@@ -150,14 +150,14 @@ function putPresigned(file: File, uploadUrl: string, onProgress?: UploadProgress
   };
   xhr.onload = () => {
     if (xhr.status < 200 || xhr.status >= 300) {
-      reject(new Error(t('上传失败 ({status})', { status: xhr.status })));
+      reject(new Error(t('Upload failed ({status})', { status: xhr.status })));
       return;
     }
     onProgress?.(1);
     resolve();
   };
-  xhr.onerror = () => reject(new Error(t('上传失败 ({status})', { status: 0 })));
-  xhr.onabort = () => reject(new Error(t('上传已取消')));
+  xhr.onerror = () => reject(new Error(t('Upload failed ({status})', { status: 0 })));
+  xhr.onabort = () => reject(new Error(t('Upload canceled')));
   xhr.send(file);
   return promise;
 }
@@ -208,14 +208,14 @@ async function startMultipart(file: File): Promise<MultipartSession> {
   const info: unknown = await response.json().catch(() => null);
   const error = responseError(info);
   if (!response.ok) {
-    if (response.status === 413) throw new Error(error ?? t('文件过大，无法上传'));
-    throw new Error(error ?? t('上传失败 ({status})', { status: response.status }));
+    if (response.status === 413) throw new Error(error ?? t('File too large to upload'));
+    throw new Error(error ?? t('Upload failed ({status})', { status: response.status }));
   }
   if (!info || typeof info !== 'object' || !('uploadId' in info)
     || !('partSize' in info) || !('partCount' in info)
     || typeof info.uploadId !== 'string' || typeof info.partSize !== 'number'
     || typeof info.partCount !== 'number') {
-    throw new Error(t('上传失败 ({status})', { status: response.status }));
+    throw new Error(t('Upload failed ({status})', { status: response.status }));
   }
   return { uploadId: info.uploadId, partSize: info.partSize, partCount: info.partCount };
 }
@@ -259,10 +259,10 @@ async function completeMultipart(session: MultipartSession): Promise<UploadedMed
   });
   const value = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(responseError(value) ?? t('上传失败 ({status})', { status: response.status }));
+    throw new Error(responseError(value) ?? t('Upload failed ({status})', { status: response.status }));
   }
   const location = uploadedMediaLocation(value);
-  if (!location) throw new Error(t('上传失败 ({status})', { status: response.status }));
+  if (!location) throw new Error(t('Upload failed ({status})', { status: response.status }));
   return location;
 }
 
@@ -290,7 +290,7 @@ export async function retryExpiredMultipartSession<T>(attempt: () => Promise<T>)
   try {
     return await attempt();
   } catch (error) {
-    if (isExpiredMultipartSessionError(error)) throw new Error(t('上传会话已失效，请重新导入'));
+    if (isExpiredMultipartSessionError(error)) throw new Error(t('Upload session expired; re-import'));
     throw error;
   }
 }

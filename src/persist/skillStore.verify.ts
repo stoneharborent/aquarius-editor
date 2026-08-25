@@ -40,7 +40,6 @@ const seed: CustomSkill = {
   id: 'skill_seed',
   slug: 'skill_seed',
   name: 'Seed',
-  nameZh: 'Seed',
   description: 's',
   summary: 's',
   scenarios: ['a'],

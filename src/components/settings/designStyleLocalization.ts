@@ -56,16 +56,16 @@ const PRESET_GUIDE_ZH: Record<string, string> = {
 };
 
 const ROLE_ZH: Record<string, string> = {
-  primary: '主色',
-  secondary: '辅色',
-  accent: '强调色',
-  background: '背景',
-  text: '文字',
+  primary: 'Primary',
+  secondary: 'Secondary',
+  accent: 'Accent',
+  background: 'Background',
+  text: 'Text',
   'text secondary': '次要文字',
   'text-secondary': '次要文字',
   'text-on-dark': '深色背景文字',
-  heading: '标题字体',
-  body: '正文字体',
+  heading: 'Heading font',
+  body: 'Body font',
   quote: '引用字体',
   display: '展示字体',
   'display number': '数字展示字体',

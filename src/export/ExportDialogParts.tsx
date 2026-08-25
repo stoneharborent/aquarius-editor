@@ -26,17 +26,17 @@ export function InfoCard({ icon, title, text }: { icon: IconName; title: string;
 }
 
 const QA_ISSUE_LABELS: Record<string, string> = {
-  missing_video: '成片缺少视频轨',
-  duration_mismatch: '成片时长与时间线不一致',
-  resolution_mismatch: '成片分辨率与导出设置不一致',
-  fps_mismatch: '成片帧率与导出设置不一致',
-  missing_audio: '成片缺少应有的音频轨',
-  black_frames: '检测到异常黑帧',
-  frozen_frames: '检测到较长静帧',
-  long_silence: '检测到较长静音',
-  audio_peak: '音频峰值接近削波',
-  caption_safe_area_horizontal: '字幕越出横向安全区',
-  caption_safe_area_vertical: '字幕越出纵向安全区',
+  missing_video: 'The export is missing a video stream',
+  duration_mismatch: 'The export duration does not match the timeline',
+  resolution_mismatch: 'The export resolution does not match the settings',
+  fps_mismatch: 'The export frame rate does not match the settings',
+  missing_audio: 'The export is missing the expected audio stream',
+  black_frames: 'Unexpected black frames detected',
+  frozen_frames: 'A long frozen span was detected',
+  long_silence: 'A long silent span was detected',
+  audio_peak: 'Audio peaks are close to clipping',
+  caption_safe_area_horizontal: 'Captions cross the horizontal safe area',
+  caption_safe_area_vertical: 'Captions cross the vertical safe area',
 };
 
 function qaIssueLabel(issue: ExportQaIssue, translate: ReturnType<typeof useT>): string {
@@ -49,13 +49,13 @@ function qaIssueLabel(issue: ExportQaIssue, translate: ReturnType<typeof useT>):
 export function ExportQaCard({ qa }: { qa: ExportQaUiState }) {
   const t = useT();
   if (qa.status === 'running') {
-    return <div className="cc-export-qa-card running"><strong>{t('正在自动检查成片…')}</strong></div>;
+    return <div className="cc-export-qa-card running"><strong>{t('Automatically checking the exported video…')}</strong></div>;
   }
   if (qa.status === 'error') {
     return (
       <div className="cc-export-qa-card error">
-        <strong>{t('自动质量检查未完成')}</strong>
-        <p>{t('成片仍会正常下载；你可以稍后重新导出复检。')} {qa.message}</p>
+        <strong>{t('Automatic quality check did not finish')}</strong>
+        <p>{t('The video will still download normally; export it again later to recheck it.')} {qa.message}</p>
       </div>
     );
   }
@@ -63,13 +63,13 @@ export function ExportQaCard({ qa }: { qa: ExportQaUiState }) {
   return (
     <div className={`cc-export-qa-card ${qa.status}`}>
       <div className="cc-export-qa-summary">
-        <strong>{qa.status === 'passed' ? t('自动质量检查通过') : t('自动质量检查发现问题')}</strong>
-        <span>{t('{errors} 个错误 · {warnings} 个警告', {
+        <strong>{qa.status === 'passed' ? t('Automatic quality check passed') : t('Automatic quality check found issues')}</strong>
+        <span>{t('{errors} errors · {warnings} warnings', {
           errors: report.summary.errors,
           warnings: report.summary.warnings,
         })}</span>
       </div>
-      {qa.attempts > 1 && <p>{t('第 {n} 轮检查完成', { n: qa.attempts })}</p>}
+      {qa.attempts > 1 && <p>{t('Check completed on attempt {n}', { n: qa.attempts })}</p>}
       {report.issues.length > 0 && (
         <ul>
           {report.issues.map((issue, index) => (
@@ -81,8 +81,8 @@ export function ExportQaCard({ qa }: { qa: ExportQaUiState }) {
       )}
       {qa.evidenceUrl && (
         <details>
-          <summary>{t('查看剪辑点前后对照图')}</summary>
-          <img src={qa.evidenceUrl} alt={t('剪辑点前后画面对照')} />
+          <summary>{t('View before/after edit-point evidence')}</summary>
+          <img src={qa.evidenceUrl} alt={t('Before/after edit-point frame comparison')} />
         </details>
       )}
     </div>

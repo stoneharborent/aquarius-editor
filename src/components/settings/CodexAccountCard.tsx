@@ -50,18 +50,18 @@ function StatusSummary({ state, controller }: {
 }) {
   const t = useT();
   const status = controller.status;
-  const signedInDetail = t('凭据与续期均由 Codex CLI 管理。');
+  const signedInDetail = t('Credentials and renewal are managed by the Codex CLI.');
   const copy: Record<AccountState, readonly [string, string]> = {
-    loading: [t('正在检查 Codex CLI…'), t('正在读取本机 Codex 运行时状态。')],
-    missing: [t('未检测到 Codex CLI'), t('请先安装 OpenAI Codex CLI，然后刷新状态。')],
-    'signed-out': [t('尚未登录 ChatGPT'), t('通过 Codex 官方登录流程连接 ChatGPT 订阅。')],
-    pending: [t('等待 ChatGPT 授权'), t('请在登录页面完成授权，完成后会自动刷新。')],
-    'signed-in': [t('已登录 ChatGPT'), signedInDetail],
+    loading: [t('Checking Codex CLI…'), t('Reading the local Codex runtime status.')],
+    missing: [t('Codex CLI was not found'), t('Install the OpenAI Codex CLI, then refresh the status.')],
+    'signed-out': [t('Not signed in to ChatGPT'), t('Connect a ChatGPT subscription through the official Codex sign-in flow.')],
+    pending: [t('Waiting for ChatGPT authorization'), t('Finish authorization on the sign-in page. This status will refresh automatically.')],
+    'signed-in': [t('Signed in to ChatGPT'), signedInDetail],
     'api-key': [
-      t('Codex CLI 正在使用 API Key'),
-      t('此页面仅启用 ChatGPT 订阅；API Key 请使用 OpenAI 厂商页。'),
+      t('Codex CLI is using an API key'),
+      t('This page enables ChatGPT subscriptions only. Use the OpenAI provider page for API keys.'),
     ],
-    error: [t('Codex 暂时不可用'), controller.error ?? status?.error ?? t('请刷新后重试。')],
+    error: [t('Codex is temporarily unavailable'), controller.error ?? status?.error ?? t('Refresh and try again.')],
   };
   const [title, detail] = copy[state];
   const tone = state === 'signed-in' ? theme.success
@@ -87,28 +87,28 @@ function AccountMetadata({ status }: { status: CodexAgentStatus }) {
   return (
     <div style={metadata}>
       {account.email && <span title={account.email}>{account.email}</span>}
-      {account.planType && <span>{t('套餐：{plan}', { plan: account.planType })}</span>}
+      {account.planType && <span>{t('Plan: {plan}', { plan: account.planType })}</span>}
     </div>
   );
 }
 
 function LoginDetails({ login }: { login: CodexLoginStartResponse | null }) {
   const t = useT();
-  if (!login) return <div style={pendingNote}>{t('请在先前打开的 Codex 登录窗口中完成授权。')}</div>;
+  if (!login) return <div style={pendingNote}>{t('Finish authorization in the Codex sign-in window you opened earlier.')}</div>;
   if (login.type === 'chatgpt') {
     const authUrl = safeHttpsUrl(login.authUrl);
     return authUrl
-      ? <ValueRow label={t('登录地址')} value={authUrl} href={authUrl} />
-      : <div role="alert" style={errorText}>{t('Codex 返回了无效的登录地址。')}</div>;
+      ? <ValueRow label={t('Sign-in URL')} value={authUrl} href={authUrl} />
+      : <div role="alert" style={errorText}>{t('Codex returned an invalid sign-in URL.')}</div>;
   }
   const verificationUrl = safeHttpsUrl(login.verificationUrl);
   if (!verificationUrl) {
-    return <div role="alert" style={errorText}>{t('Codex 返回了无效的验证地址。')}</div>;
+    return <div role="alert" style={errorText}>{t('Codex returned an invalid verification URL.')}</div>;
   }
   return (
     <div style={loginDetails}>
-      <ValueRow label={t('验证地址')} value={verificationUrl} href={verificationUrl} />
-      <ValueRow label={t('设备代码')} value={login.userCode} prominent />
+      <ValueRow label={t('Verification URL')} value={verificationUrl} href={verificationUrl} />
+      <ValueRow label={t('Device code')} value={login.userCode} prominent />
     </div>
   );
 }
@@ -135,38 +135,38 @@ function ActionRow({ state, controller, onLoadModels }: {
   const t = useT();
   const busy = controller.loginBusy || controller.logoutBusy || controller.loading || controller.modelBusy;
   if (state === 'loading' || state === 'missing' || state === 'error') {
-    return <div style={actions}><ActionButton disabled={busy} onClick={() => { void controller.refresh(); }}>{controller.loading ? t('刷新中…') : t('刷新状态')}</ActionButton></div>;
+    return <div style={actions}><ActionButton disabled={busy} onClick={() => { void controller.refresh(); }}>{controller.loading ? t('Refreshing…') : t('Refresh status')}</ActionButton></div>;
   }
   if (state === 'signed-in') {
     return (
       <div style={actions}>
-        <ActionButton primary disabled={busy} onClick={onLoadModels}>{controller.modelBusy ? t('读取中…') : t('读取模型')}</ActionButton>
-        <ActionButton disabled={busy} onClick={() => { void controller.refresh(); }}>{controller.loading ? t('刷新中…') : t('刷新状态')}</ActionButton>
-        <ActionButton danger disabled={busy} onClick={() => { void controller.logout(); }}>{controller.logoutBusy ? t('正在退出…') : t('退出登录')}</ActionButton>
+        <ActionButton primary disabled={busy} onClick={onLoadModels}>{controller.modelBusy ? t('Loading…') : t('Load models')}</ActionButton>
+        <ActionButton disabled={busy} onClick={() => { void controller.refresh(); }}>{controller.loading ? t('Refreshing…') : t('Refresh status')}</ActionButton>
+        <ActionButton danger disabled={busy} onClick={() => { void controller.logout(); }}>{controller.logoutBusy ? t('Signing out…') : t('Sign out')}</ActionButton>
       </div>
     );
   }
   if (state === 'api-key') {
     return (
       <div style={actions}>
-        <ActionButton disabled={busy} onClick={() => { void controller.refresh(); }}>{controller.loading ? t('刷新中…') : t('刷新状态')}</ActionButton>
-        <ActionButton danger disabled={busy} onClick={() => { void controller.logout(); }}>{controller.logoutBusy ? t('正在退出…') : t('退出登录')}</ActionButton>
+        <ActionButton disabled={busy} onClick={() => { void controller.refresh(); }}>{controller.loading ? t('Refreshing…') : t('Refresh status')}</ActionButton>
+        <ActionButton danger disabled={busy} onClick={() => { void controller.logout(); }}>{controller.logoutBusy ? t('Signing out…') : t('Sign out')}</ActionButton>
       </div>
     );
   }
   if (state === 'pending') {
     return (
       <div style={actions}>
-        <ActionButton danger disabled={busy} onClick={() => { void controller.cancelLogin(); }}>{t('取消登录')}</ActionButton>
-        <ActionButton disabled={busy} onClick={() => { void controller.refresh(); }}>{controller.loading ? t('刷新中…') : t('刷新状态')}</ActionButton>
+        <ActionButton danger disabled={busy} onClick={() => { void controller.cancelLogin(); }}>{t('Cancel sign-in')}</ActionButton>
+        <ActionButton disabled={busy} onClick={() => { void controller.refresh(); }}>{controller.loading ? t('Refreshing…') : t('Refresh status')}</ActionButton>
       </div>
     );
   }
   return (
     <div style={actions}>
-      <ActionButton primary disabled={busy} onClick={() => { void controller.startLogin('chatgpt'); }}>{controller.loginBusy ? t('正在启动…') : t('浏览器登录')}</ActionButton>
-      <ActionButton disabled={busy} onClick={() => { void controller.startLogin('chatgptDeviceCode'); }}>{t('使用设备代码')}</ActionButton>
-      <ActionButton disabled={busy} onClick={() => { void controller.refresh(); }}>{controller.loading ? t('刷新中…') : t('刷新状态')}</ActionButton>
+      <ActionButton primary disabled={busy} onClick={() => { void controller.startLogin('chatgpt'); }}>{controller.loginBusy ? t('Starting…') : t('Sign in with browser')}</ActionButton>
+      <ActionButton disabled={busy} onClick={() => { void controller.startLogin('chatgptDeviceCode'); }}>{t('Use device code')}</ActionButton>
+      <ActionButton disabled={busy} onClick={() => { void controller.refresh(); }}>{controller.loading ? t('Refreshing…') : t('Refresh status')}</ActionButton>
     </div>
   );
 }
@@ -200,7 +200,7 @@ function CopyButton({ value }: { value: string }) {
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setState('idle'), COPY_FEEDBACK_MS);
   };
-  const label = state === 'copied' ? t('已复制') : state === 'failed' ? t('复制失败') : t('复制');
+  const label = state === 'copied' ? t('Copied') : state === 'failed' ? t('Copy failed') : t('Copy');
   return (
     <button type="button" onClick={() => { void copy(); }} title={label} aria-label={label} style={copyButton}>
       <Icon name={state === 'copied' ? 'check' : 'copy'} size={11} />

@@ -12,8 +12,8 @@ export function CaptionMotionControls({ value, onChange }: CaptionMotionControls
   const selected = value ?? 'none';
   return (
     <div className="cc-cap-field">
-      <div className="cc-cap-label">{t('字幕动效')}</div>
-      <div className="cc-cap-pills" role="listbox" aria-label={t('字幕动效')}>
+      <div className="cc-cap-label">{t('Caption motion')}</div>
+      <div className="cc-cap-pills" role="listbox" aria-label={t('Caption motion')}>
         {CAPTION_MOTION_OPTIONS.map((option) => (
           <button
             key={option.id}
@@ -27,7 +27,7 @@ export function CaptionMotionControls({ value, onChange }: CaptionMotionControls
           </button>
         ))}
       </div>
-      <p className="cc-cap-hint">{t('动效按时间线帧计算，预览与导出保持一致。')}</p>
+      <p className="cc-cap-hint">{t('Motion is timeline-frame driven, so preview and export stay aligned.')}</p>
     </div>
   );
 }

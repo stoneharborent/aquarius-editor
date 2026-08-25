@@ -27,12 +27,12 @@ export function ApprovalDetails({
       ))}
       {operationId && (
         <div style={{ color: theme.textDim, fontFamily: mono, fontSize: 10.5, overflowWrap: 'anywhere' }}>
-          {t('操作 ID')} {operationId}
+          {t('Operation ID')} {operationId}
         </div>
       )}
       {argsDigest && (
         <div style={{ color: theme.textDim, fontFamily: mono, fontSize: 10.5, overflowWrap: 'anywhere' }}>
-          {t('参数摘要')} {argsDigest}
+          {t('Args digest')} {argsDigest}
         </div>
       )}
     </div>

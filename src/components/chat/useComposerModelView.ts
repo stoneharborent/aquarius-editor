@@ -65,7 +65,7 @@ export function useComposerModelView(
     ? `${usedEstimated ? '~' : ''}${compactTokens(used)} / ${limitEstimated ? '~' : ''}${compactTokens(limit)}`
     : '';
   const breakdown = contextUsage && usageMatchesModel && contextUsage.systemTokens !== undefined
-    ? t('系统 {system} · 工具 {tools}（{toolCount} 个）· 历史 {history}', {
+    ? t('System {system} · tools {tools} ({toolCount}) · history {history}', {
         system: `≈${compactTokens(contextUsage.systemTokens)}`,
         tools: `≈${compactTokens(contextUsage.toolSchemaTokens ?? 0)}`,
         toolCount: String(contextUsage.toolCount ?? 0),
@@ -73,16 +73,16 @@ export function useComposerModelView(
       })
     : '';
   const cache = contextUsage && usageMatchesModel && contextUsage.cacheReadTokens !== undefined
-    ? t('缓存读取 {tokens}', { tokens: compactTokens(contextUsage.cacheReadTokens) })
+    ? t('Cache read {tokens}', { tokens: compactTokens(contextUsage.cacheReadTokens) })
     : '';
   const contextSummary = activeModel
-    ? t('上下文：{used} / {limit}', {
+    ? t('Context: {used} / {limit}', {
         used: `${usedEstimated ? '≈' : ''}${compactTokens(used)}`,
         limit: `${limitEstimated ? '≈' : ''}${compactTokens(limit)}`,
       })
-    : t('选择模型');
+    : t('Choose model');
   const warning = contextNearLimit
-    ? t('上下文接近上限，发送后可能自动压缩较早对话。')
+    ? t('Context is near its limit; sending may compact earlier conversation.')
     : '';
   const contextTitle = [contextSummary, warning, breakdown, cache].filter(Boolean).join('\n');
   return {

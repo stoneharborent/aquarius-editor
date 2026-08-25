@@ -201,10 +201,10 @@ function AssetThumbArea(props: MediaAssetCardProps) {
       <button
         className="cc-asset-thumb"
         title={missing
-          ? t('点击重新链接')
+          ? t('Click to relink')
           : t(isTimelineMediaAssetKind(asset.kind)
-            ? '单击选中，双击加入时间线，或拖到指定轨道：{name}'
-            : '单击选中，或拖到 AI 对话框：{name}', { name: asset.name })}
+            ? 'Click to select, double-click to add to the timeline, or drag to a specific track: {name}'
+            : 'Click to select, or drag into the AI chat: {name}', { name: asset.name })}
         style={missing ? undefined : { cursor: 'grab' }}
         onClick={() => { if (missing && props.canRelink) props.onRelink(asset.id); }}
       >
@@ -239,7 +239,7 @@ function MissingMedia() {
   return (
     <span style={{ display: 'grid', placeItems: 'center', gap: 4, color: theme.textMuted, fontSize: 11, padding: 8, textAlign: 'center' }}>
       <Icon name="swap" size={22} />
-      {t('点击重新链接')}
+      {t('Click to relink')}
     </span>
   );
 }
@@ -252,44 +252,44 @@ function AssetBadges(props: MediaAssetCardProps) {
     <>
       {asset.kind === 'audio' && <span className="cc-asset-audio-mark"><Icon name="volume" size={13} strokeWidth={1.4} /></span>}
       {(asset.kind === 'gif' || asset.kind === 'svg') && <span className="cc-asset-audio-mark cc-asset-kind-mark">{asset.kind.toUpperCase()}</span>}
-      {props.used && <span className="cc-asset-used-dot" title={t('正在时间线中使用')} aria-label={t('正在时间线中使用')} />}
+      {props.used && <span className="cc-asset-used-dot" title={t('Used on a timeline')} aria-label={t('Used on a timeline')} />}
       {aspectLabel && <span className="cc-asset-ratio">{aspectLabel}</span>}
       {isTimelineMediaAssetKind(asset.kind) && <span className="cc-asset-duration">{durationLabel(asset.durationInFrames, props.fps)}</span>}
       <button
         type="button"
         className="cc-asset-favorite"
         aria-pressed={!!asset.favorite}
-        aria-label={`${asset.favorite ? t('取消收藏') : t('收藏')}：${asset.name}`}
-        title={asset.favorite ? t('取消收藏') : t('收藏')}
+        aria-label={`${asset.favorite ? t('Unfavorite') : t('Favorite')}：${asset.name}`}
+        title={asset.favorite ? t('Unfavorite') : t('Favorite')}
         onClick={(event) => {
           event.stopPropagation();
           props.onSetFavorite(asset.id, !asset.favorite);
         }}
       ><Icon name="star" size={14} strokeWidth={1.35} filled={!!asset.favorite} /></button>
-      <button className="cc-asset-more" aria-label={t('管理 {name}', { name: asset.name })} onClick={(event) => {
+      <button className="cc-asset-more" aria-label={t('Manage {name}', { name: asset.name })} onClick={(event) => {
         event.stopPropagation();
         props.onOpenMenu(asset.id, event.currentTarget);
       }}><Icon name="more" size={17} /></button>
       {props.onTranscribe && assetCanTranscribe(asset.kind, asset.transcribeStatus) && <button
         className="cc-asset-transcribe"
-        aria-label={asset.transcribeStatus === 'failed' ? t('重新转写：{name}', { name: asset.name }) : t('转写：{name}', { name: asset.name })}
-        title={asset.transcribeStatus === 'failed' ? t('重新转写') : t('转写')}
+        aria-label={asset.transcribeStatus === 'failed' ? t('Retranscribe: {name}', { name: asset.name }) : t('Transcribe: {name}', { name: asset.name })}
+        title={asset.transcribeStatus === 'failed' ? t('Retranscribe') : t('Transcription')}
         onClick={(event) => {
           event.stopPropagation();
           props.onTranscribe?.(asset.id);
         }}
       ><Icon name="mic" size={14} strokeWidth={1.5} /></button>}
-      {asset.transcribeStatus === 'running' && <span className="cc-asset-transcribe-status" title={t('正在转写…')}><span className="cc-asset-transcribe-spinner" /></span>}
+      {asset.transcribeStatus === 'running' && <span className="cc-asset-transcribe-status" title={t('Transcribing…')}><span className="cc-asset-transcribe-spinner" /></span>}
       {asset.transcribeStatus === 'done' && <button
         className="cc-asset-transcribe-status cc-asset-transcribe-done"
-        aria-label={t('查看文字稿：{name}', { name: asset.name })}
-        title={props.onOpenTranscript ? t('查看文字稿') : t('已转写')}
+        aria-label={t('View transcript: {name}', { name: asset.name })}
+        title={props.onOpenTranscript ? t('View transcript') : t('Transcribed')}
         onClick={(event) => {
           event.stopPropagation();
           props.onOpenTranscript?.(asset.id);
         }}
       ><Icon name="check" size={14} strokeWidth={2.2} /></button>}
-      {asset.transcribeStatus === 'failed' && <span className="cc-asset-transcribe-status cc-asset-transcribe-failed" title={asset.transcribeError ?? t('转写失败')}>!</span>}
+      {asset.transcribeStatus === 'failed' && <span className="cc-asset-transcribe-status cc-asset-transcribe-failed" title={asset.transcribeError ?? t('Transcription failed')}>!</span>}
     </>
   );
 }
@@ -387,7 +387,7 @@ function FolderDropTarget({
         <button
           type="button"
           className="cc-asset-more cc-folder-more"
-          aria-label={t('文件夹菜单')}
+          aria-label={t('Folder menu')}
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
@@ -439,8 +439,8 @@ export const MediaParentFolderCard = memo(function MediaParentFolderCard({
   const t = useT();
   return (
     <FolderDropTarget
-      label={t('上一层')}
-      ariaLabel={t('返回上级：{name}（可拖入素材移回）', { name: parentName })}
+      label={t('Up one level')}
+      ariaLabel={t('Back to {name} (drop assets here to move them up)', { name: parentName })}
       className="cc-folder-card cc-parent-folder"
       icon="prev"
       targetFolderId={parentId}

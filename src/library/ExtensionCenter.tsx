@@ -65,7 +65,7 @@ function useRegistry(query: string, category: Category, locale: Locale) {
   const entries = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
     return registry.filter((entry) => {
-      if (category !== '全部' && !entry.categories.includes(category)) return false;
+      if (category !== 'All' && !entry.categories.includes(category)) return false;
       return !needle || `${entry.name} ${entry.description ?? ''} ${entry.author ?? ''}`.toLocaleLowerCase().includes(needle);
     });
   }, [registry, query, category]);
@@ -81,7 +81,7 @@ function useExtensionActions(onInstalled: () => void) {
     void task.then((result) => {
       setBusyId(null);
       if (result.ok) {
-        setStatus({ ok: true, text: t('已安装「{name}」', { name: result.pack.name }) });
+        setStatus({ ok: true, text: t('Installed "{name}"', { name: result.pack.name }) });
         onInstalled();
         return;
       }
@@ -115,18 +115,18 @@ function CenterHeader({ tab, installedCount, onTab, onClose, showLocalInstall, o
   return (
     <header style={{ borderBottom: `0.5px solid ${theme.border}`, padding: '11px 14px 0' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-        <button type="button" onClick={onClose} aria-label={t('返回资源库')} style={{ ...secondaryButton(), padding: 4, display: 'grid', placeItems: 'center' }}><Icon name="prev" size={14} /></button>
+        <button type="button" onClick={onClose} aria-label={t('Back to library')} style={{ ...secondaryButton(), padding: 4, display: 'grid', placeItems: 'center' }}><Icon name="prev" size={14} /></button>
         <div style={{ minWidth: 0 }}>
-          <div style={{ color: theme.textStrong, fontSize: 14, fontWeight: 700 }}>{t('扩展中心')}</div>
-          <div style={{ color: theme.textDim, fontSize: 10.5 }}>{t('发现、管理并分享创意扩展包')}</div>
+          <div style={{ color: theme.textStrong, fontSize: 14, fontWeight: 700 }}>{t('Extension Center')}</div>
+          <div style={{ color: theme.textDim, fontSize: 10.5 }}>{t('Discover, manage, and share creative extension packs')}</div>
         </div>
         <span style={{ flex: 1 }} />
-        {tab === '发现' && <button type="button" onClick={onLocalInstall} style={secondaryButton()}>{t(showLocalInstall ? '收起安装' : '安装')}</button>}
+        {tab === 'Discover' && <button type="button" onClick={onLocalInstall} style={secondaryButton()}>{t(showLocalInstall ? 'Hide install' : 'Install')}</button>}
       </div>
       <nav style={{ display: 'flex', gap: 18, marginTop: 11 }}>
         {CENTER_TABS.map((item) => (
           <button key={item} type="button" onClick={() => onTab(item)} style={{ background: 'none', border: 'none', borderBottom: `2px solid ${tab === item ? theme.accent : 'transparent'}`, color: tab === item ? theme.textStrong : theme.textDim, padding: '0 1px 7px', fontSize: 11.5, fontWeight: tab === item ? 650 : 500, cursor: 'pointer' }}>
-            {t(item)}{item === '已安装' && installedCount > 0 ? ` ${installedCount}` : ''}
+            {t(item)}{item === 'Installed' && installedCount > 0 ? ` ${installedCount}` : ''}
           </button>
         ))}
       </nav>
@@ -138,15 +138,15 @@ export function ExtensionCenter({ onClose }: ExtensionCenterProps) {
   const t = useT();
   const locale = getLocale();
   const packs = usePluginPacks();
-  const [tab, setTab] = useState<CenterTab>('发现');
-  const [category, setCategory] = useState<Category>('全部');
+  const [tab, setTab] = useState<CenterTab>('Discover');
+  const [category, setCategory] = useState<Category>('All');
   const [query, setQuery] = useState('');
   const [showLocalInstall, setShowLocalInstall] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const registry = useRegistry(query, category, locale);
   const actions = useExtensionActions(() => {
-    setTab('已安装');
+    setTab('Installed');
     setShowLocalInstall(false);
   });
   return (
@@ -154,9 +154,9 @@ export function ExtensionCenter({ onClose }: ExtensionCenterProps) {
       <CenterHeader tab={tab} installedCount={packs.length} onTab={setTab} onClose={onClose} showLocalInstall={showLocalInstall} onLocalInstall={() => setShowLocalInstall((value) => !value)} />
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 14 }}>
         {actions.status && <div style={{ marginBottom: 10, padding: '7px 9px', border: `0.5px solid ${actions.status.ok ? theme.success : theme.danger}`, borderRadius: 3, background: theme.panelAlt, color: actions.status.ok ? theme.text : theme.danger, fontSize: 11 }}>{actions.status.text}</div>}
-        {tab === '发现' && registry.syncFailed && <div style={{ marginBottom: 10, color: theme.textDim, fontSize: 10.5 }}>{t('官网资源暂时不可用，正在显示上次同步内容。')}</div>}
-        {tab === '发现' && <ExtensionDiscover entries={registry.entries} packs={packs} busyId={actions.busyId} showLocalInstall={showLocalInstall} query={query} category={category} onQuery={setQuery} onCategory={setCategory} onInstall={actions.runInstall} />}
-        {tab === '已安装' && (
+        {tab === 'Discover' && registry.syncFailed && <div style={{ marginBottom: 10, color: theme.textDim, fontSize: 10.5 }}>{t('Official resources are temporarily unavailable. Showing the last synced content.')}</div>}
+        {tab === 'Discover' && <ExtensionDiscover entries={registry.entries} packs={packs} busyId={actions.busyId} showLocalInstall={showLocalInstall} query={query} category={category} onQuery={setQuery} onCategory={setCategory} onInstall={actions.runInstall} />}
+        {tab === 'Installed' && (
           <ExtensionInstalled
             packs={packs}
             busyId={actions.busyId}
@@ -164,8 +164,8 @@ export function ExtensionCenter({ onClose }: ExtensionCenterProps) {
             confirmId={confirmId}
             onExpand={setExpandedId}
             onConfirm={setConfirmId}
-            onToggle={(pack) => actions.runAction(pack.id, setPackEnabled(pack.id, !pack.enabled), pack.enabled ? t('已停用「{name}」', { name: pack.name }) : t('已启用「{name}」', { name: pack.name }))}
-            onRemove={(pack) => actions.runAction(pack.id, removePack(pack.id), t('已卸载「{name}」', { name: pack.name }), () => {
+            onToggle={(pack) => actions.runAction(pack.id, setPackEnabled(pack.id, !pack.enabled), pack.enabled ? t('Disabled "{name}"', { name: pack.name }) : t('Enabled "{name}"', { name: pack.name }))}
+            onRemove={(pack) => actions.runAction(pack.id, removePack(pack.id), t('Uninstalled "{name}"', { name: pack.name }), () => {
               setConfirmId(null);
               setExpandedId(null);
             })}

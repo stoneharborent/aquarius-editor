@@ -1,21 +1,27 @@
-// Language status + t(): The original Chinese text is the key (no additional key namespace is created),
-// if the active-language dictionary cannot be found, it will fall back to Chinese.
-// Never go blank. Switch persistence localStorage('cc.locale'), subscription rerendering (useSyncExternalStore).
-// Rules: Use useT() (subscription switching) in React components; pure helper modules can directly import { t }
-//  — As long as the component that renders its output calls useT(), it will be recalculated when switching languages.
-// LLM interface (systemPrompt/tool ​​description/skill content) and persistent dynamic history tags do not enter i18n.
-// Default language: the saved choice wins; otherwise the system language (zh/ru), and English for everything else.
+// Language state + t(): the English source string is the key (no separate key namespace),
+// so an untranslated locale always falls back to readable English — never a blank string.
+// The choice is persisted in localStorage('cc.locale') and re-renders subscribers through
+// useSyncExternalStore.
+// Rules: use useT() inside React components (it subscribes to language switches); plain helper
+//  modules may import { t } directly — as long as the component rendering their output calls
+//  useT(), the text is recomputed when the language changes.
+// LLM surfaces (systemPrompt / tool descriptions / skill bodies) and persisted dynamic history
+// labels stay out of i18n.
+// Default language: the saved choice wins; otherwise the system language (zh/it/ru), and English
+// for everything else.
 import { useSyncExternalStore } from 'react';
-import { EN } from './dict/en';
-import EN_DATA from './dict/en/templates-data';
 import { IT } from './dict/it';
 import IT_DATA from './dict/it/templates-data';
 import { RU } from './dict/ru';
 import { ZH_DATA } from './dict/zh';
+import { ZH } from './dict/zh/ui';
 
 export type Locale = 'zh' | 'en' | 'it' | 'ru';
 
 export const ALL_LOCALES: readonly Locale[] = ['zh', 'en', 'it', 'ru'];
+
+/** English is the source language: an English string needs no dictionary lookup. */
+export const SOURCE_LOCALE: Locale = 'en';
 
 const STORAGE_KEY = 'cc.locale';
 const DOCUMENT_LANG: Record<Locale, string> = {
@@ -31,9 +37,9 @@ function systemLocale(): Locale {
     if (tag.startsWith('zh')) return 'zh';
     if (tag.startsWith('it')) return 'it';
     if (tag.startsWith('ru')) return 'ru';
-    return 'en';
+    return SOURCE_LOCALE;
   } catch {
-    return 'en';
+    return SOURCE_LOCALE;
   }
 }
 
@@ -62,45 +68,38 @@ export function localeLanguageName(locale: Locale): 'Chinese' | 'English' | 'Ita
   return 'English';
 }
 
-export function localizedCatalogText(
-  english: string,
-  chinese: string,
-  locale: Locale = current,
-): string {
-  return locale === 'zh' ? chinese : english;
-}
-
 export function setLocale(next: Locale): void {
   if (next === current) return;
   current = next;
   try {
     localStorage.setItem(STORAGE_KEY, next);
-  } catch { /* If the private mode cannot be saved, it will only affect this session */ }
+  } catch { /* Private mode cannot persist; only this session is affected. */ }
   if (typeof document !== 'undefined') {
     document.documentElement.lang = DOCUMENT_LANG[next];
   }
   subscribers.forEach((notify) => notify());
 }
 
-/** t('Selected {n}', { n: 3 }) - The Chinese original text is the key; the placeholder {name} has the same name in both languages. */
-export function t(zh: string, params?: Record<string, string | number>): string {
-  const raw = current === 'en' ? (EN[zh] ?? zh)
-    : current === 'it' ? (IT[zh] ?? EN[zh] ?? zh)
-      : current === 'ru' ? (RU[zh] ?? zh) : zh;
+/** t('Selected {n}', { n: 3 }) — the English source text is the key; {name} placeholders keep
+ * the same name in every language. */
+export function t(en: string, params?: Record<string, string | number>): string {
+  const raw = current === 'zh' ? (ZH[en] ?? en)
+    : current === 'it' ? (IT[en] ?? en)
+      : current === 'ru' ? (RU[en] ?? en) : en;
   if (!params) return raw;
   return raw.replace(/\{(\w+)\}/g, (match, key: string) => (key in params ? String(params[key]) : match));
 }
 
-/** Two-way data localization: **data** names (template names, etc.) are displayed according to the current language in the table lookup. If not found, they are returned as they are.
- * English key data (211 built-in items) zh state walking ZH_DATA; Chinese key data (self-made package) en state walking EN_DATA.
- * It is only used for display and does not change the data itself (the name is also a reference key). */
+/** Localization for **data** names (template names, sound names, music tags …): looks the English
+ * canonical name up in the active language and returns it unchanged when there is no entry.
+ * Display only — the underlying data (where the name doubles as a lookup key) never changes. */
 export function tData(text: string): string {
   if (current === 'zh') return ZH_DATA[text] ?? text;
-  if (current === 'it') return IT_DATA[text] ?? EN_DATA[text] ?? text;
-  return EN_DATA[text] ?? text;
+  if (current === 'it') return IT_DATA[text] ?? text;
+  return text;
 }
 
-/** Get t in the component: subscribe to language switching, trigger rerendering of this component when switching. */
+/** Get t inside a component: subscribes to language switches so the component re-renders. */
 export function useT(): typeof t {
   useSyncExternalStore(
     (onChange) => {

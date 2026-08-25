@@ -11,12 +11,12 @@ const BANNER_CAPS: readonly CapabilityKey[] = ['transcription', 'image', 'voice'
 
 /** Chinese source text doubles as the i18n key; the en dictionary maps it. */
 export const CAPABILITY_LABELS: Partial<Record<CapabilityKey, string>> = {
-  transcription: '转写',
-  image: '图片生成',
-  voice: '语音合成',
-  video: '视频生成',
-  music: '音乐生成',
-  sound: '音效生成',
+  transcription: 'Transcription',
+  image: 'Image generation',
+  voice: 'Voice',
+  video: 'Video generation',
+  music: 'Music',
+  sound: 'Sound effect generation',
 };
 
 export function missingCreativeCaps(): readonly CapabilityKey[] {

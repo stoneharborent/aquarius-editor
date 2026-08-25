@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 const toolbar = await readFile(new URL('./MediaPoolToolbar.tsx', import.meta.url), 'utf8');
 const semantic = await readFile(new URL('./semantic-search/SemanticSearchControls.tsx', import.meta.url), 'utf8');
 
-for (const label of ['上传素材', '排序', '筛选', '更多操作']) {
+for (const label of ['Upload media', 'Sort', 'Filter', 'More actions']) {
   assert.match(toolbar, new RegExp(`data-tip=\\{t\\('${label}'\\)\\}`), `媒体工具栏应即时提示“${label}”`);
 }
 assert.match(toolbar, /data-tip=\{t\(mediaViewToggleLabel\(props\.view\)\)\}/, '网格/列表切换应即时提示当前操作');

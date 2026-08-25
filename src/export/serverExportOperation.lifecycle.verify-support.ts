@@ -271,7 +271,7 @@ async function verifyCancellationAfterRenderDoesNotSave(): Promise<void> {
   await permissionStarted.promise;
   const saving = store.getSnapshot().jobs.find((job) => job.id === id);
   assert.equal(saving?.progress.phase, 'downloading');
-  assert.equal(saving?.busy, '正在保存…');
+  assert.equal(saving?.busy, 'Saving…');
   assert.equal(store.cancel(id), true);
   permissionGate.resolve();
   await done.promise;

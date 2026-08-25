@@ -22,7 +22,6 @@ interface CustomSkillPayload {
   id: string;
   slug: string;
   name: string;
-  nameZh: string;
   description: string;
   summary: string;
   scenarios: string[];
@@ -144,7 +143,6 @@ async function handleSkillsRequest(
           id: file.slug,
           slug: file.slug,
           name: file.slug,
-          nameZh: file.slug,
           description: file.description,
           summary: file.description,
           scenarios: [] as string[],

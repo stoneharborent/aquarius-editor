@@ -46,7 +46,7 @@ assert.deepEqual(detectSkillDependencies('plain text without services'), []);
 // --- prompt: built-in skill never gets an adaptation block ------------------
 
 const builtin = {
-  id: 'b1', slug: 'long-video-to-shorts', name: 'x', nameZh: 'x', description: 'x',
+  id: 'b1', slug: 'long-video-to-shorts', name: 'x', description: 'x',
   summary: 'x', scenarios: [], body: SAMPLE, files: [], source: 'builtin' as const,
 };
 assert.equal(skillDependencyPrompt(builtin, `${builtin.description}\n${builtin.body}`), '');
@@ -54,7 +54,7 @@ assert.equal(skillDependencyPrompt(builtin, `${builtin.description}\n${builtin.b
 // --- prompt: everything configured → substitution wording --------------------
 
 const custom = {
-  id: 'c1', slug: 'paper-collage-ad', name: 'x', nameZh: 'x', description: 'x',
+  id: 'c1', slug: 'paper-collage-ad', name: 'x', description: 'x',
   summary: 'x', scenarios: [], body: SAMPLE, files: [], source: 'custom' as const,
 };
 const onPrompt = skillDependencyPrompt(custom, `${custom.description}\n${custom.body}`, capsAllOn());

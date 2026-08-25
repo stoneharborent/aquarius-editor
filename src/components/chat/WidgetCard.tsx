@@ -94,7 +94,7 @@ export function WidgetCard({ fields, title, submitLabel, messagePrefix, persiste
           <section key={f.id} className={`cc-widget-field${fi === 0 ? ' first' : ''}`}>
             <header className="cc-widget-field-head">
               <h4 className="cc-widget-label">{f.label}</h4>
-              {f.required ? <span className="cc-widget-req">{t('必选')}</span> : <span className="cc-widget-opt">{t('可选')}</span>}
+              {f.required ? <span className="cc-widget-req">{t('Required')}</span> : <span className="cc-widget-opt">{t('Optional')}</span>}
             </header>
             {f.description ? <p className="cc-widget-description">{f.description}</p> : null}
 
@@ -126,7 +126,7 @@ export function WidgetCard({ fields, title, submitLabel, messagePrefix, persiste
                       onChange={() => selectOther(f.id)}
                     />
                     <span className="cc-widget-radio" aria-hidden />
-                    <span className="cc-widget-option-text">{t('其他…')}</span>
+                    <span className="cc-widget-option-text">{t('Other…')}</span>
                     {otherFields[f.id] && (
                       <input
                         type="text"
@@ -136,7 +136,7 @@ export function WidgetCard({ fields, title, submitLabel, messagePrefix, persiste
                         value={typeof values[f.id] === 'string' ? (values[f.id] as string) : ''}
                         onChange={(e) => setOtherText(f.id, e.target.value)}
                         onClick={(e) => e.stopPropagation()}
-                        placeholder={f.otherPlaceholder || t('请输入')}
+                        placeholder={f.otherPlaceholder || t('Type here')}
                       />
                     )}
                   </label>
@@ -171,7 +171,7 @@ export function WidgetCard({ fields, title, submitLabel, messagePrefix, persiste
                 disabled={submitted}
                 value={typeof values[f.id] === 'string' ? values[f.id] as string : ''}
                 onChange={(event) => setOtherText(f.id, event.target.value)}
-                placeholder={f.placeholder || t('请输入')}
+                placeholder={f.placeholder || t('Type here')}
                 rows={3}
               />
             )}
@@ -212,7 +212,7 @@ export function WidgetCard({ fields, title, submitLabel, messagePrefix, persiste
                       onClick={() => selectOther(f.id)}
                     >
                       <span className="cc-widget-radio" aria-hidden />
-                      <span className="cc-widget-visual-name">{t('其他…')}</span>
+                      <span className="cc-widget-visual-name">{t('Other…')}</span>
                     </button>
                     {otherFields[f.id] && (
                       <input
@@ -222,7 +222,7 @@ export function WidgetCard({ fields, title, submitLabel, messagePrefix, persiste
                         autoFocus
                         value={typeof values[f.id] === 'string' ? values[f.id] as string : ''}
                         onChange={(event) => setOtherText(f.id, event.target.value)}
-                        placeholder={f.otherPlaceholder || t('请输入')}
+                        placeholder={f.otherPlaceholder || t('Type here')}
                       />
                     )}
                   </div>
@@ -237,10 +237,10 @@ export function WidgetCard({ fields, title, submitLabel, messagePrefix, persiste
         {submitted ? (
           <span className="cc-widget-done">
             <span className="cc-widget-done-dot" />
-            {t('已提交')}
+            {t('Submitted')}
           </span>
         ) : (
-          <span className="cc-widget-hint">{t('选择后提交，Agent 会按你的选择继续')}</span>
+          <span className="cc-widget-hint">{t('Choose and submit — the Agent continues with your picks')}</span>
         )}
         <button
           type="button"
@@ -248,7 +248,7 @@ export function WidgetCard({ fields, title, submitLabel, messagePrefix, persiste
           onClick={handleSubmit}
           disabled={!canSubmit}
         >
-          {submitted ? t('已提交') : (submitLabel || t('提交'))}
+          {submitted ? t('Submitted') : (submitLabel || t('Submit'))}
         </button>
       </footer>
     </div>

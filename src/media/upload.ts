@@ -208,7 +208,7 @@ export async function normalizeUploadedVideo(
     throw new Error('server returned no media path');
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    throw new Error(t('视频兼容性处理失败：{error}', { error: message }));
+    throw new Error(t('Video compatibility processing failed: {error}', { error: message }));
   }
 }
 

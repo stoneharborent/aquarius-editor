@@ -47,13 +47,13 @@ interface MediaPoolFileImportState {
 function directoryNotice(result: DirectoryScanResult, t: typeof translate): string | null {
   const notices: string[] = [];
   if (result.limitReached) {
-    notices.push(t('文件夹导入不完整：仅检查前 {n} 个文件。', { n: DIRECTORY_SCAN_MAX_FILES }));
+    notices.push(t('Folder import is partial: only the first {n} files were checked.', { n: DIRECTORY_SCAN_MAX_FILES }));
   }
   if (result.depthReached) {
-    notices.push(t('文件夹导入不完整：已跳过超出 {n} 层的内容。', { n: DIRECTORY_SCAN_MAX_DEPTH }));
+    notices.push(t('Folder import is partial: content deeper than {n} levels was skipped.', { n: DIRECTORY_SCAN_MAX_DEPTH }));
   }
   if (result.unsupportedFiles > 0) {
-    notices.push(t('已跳过 {n} 个不支持的文件。', { n: result.unsupportedFiles }));
+    notices.push(t('Skipped {n} unsupported files.', { n: result.unsupportedFiles }));
   }
   return notices.length ? notices.join(' ') : null;
 }
@@ -98,7 +98,7 @@ function useDirectoryFileActions(
   const importResult = useCallback(async (result: DirectoryScanResult, folderId?: string) => {
     const notice = directoryNotice(result, t);
     if (!result.files.length) {
-      setError(notice ?? t('文件夹中没有文件。'));
+      setError(notice ?? t('The folder is empty.'));
       return;
     }
     const targetFolderIds = materializeDirectoryFolders(result, folderId, onCreateFolder);

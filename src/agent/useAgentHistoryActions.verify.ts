@@ -221,7 +221,7 @@ assert.notEqual(await loadChat(projectId), null, 'active run blocks chat deletio
 assert.equal((await loadAgentRuntimeSidecar(projectId)).runs.length, 1, 'active run ledger survives');
 assert.deepEqual(blocked.state.llmRef.current, [{ role: 'user', content: 'must survive active run' }]);
 assert.ok(
-  blocked.messages.at(-1)?.text.includes(t('运行 {runId}（{status}）仍在进行。请先停止该运行，确认检查器中没有活动任务后再重试。', {
+  blocked.messages.at(-1)?.text.includes(t('Run {runId} ({status}) is still active. Stop it, confirm the inspector has no active tasks, then retry.', {
     runId: activeRunId,
     status: 'running',
   })),

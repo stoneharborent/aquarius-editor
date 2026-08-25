@@ -23,7 +23,7 @@ function durationInProjectFrames(file: DirectoryImportedFile, projectFps: number
 function assertPublishedVideoIsReady(file: DirectoryImportedFile): void {
   if (file.kind !== 'video' || file.proxyKind === 'alpha-webm') return;
   if (file.compatibilityNormalized !== true) {
-    throw new Error(t('监听目录中的视频尚未完成兼容性处理'));
+    throw new Error(t('A watched video was published before compatibility processing completed.'));
   }
 }
 

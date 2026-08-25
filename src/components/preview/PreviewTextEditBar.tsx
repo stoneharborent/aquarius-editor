@@ -83,10 +83,10 @@ export function PreviewTextEditBar({
         <button
           type="button"
           className="cc-capedit-btn ai"
-          title={t('让 AI 改写这段文字')}
-          onClick={() => onSeedChat(t('优化这段画面文字（保持版式）：「{text}」', { text: fields.text || t('（空）') }))}
+          title={t('Ask AI to rewrite this on-screen text')}
+          onClick={() => onSeedChat(t('Improve this on-screen text (keep layout): "{text}"', { text: fields.text || t('(empty)') }))}
         >
-          <Icon name="sparkles" size={12} />{t('AI 编辑')}
+          <Icon name="sparkles" size={12} />{t('AI edit')}
         </button>
       )}
 
@@ -96,7 +96,7 @@ export function PreviewTextEditBar({
           <button
             type="button"
             className={`cc-capedit-btn${editing ? ' on' : ''}`}
-            title={t('编辑文字')}
+            title={t('Edit text')}
             onClick={() => {
               setPop(null);
               if (!editing) {
@@ -105,7 +105,7 @@ export function PreviewTextEditBar({
               }
             }}
           >
-            <Icon name="pencil" size={12} />{t('文字')}
+            <Icon name="pencil" size={12} />{t('Text')}
           </button>
         </>
       )}
@@ -114,7 +114,7 @@ export function PreviewTextEditBar({
         <button
           type="button"
           className={`cc-capedit-btn${pop === 'color' ? ' on' : ''}`}
-          title={t('文字颜色')}
+          title={t('Text color')}
           onClick={() => setPop(pop === 'color' ? null : 'color')}
         >
           <span className="cc-capedit-colordot" style={{ background: fields.color }} />
@@ -127,7 +127,7 @@ export function PreviewTextEditBar({
           <button
             type="button"
             className="cc-capedit-btn"
-            title={t('缩小字号')}
+            title={t('Smaller text')}
             onClick={() => fields.fontSizeKey && onPropChange(item.id, fields.fontSizeKey, bumpPreviewFontSize(fields, -1))}
           >
             A−
@@ -135,7 +135,7 @@ export function PreviewTextEditBar({
           <button
             type="button"
             className="cc-capedit-btn"
-            title={t('放大字号')}
+            title={t('Bigger text')}
             onClick={() => fields.fontSizeKey && onPropChange(item.id, fields.fontSizeKey, bumpPreviewFontSize(fields, 1))}
           >
             A+
@@ -149,7 +149,7 @@ export function PreviewTextEditBar({
           <button
             type="button"
             className="cc-capedit-btn"
-            title={t('字重')}
+            title={t('Weight')}
             onClick={() => onPropChange(item.id, fields.fontWeightKey!, cyclePreviewFontWeight(fields.fontWeight))}
           >
             {fields.fontWeight >= 900 ? 'B++' : fields.fontWeight >= 700 ? 'B' : 'R'}
@@ -161,7 +161,7 @@ export function PreviewTextEditBar({
         <button
           type="button"
           className="cc-capedit-btn"
-          title={t('对齐')}
+          title={t('Align')}
           onClick={() => onPropChange(item.id, fields.alignKey!, cyclePreviewAlign(fields.align))}
         >
           {fields.align === 'left' ? '⫷' : fields.align === 'right' ? '⫸' : '☰'}
@@ -205,7 +205,7 @@ export function PreviewTextEditBar({
               }}
             />
           ))}
-          <label className="cc-capedit-custom" title={t('自定义颜色')}>
+          <label className="cc-capedit-custom" title={t('Custom color')}>
             <input
               type="color"
               defaultValue={/^#[0-9a-fA-F]{6}$/.test(fields.color) ? fields.color : '#ffffff'}
@@ -214,7 +214,7 @@ export function PreviewTextEditBar({
                 setPop(null);
               }}
             />
-            <span>{t('自定义')}</span>
+            <span>{t('Custom')}</span>
           </label>
         </div>
       )}

@@ -22,9 +22,9 @@ import { VendorIcon } from './vendorIcons';
 // Data constants: keep Chinese originals and translate at render time via
 // t(mode.label) / t(mode.hint) so a language switch re-renders correctly.
 const MODES: readonly { value: VisionModelMode; label: string; hint: string }[] = [
-  { value: 'follow', label: '跟随主模型', hint: '主模型不支持图片时维持现状（图片剥离为文本）。' },
-  { value: 'custom', label: '指定视觉模型', hint: '图片与时间线帧由所选视觉模型理解后以文本注入。' },
-  { value: 'disabled', label: '禁用', hint: '不描述图片，一律剥离。' },
+  { value: 'follow', label: 'Follow main model', hint: 'Keep current behavior when the main model cannot see images (images stripped to text).' },
+  { value: 'custom', label: 'Use a specific vision model', hint: 'Images and timeline frames are understood by the selected vision model and injected as text.' },
+  { value: 'disabled', label: 'Disable', hint: 'Do not describe images; always strip them.' },
 ];
 
 const PROVIDER_LABELS: Record<LlmProvider, string> = {
@@ -110,13 +110,13 @@ export function VisionModelPane(): React.JSX.Element {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <VendorIcon vendor="vision" size={18} />
-          <b style={{ fontSize: 13 }}>{t('视觉理解')}</b>
+          <b style={{ fontSize: 13 }}>{t('Vision understanding')}</b>
           <span style={{ fontSize: 11, color: theme.textDim }}>
-            {config.mode === 'custom' ? t('已指定') : config.mode === 'disabled' ? t('已禁用') : t('跟随主模型')}
+            {config.mode === 'custom' ? t('Custom') : config.mode === 'disabled' ? t('Disabled') : t('Follow main model')}
           </span>
         </div>
         <div style={{ fontSize: 11.5, color: theme.textDim, marginTop: 3, paddingLeft: 26 }}>
-          {t('基底模型不支持图片输入时（如 DeepSeek 系），图片由所选视觉模型理解后以文本注入。')}
+          {t('When the base model cannot accept images (e.g. DeepSeek family), the chosen vision model understands them and injects text.')}
         </div>
       </div>
       <section style={fieldCardBox}>
@@ -139,13 +139,13 @@ export function VisionModelPane(): React.JSX.Element {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
               <div style={{ display: 'flex', gap: 8 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-                  <span style={{ fontSize: 11, color: theme.textDim }}>{t('厂商（已配置 API Key）')}</span>
+                  <span style={{ fontSize: 11, color: theme.textDim }}>{t('Provider (API key configured)')}</span>
                   <select
                     value={selectedProvider ?? ''}
                     onChange={(event) => onPickProvider(event.target.value as LlmProvider)}
                     style={selectStyle}
                   >
-                    {providerChoices.length === 0 && <option value="">{t('无可用厂商（请先配置 API Key）')}</option>}
+                    {providerChoices.length === 0 && <option value="">{t('No provider available (configure an API key first)')}</option>}
                     {providerChoices.map((entry) => (
                       <option key={entry.provider} value={entry.provider}>
                         {PROVIDER_LABELS[entry.provider]}
@@ -154,7 +154,7 @@ export function VisionModelPane(): React.JSX.Element {
                   </select>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1.4 }}>
-                  <span style={{ fontSize: 11, color: theme.textDim }}>{t('视觉模型')}</span>
+                  <span style={{ fontSize: 11, color: theme.textDim }}>{t('Vision model')}</span>
                   <select
                     value={selectedModel}
                     onChange={(event) => onPickModel(event.target.value)}
@@ -167,7 +167,7 @@ export function VisionModelPane(): React.JSX.Element {
                 </div>
               </div>
               <span style={{ fontSize: 10.5, color: theme.textDim }}>
-                {t('图片会发送给所选视觉模型厂商用于描述；视觉调用失败时自动回退为剥离文本，不阻塞对话。')}
+                {t('Images are sent to the selected vision provider for description; on vision failure it falls back to stripping text and never blocks the conversation.')}
               </span>
             </div>
           )}

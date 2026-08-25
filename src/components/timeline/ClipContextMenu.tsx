@@ -78,10 +78,10 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
   // If only one selected but right-clicked a media clip, still require multi-select
   const multicamReady = multicamIds.length >= 2;
   const multicamHint = multicamReady
-    ? t('对 {n} 个片段按时间码、采集时钟或音频依次对齐', { n: multicamIds.length })
+    ? t('Align {n} clips by timecode, capture clock, or audio', { n: multicamIds.length })
     : batchN < 2 && selectedIds.length < 2
-      ? t('先框选 2 个及以上视频/音频片段')
-      : t('多机位同步只支持带媒体的视频/音频片段');
+      ? t('Select 2+ video/audio clips first')
+      : t('Multicam sync needs video/audio clips with media');
   const multicamGroup = item.multicamGroupId
     ? timeline.multicamGroups?.find((group) => group.id === item.multicamGroupId)
     : timeline.multicamGroups?.find((group) => group.angles.some((angle) => angle.itemId === item.id));
@@ -103,7 +103,7 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
   const runMulticam = async () => {
     if (!multicamReady || syncBusy) return;
     setSyncBusy(true);
-    setSyncMsg(t('正在读取时间码、采集时钟或音频…'));
+    setSyncMsg(t('Reading timecode, capture clock, or audio…'));
     try {
       // Prefer right-clicked item as reference when it's in the set
       const refId = multicamIds.includes(item.id) ? item.id : undefined;
@@ -116,19 +116,19 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
       const methods = [...new Set(result.offsets.map((offset) => offset.method))].join(' / ');
       setSyncMsg(result.groupId
         ? (result.skippedItemIds.length
-          ? t('多机位组已保存（{method}），跳过 {m} 个', { method: methods, m: result.skippedItemIds.length })
-          : t('多机位组已保存（{method}）', { method: methods }))
+          ? t('Multicam group saved ({method}), skipped {m}', { method: methods, m: result.skippedItemIds.length })
+          : t('Multicam group saved ({method})', { method: methods }))
         : result.status === 'already_synced'
-          ? t('已经对齐（偏移小于 1 帧）')
+          ? t('Already in sync (offsets under 1 frame)')
           : result.status === 'failed'
             ? result.message
-            : t('无法对齐所选片段（缺少时间码且音频置信度过低）'));
+            : t('Cannot align selected clips (no timecode and audio confidence too low)'));
       if (result.changed) {
         // brief toast then close
         window.setTimeout(() => onClose(), 900);
       }
     } catch (e) {
-      setSyncMsg(e instanceof Error ? e.message : t('多机位同步失败'));
+      setSyncMsg(e instanceof Error ? e.message : t('Multicam sync failed'));
     } finally {
       setSyncBusy(false);
     }
@@ -160,19 +160,19 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
   const applied: { key: string; label: string; remove: () => void }[] = [
     ...effects.map((fx) => ({
       key: fx.id,
-      label: `${fx.assetId in LUT_EFFECTS ? 'LUT' : t('特效')} · ${t(ALL_FX[fx.assetId]?.name ?? fx.assetId)}`,
+      label: `${fx.assetId in LUT_EFFECTS ? 'LUT' : t('Effects')} · ${t(ALL_FX[fx.assetId]?.name ?? fx.assetId)}`,
       remove: () => commands.setItemEffects(item.id, effects.filter((e) => e.id !== fx.id)),
     })),
     ...(item.zoom?.shape || (item.zoom?.reframeCurve?.keyframes.length ?? 0) > 0
       ? [{
           key: 'zoom',
-          label: t('缩放 · {name}', { name: item.zoom?.shape ? t(ZOOM_SHAPE_LABELS[item.zoom.shape] ?? item.zoom.shape) : item.zoom?.label ?? t('关键帧') }),
+          label: t('Zoom · {name}', { name: item.zoom?.shape ? t(ZOOM_SHAPE_LABELS[item.zoom.shape] ?? item.zoom.shape) : item.zoom?.label ?? t('Keyframes') }),
           remove: () => commands.setItemZoom(item.id, null),
         }]
       : []),
     ...transitions.map((tr) => ({
       key: tr.id,
-      label: t(tr.incomingItemId === item.id ? '转场 · {name}（入）' : '转场 · {name}（出）', { name: t(TRANSITION_LABELS[tr.type] ?? tr.type) }),
+      label: t(tr.incomingItemId === item.id ? 'Transition · {name} (in)' : 'Transition · {name} (out)', { name: t(TRANSITION_LABELS[tr.type] ?? tr.type) }),
       remove: () => commands.removeTransition(tr.id),
     })),
   ];
@@ -206,10 +206,10 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
 
   return (
     <div ref={ref} style={style}>
-      <Item label={t('添加评论')} icon="clipboard" onClick={run(() => onAddComment(item, reviewFrame, x, y))} />
+      <Item label={t('Add comment')} icon="clipboard" onClick={run(() => onAddComment(item, reviewFrame, x, y))} />
       <Sep />
       <Item
-        label={syncBusy ? t('多机位同步中…') : t('AI 多机位同步')}
+        label={syncBusy ? t('Syncing multicam…') : t('AI multicam sync')}
         icon="users"
         disabled={!multicamReady || syncBusy}
         onClick={() => { void runMulticam(); }}
@@ -226,34 +226,34 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
       )}
       {multicamGroup && (
         <div style={{ padding: '0 9px 6px', fontSize: 10.5, color: theme.textDim, lineHeight: 1.3 }}>
-          {t('多机位组 · {n} 机位 · {method}', {
+          {t('Multicam group · {n} cameras · {method}', {
             n: multicamGroup.angles.length,
             method: multicamGroup.syncMethod,
           })}
         </div>
       )}
       <Item
-        label={linkedGroup ? t('取消链接音视频') : t('链接所选音视频')}
+        label={linkedGroup ? t('Unlink audio & video') : t('Link selected audio & video')}
         icon={linkedGroup ? 'unlock' : 'users'}
         disabled={!linkedGroup && batchN < 2}
         onClick={run(() => toggleRelationship('linked'))}
       />
       <Item
-        label={syncLockGroup ? t('取消同步锁定') : t('同步锁定所选片段')}
+        label={syncLockGroup ? t('Unlock sync') : t('Sync-lock selected clips')}
         icon={syncLockGroup ? 'unlock' : 'lock'}
         disabled={!syncLockGroup && batchN < 2}
         onClick={run(() => toggleRelationship('sync-lock'))}
       />
       <Sep />
-      <Item label={t('复制')} icon="copy" shortcut="⌘C" onClick={run(() => commands.duplicateItem(item.id))} />
-      <Item label={t('切分')} icon="scissors" shortcut="C" disabled={!inside} onClick={run(() => commands.splitItem(item.id, playhead))} />
+      <Item label={t('Copy')} icon="copy" shortcut="⌘C" onClick={run(() => commands.duplicateItem(item.id))} />
+      <Item label={t('Split')} icon="scissors" shortcut="C" disabled={!inside} onClick={run(() => commands.splitItem(item.id, playhead))} />
       <Sep />
-      <Item label={applied.length ? t('已应用效果（{n}）', { n: applied.length }) : t('已应用效果')} icon="filter" chevron disabled={applied.length === 0}
+      <Item label={applied.length ? t('Applied effects ({n})', { n: applied.length }) : t('Applied effects')} icon="filter" chevron disabled={applied.length === 0}
         onClick={applied.length ? () => setShowApplied((v) => !v) : undefined} />
       {showApplied && applied.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '0 6px 6px 35px' }}>
           {applied.map((a) => (
-            <button key={a.key} title={t('点击移除')} onClick={run(a.remove)} style={appliedRow}
+            <button key={a.key} title={t('Click to remove')} onClick={run(a.remove)} style={appliedRow}
               onMouseEnter={(e) => { e.currentTarget.style.background = theme.bg; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}>
               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left' }}>{a.label}</span>
@@ -262,9 +262,9 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
           ))}
         </div>
       )}
-      <Item label={t('复制效果')} icon="sparkles" disabled={!isVisual} onClick={run(copyFx)} />
-      <Item label={t('粘贴效果')} icon="clipboard" shortcut={PASTE_HINT} disabled={!isVisual || !fxClip} onClick={run(pasteFx)} />
-      <Item label={!matchesSpeedPreset(rate, 1) ? t('变速（{rate}×）', { rate: displayedRate }) : t('变速')} icon="clock" chevron disabled={!canSpeed}
+      <Item label={t('Copy effects')} icon="sparkles" disabled={!isVisual} onClick={run(copyFx)} />
+      <Item label={t('Paste effects')} icon="clipboard" shortcut={PASTE_HINT} disabled={!isVisual || !fxClip} onClick={run(pasteFx)} />
+      <Item label={!matchesSpeedPreset(rate, 1) ? t('Speed ({rate}×)', { rate: displayedRate }) : t('Speed')} icon="clock" chevron disabled={!canSpeed}
         onClick={canSpeed ? () => setShowSpeed((v) => !v) : undefined} />
       {showSpeed && canSpeed && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '2px 9px 6px 35px' }}>
@@ -283,17 +283,17 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
       )}
       <Sep />
       <Item
-        label={batchN > 1 ? t('添加到 AI 对话框（{n}）', { n: batchN }) : t('添加到 AI 对话框')}
+        label={batchN > 1 ? t('Add to AI chat ({n})', { n: batchN }) : t('Add to AI composer')}
         icon="sparkles"
         onClick={run(() => onAddToChat(referenceItems))}
       />
-      <Item label={t('重新链接文件')} icon="folder" disabled={!canRelink} onClick={run(() => onRelinkFile(item))} />
+      <Item label={t('Relink file')} icon="folder" disabled={!canRelink} onClick={run(() => onRelinkFile(item))} />
       <Sep />
-      <Item label={t('导出 MG 动画')} icon="download" disabled={!isDom} onClick={run(() => onExportMg(item))} />
-      <Item label={t('转为视频')} icon="film" disabled={item.kind === 'audio'} onClick={run(() => onConvertToVideo(item))} />
+      <Item label={t('Export MG animation')} icon="download" disabled={!isDom} onClick={run(() => onExportMg(item))} />
+      <Item label={t('Convert to video')} icon="film" disabled={item.kind === 'audio'} onClick={run(() => onConvertToVideo(item))} />
       <Sep />
       <Item
-        label={batchN > 1 ? t('删除（{n}）', { n: batchN }) : t('删除')}
+        label={batchN > 1 ? t('Delete ({n})', { n: batchN }) : t('Delete')}
         icon="trash"
         danger
         shortcut="⌫"
@@ -303,7 +303,7 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
         })}
       />
       <Item
-        label={batchN > 1 ? t('波纹删除（{n}）', { n: batchN }) : t('波纹删除（合缝）')}
+        label={batchN > 1 ? t('Ripple delete ({n})', { n: batchN }) : t('Ripple delete (close gap)')}
         icon="trash"
         danger
         shortcut="⇧⌫"

@@ -26,7 +26,7 @@ async function main(): Promise<void> {
     const { segmentForIndex } = await import('./search-tokenizer.ts');
 
     // ── tokenizer: Chinese 2-char words and mixed text ──
-    assert.equal(segmentForIndex('字幕'), '字幕', 'a 2-char word must stay whole');
+    assert.equal(segmentForIndex('Captions'), 'Captions', 'a 2-char word must stay whole');
     assert.ok(segmentForIndex('把背景音乐的音量降低').includes('背景音乐'), 'domain words must segment');
     assert.ok(segmentForIndex('导出4K视频').includes('4K'), 'latin runs must stay intact');
 
@@ -41,7 +41,7 @@ async function main(): Promise<void> {
     const chatHits = searchContent('背景音乐音量');
     assert.ok(chatHits.some((hit) => hit.kind === 'chat' && hit.ref.startsWith('chat:project-a:')),
       'chat text must be searchable by segmented words');
-    const assistantHits = searchContent('字幕样式');
+    const assistantHits = searchContent('Caption styles');
     assert.ok(assistantHits.some((hit) => hit.ref.endsWith(':1')), 'assistant message must match');
 
     // ── project indexing: captions (cue text) + transcript words ──
@@ -58,18 +58,18 @@ async function main(): Promise<void> {
       }],
       assets: [{
         id: 'asset-1',
-        transcript: { words: [{ text: '转场' }, { text: '字幕' }] },
+        transcript: { words: [{ text: 'Transitions' }, { text: 'Captions' }] },
       }],
     });
     const captionHits = searchContent('黄昏');
     assert.ok(captionHits.some((hit) => hit.kind === 'caption' && hit.projectId === 'project-a'),
       'caption cue text must be searchable');
-    const transcriptHits = searchContent('转场');
+    const transcriptHits = searchContent('Transitions');
     assert.ok(transcriptHits.some((hit) => hit.kind === 'transcript'),
       'transcript words must be searchable');
 
     // ── project scoping ──
-    const scoped = searchContent('字幕', { projectId: 'project-b' });
+    const scoped = searchContent('Captions', { projectId: 'project-b' });
     assert.equal(scoped.length, 0, 'another project must not see the hits');
 
     // ── bm25 ranking: exact multi-token match ranks above partial ──
@@ -109,7 +109,7 @@ async function main(): Promise<void> {
     // ── search unavailable without SQLite enabled ──
     process.env[SQLITE_STORE_ENV] = '0';
     resetSearchForTests();
-    assert.equal(searchContent('字幕').length, 0, 'search must be a no-op without the SQLite store');
+    assert.equal(searchContent('Captions').length, 0, 'search must be a no-op without the SQLite store');
 
     console.log('✓ fulltext-search verify: tokenizer/index/search/ranking/scoping/delete-sync/rebuild all passed');
   } finally {

@@ -45,21 +45,21 @@ import {
 } from './useExportWorkflow';
 
 export const EXPORT_TABS = [
-  { key: 'video', label: '成片', summary: 'MP4 / WebM', icon: 'film' },
-  { key: 'audio', label: '音轨', summary: 'MP3', icon: 'music' },
-  { key: 'mg', label: '动态图层', summary: 'ProRes 4444', icon: 'sparkles' },
-  { key: 'subtitles', label: '字幕稿', summary: 'SRT / TXT', icon: 'captions' },
-  { key: 'xml', label: '剪辑工程', summary: 'FCPXML', icon: 'clipboard' },
-  { key: 'jianying', label: '剪映草稿', summary: 'CapCut / 剪映', icon: 'video' },
+  { key: 'video', label: 'Final video', summary: 'MP4 / WebM', icon: 'film' },
+  { key: 'audio', label: 'Audio mix', summary: 'MP3', icon: 'music' },
+  { key: 'mg', label: 'Motion layers', summary: 'ProRes 4444', icon: 'sparkles' },
+  { key: 'subtitles', label: 'Caption file', summary: 'SRT / TXT', icon: 'captions' },
+  { key: 'xml', label: 'Edit project', summary: 'FCPXML', icon: 'clipboard' },
+  { key: 'jianying', label: 'JianYing Draft', summary: 'CapCut / 剪映', icon: 'video' },
 ] as const satisfies ReadonlyArray<{ key: ExportTab; label: string; summary: string; icon: IconName }>;
 
 export const EXPORT_ACTION_LABELS: Record<ExportTab, string> = {
-  video: '导出成片',
-  audio: '提取音轨',
-  mg: '导出动态图层',
-  subtitles: '下载字幕',
-  xml: '生成剪辑工程',
-  jianying: '导出剪映草稿',
+  video: 'Export video',
+  audio: 'Extract audio',
+  mg: 'Export motion layers',
+  subtitles: 'Download captions',
+  xml: 'Create edit project',
+  jianying: 'Export JianYing Draft',
 };
 
 export const EXPORT_FPS = [...EXPORT_FPS_OPTIONS];
@@ -215,13 +215,13 @@ export function useExportDialogModel({ state, project, projectId, projectName, e
     subtitleFormat: subtitles.format, subtitleCaptions: subtitles.captions,
     nleFormat, includeMg: includeAvailableMg, mgItems, onClose,
   }, exportJobs);
-  const name = outputName(base, tab, video, subtitles, nleFormat, t('{n} 个透明 MOV 文件', { n: mgItems.length }));
-  const qualityTag = qualityMode === 'master' ? ` · ${t('画质优先')}` : '';
+  const name = outputName(base, tab, video, subtitles, nleFormat, t('{n} transparent MOV files', { n: mgItems.length }));
+  const qualityTag = qualityMode === 'master' ? ` · ${t('Master quality')}` : '';
   const codecLabel = video.codec === 'prores'
     ? 'MOV · ProRes 422 HQ'
     : video.codec === 'h264' ? 'MP4 · H.264' : 'WebM · VP8';
   const rateLabel = video.codec === 'prores'
-    ? t('母带')
+    ? t('Mezzanine')
     : `${(video.resolvedBitrate / 1_000_000).toFixed(1)} Mbps`;
   const videoSummary = `${codecLabel} · ${video.dimensions.width}×${video.dimensions.height} · ${video.fps} fps · ${rateLabel}${qualityTag}`;
   const disabled = !!workflow.busy

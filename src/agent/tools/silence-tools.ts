@@ -102,7 +102,7 @@ export async function execSilenceTool(name: string, args: Args, ctx: AgentContex
   if (args.dryRun === true) {
     return { ok: true, dryRun: true, wouldEdit: edited, ...(skipped.length ? { skipped } : {}) };
   }
-  if (allActions.length) ctx.commands.batch(allActions, '删除静音');
+  if (allActions.length) ctx.commands.batch(allActions, 'Remove silence');
   return {
     ok: true,
     edited,

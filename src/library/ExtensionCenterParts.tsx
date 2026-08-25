@@ -9,12 +9,12 @@ import { secondaryButton } from './ExtensionCenterModel';
 export function SourceLabel({ pack }: { pack: InstalledPack }) {
   const t = useT();
   const label = pack.source?.kind === 'registry'
-    ? t('扩展中心')
+    ? t('Extension Center')
     : pack.source?.kind === 'url'
-      ? t('URL 安装')
+      ? t('URL install')
       : pack.source?.kind === 'file'
-        ? t('本地文件')
-        : t('旧版迁移');
+        ? t('Local file')
+        : t('Legacy migration');
   return <span>{label}</span>;
 }
 
@@ -33,7 +33,7 @@ export function ExtensionToggle({
       type="button"
       role="switch"
       aria-checked={checked}
-      aria-label={checked ? t('停用扩展') : t('启用扩展')}
+      aria-label={checked ? t('Disable extension') : t('Enable extension')}
       disabled={disabled}
       onClick={onChange}
       style={{
@@ -124,11 +124,11 @@ function UrlInstallRow({ busy, onInstall }: {
         value={url}
         onChange={(event) => setUrl(event.target.value)}
         onKeyDown={(event) => { if (event.key === 'Enter' && url.trim() && !busy) submit(); }}
-        placeholder={t('扩展包 JSON URL…')}
+        placeholder={t('Extension pack JSON URL…')}
         style={INSTALL_INPUT_STYLE}
       />
       <button type="button" disabled={busy || !url.trim()} onClick={submit} style={secondaryButton(busy || !url.trim())}>
-        {t('从 URL 安装')}
+        {t('Install from URL')}
       </button>
     </>
   );
@@ -145,7 +145,7 @@ function FileInstallButton({ busy, onInstall }: {
   };
   return (
     <>
-      <button type="button" disabled={busy} onClick={() => fileRef.current?.click()} style={secondaryButton(busy)}>{t('选择文件')}</button>
+      <button type="button" disabled={busy} onClick={() => fileRef.current?.click()} style={secondaryButton(busy)}>{t('Choose file')}</button>
       <input
         ref={fileRef}
         type="file"
@@ -178,9 +178,9 @@ export function InstallPanel({
       padding: 10,
       borderRadius: 5,
     }}>
-      <div style={{ fontSize: 11.5, color: theme.text, fontWeight: 650 }}>{t('安装')}</div>
+      <div style={{ fontSize: 11.5, color: theme.text, fontWeight: 650 }}>{t('Install')}</div>
       <div style={{ fontSize: 10.5, color: theme.textDim }}>
-        {t('仅安装你信任的扩展包；安装前会校验格式并真实编译其中的 MG 与 Shader。')}
+        {t('Only install extension packs you trust. OpenChatCut validates the format and compiles MG and shaders before installing.')}
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
         <UrlInstallRow busy={busy} onInstall={onInstall} />

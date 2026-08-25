@@ -278,7 +278,7 @@ function awaitTimelinePlaceholder(file: File, batch: DropBatch, context: DropCon
   ).catch((error) => {
     if (!placeholder.id) reject(error);
     else removePlacedAsset(batch, placeholder.id, context);
-    showAppToast(error instanceof Error ? error.message : context.t('导入失败'), { error: true });
+    showAppToast(error instanceof Error ? error.message : context.t('Import failed'), { error: true });
   });
   return promise;
 }
@@ -289,19 +289,19 @@ async function importDroppedCaptions(file: File, trackId: TrackId, startFrame: n
     const captionTrackId = trackKind(snapshot, trackId) === 'caption'
       ? trackId
       : defaultTrackId(snapshot, 'caption');
-    if (!captionTrackId) throw new Error(context.t('请先创建字幕轨道'));
+    if (!captionTrackId) throw new Error(context.t('Create a caption track first'));
     const words = identifyManualCues(parseDroppedCaptions(
       file.name,
       await file.text(),
       Math.max(0, startFrame) * 1000 / snapshot.fps,
     ));
-    if (!words.length) throw new Error(context.t('字幕文件没有可用内容'));
+    if (!words.length) throw new Error(context.t('The caption file has no usable content'));
     const current = captionsOnTrack(snapshot, captionTrackId) ?? newManualCaptions();
     const withLane = current.sourceEntries?.some(isManualCaptionEntry)
       ? current
       : { ...current, ...appendManualLane(current, snapshot.items) };
     const lane = withLane.sourceEntries?.find(isManualCaptionEntry);
-    if (!lane) throw new Error(context.t('无法创建字幕轨道'));
+    if (!lane) throw new Error(context.t('Could not create a caption track'));
     context.commands.setCaptions({
       ...withLane,
       enabled: true,
@@ -310,7 +310,7 @@ async function importDroppedCaptions(file: File, trackId: TrackId, startFrame: n
         : entry),
     }, captionTrackId);
   } catch (error) {
-    showAppToast(error instanceof Error ? error.message : context.t('读取字幕文件失败'), { error: true });
+    showAppToast(error instanceof Error ? error.message : context.t('Failed to read the caption file'), { error: true });
   }
 }
 
@@ -337,7 +337,7 @@ async function placeDroppedMedia(file: File, mediaKind: MediaAsset['kind'], trac
     });
     return itemId;
   } catch (error) {
-    showAppToast(error instanceof Error ? error.message : context.t('导入失败'), { error: true });
+    showAppToast(error instanceof Error ? error.message : context.t('Import failed'), { error: true });
     return null;
   }
 }
@@ -353,7 +353,7 @@ async function dropFilesToTimeline(files: File[], trackId: TrackId, startFrame: 
   for (const file of files) {
     const target = classifyExternalFile(file);
     if (!target) {
-      showAppToast(context.t('不支持导入「{name}」', { name: file.name }), { error: true });
+      showAppToast(context.t('Unsupported file: “{name}”', { name: file.name }), { error: true });
     } else if (target.type === 'caption') {
       await importDroppedCaptions(file, trackId, startFrame, context);
     } else {
@@ -449,10 +449,10 @@ function useMediaPaste(options: EditorMediaIngestOptions) {
       asset: {
         ...asset,
         id: `asset_${crypto.randomUUID()}`,
-        name: duplicateAssetName(asset.name, t('副本')),
+        name: duplicateAssetName(asset.name, t('copy')),
         folderId,
       },
-    })), t('粘贴素材'));
+    })), t('Paste media'));
   }, [commands, stateRef, t]);
 }
 
@@ -472,7 +472,7 @@ function useMediaAISeeds(options: EditorMediaIngestOptions) {
   const useTemplateAI = useCallback((tpl: Tpl) => {
     setChatCollapsed(false);
     setChatSeed({
-      text: t('参考模板「{name}」，用 create_motion_graphic 生成一个类似风格的动画： @{name} ', { name: tpl.name }),
+      text: t('Using template "{name}" as a style reference, generate a similar animation with create_motion_graphic: @{name} ', { name: tpl.name }),
       nonce: Date.now(),
       references: [{ id: tpl.id, name: tpl.name, kind: 'template' }],
     });

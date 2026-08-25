@@ -25,10 +25,10 @@ interface InspectorContentProps {
 }
 
 const TAB_DEFS: ReadonlyArray<{ id: InspectorTab; label: string }> = [
-  { id: 'basic', label: '基础' },
-  { id: 'video', label: '视频' },
-  { id: 'audio', label: '音频' },
-  { id: 'animation', label: '动画' },
+  { id: 'basic', label: 'Basic' },
+  { id: 'video', label: 'Video' },
+  { id: 'audio', label: 'Audio' },
+  { id: 'animation', label: 'Animation' },
 ];
 function nextInspectorTab(
   current: InspectorTab,
@@ -99,7 +99,7 @@ function InspectorTabBar({ id, activeTab, available, onChange }: {
     requestAnimationFrame(() => document.getElementById(`${id}-${next}-tab`)?.focus());
   };
   return (
-    <div className="cc-insp-tabs" role="tablist" aria-label={t('属性分类')}>
+    <div className="cc-insp-tabs" role="tablist" aria-label={t('Property categories')}>
       {TAB_DEFS.map((tab) => <button
         id={`${id}-${tab.id}-tab`}
         key={tab.id}
@@ -135,7 +135,7 @@ function BasicTab({ panel, item, schema, playheadLocal }: InspectorContentProps)
     <>
       {panel.selectedItems.length === 1 && panel.slipPlan && panel.onItemSlip && (
         <>
-          <SectionLabel>{t('滑移')}</SectionLabel>
+          <SectionLabel>{t('Slip')}</SectionLabel>
           <InspectorSlipControl
             item={item}
             plan={panel.slipPlan}
@@ -143,8 +143,8 @@ function BasicTab({ panel, item, schema, playheadLocal }: InspectorContentProps)
           />
         </>
       )}
-      {item.kind === 'text' && panel.selectedItems.every((entry) => entry.kind === 'text') && <><SectionLabel>{t('文字')}</SectionLabel><TextControl item={item} mixed={(key) => isMixed(panel, (entry) => entry.props?.[key])} onPropChange={panel.onItemPropChange} /></>}
-      {panel.selectedItems.every((entry) => entry.kind !== 'audio') && <><SectionLabel onReset={() => panel.onResetItemKeyframes(transformProps)} resetDisabled={resetDisabled && !transformProps.some((prop) => isMixed(panel, (entry) => getKeyframePropertyDefinition(prop).getBaseValue(entry)))}>{t('变换')}</SectionLabel><TransformControl item={item} mixed={(prop) => {
+      {item.kind === 'text' && panel.selectedItems.every((entry) => entry.kind === 'text') && <><SectionLabel>{t('Text')}</SectionLabel><TextControl item={item} mixed={(key) => isMixed(panel, (entry) => entry.props?.[key])} onPropChange={panel.onItemPropChange} /></>}
+      {panel.selectedItems.every((entry) => entry.kind !== 'audio') && <><SectionLabel onReset={() => panel.onResetItemKeyframes(transformProps)} resetDisabled={resetDisabled && !transformProps.some((prop) => isMixed(panel, (entry) => getKeyframePropertyDefinition(prop).getBaseValue(entry)))}>{t('Transform')}</SectionLabel><TransformControl item={item} mixed={(prop) => {
         const definition = getKeyframePropertyDefinition(prop);
         return isMixed(panel, (entry) => entry.keyframes?.[prop] ?? definition.getBaseValue(entry));
       }} onChange={panel.onItemTransformChange} onReset={panel.onResetItemKeyframes} kf={{
@@ -171,7 +171,7 @@ function VideoTab({ panel, item }: InspectorContentProps) {
     <>
       {panel.backgroundFillAvailable && panel.onItemBackgroundFillChange && (
         <>
-          <SectionLabel>{t('画布')}</SectionLabel>
+          <SectionLabel>{t('Canvas')}</SectionLabel>
           <BackgroundFillControl
             enabled={item.backgroundFill === true}
             mixed={isMixed(panel, (entry) => entry.backgroundFill === true)}
@@ -182,14 +182,14 @@ function VideoTab({ panel, item }: InspectorContentProps) {
           />
         </>
       )}
-      <SectionLabel onReset={() => panel.onItemFiltersChange({ brightness: 1, contrast: 1, saturate: 1, blur: 0 })} resetDisabled={resetDisabled && !isMixed(panel, (entry) => entry.filters)}>{t('滤镜')}</SectionLabel>
+      <SectionLabel onReset={() => panel.onItemFiltersChange({ brightness: 1, contrast: 1, saturate: 1, blur: 0 })} resetDisabled={resetDisabled && !isMixed(panel, (entry) => entry.filters)}>{t('Filters')}</SectionLabel>
       <FilterControl item={item} mixed={{
         brightness: isMixed(panel, (entry) => entry.filters?.brightness ?? 1),
         contrast: isMixed(panel, (entry) => entry.filters?.contrast ?? 1),
         saturate: isMixed(panel, (entry) => entry.filters?.saturate ?? 1),
         blur: isMixed(panel, (entry) => entry.filters?.blur ?? 0),
       }} onChange={panel.onItemFiltersChange} autoGrade={panel.autoGrade} />
-      {(item.kind === 'video' || item.kind === 'image') && panel.selectedItems.every((entry) => entry.kind === 'video' || entry.kind === 'image') && <><SectionLabel>{t('特效')}</SectionLabel>{effectsMixed ? <div className="cc-insp-muted">{t('所选片段的特效堆栈不同；请先统一堆栈后再批量编辑。')}</div> : <EffectsControl item={item} onChange={panel.onItemEffectsChange} previewStatus={panel.selectedPreviewStatuses?.find((status) => status.kind === 'effect' && status.targetId === item.id)} />}</>}
+      {(item.kind === 'video' || item.kind === 'image') && panel.selectedItems.every((entry) => entry.kind === 'video' || entry.kind === 'image') && <><SectionLabel>{t('Effects')}</SectionLabel>{effectsMixed ? <div className="cc-insp-muted">{t('Selected clips have different effect stacks; unify the stacks before batch editing.')}</div> : <EffectsControl item={item} onChange={panel.onItemEffectsChange} previewStatus={panel.selectedPreviewStatuses?.find((status) => status.kind === 'effect' && status.targetId === item.id)} />}</>}
     </>
   );
 }
@@ -198,14 +198,14 @@ function AudioTab({ panel, item, playheadLocal }: InspectorContentProps) {
   const t = useT();
   return (
     <>
-      <SectionLabel>{t('音量')}</SectionLabel>
+      <SectionLabel>{t('Volume')}</SectionLabel>
       <VolumeControl item={item} mixed={isMixed(panel, (entry) => entry.volume ?? 1)} onChange={panel.onItemVolumeChange} onNormalize={panel.selectedItems.every((entry) => entry.kind === 'audio') ? panel.onNormalizeLoudness : undefined} onReset={panel.onResetItemKeyframes} kf={{
         ...playheadLocal,
         set: panel.onSetItemKeyframe,
         remove: panel.onRemoveItemKeyframe,
         seekLocal: (frame) => panel.onSeek(item.startFrame + frame),
       }} />
-      {panel.onIsolateVoice && panel.selectedItems.length === 1 && <><SectionLabel>{t('人声隔离')}</SectionLabel><IsolateVoiceControl item={item} onIsolate={panel.onIsolateVoice} /></>}
+      {panel.onIsolateVoice && panel.selectedItems.length === 1 && <><SectionLabel>{t('Voice Isolation')}</SectionLabel><IsolateVoiceControl item={item} onIsolate={panel.onIsolateVoice} /></>}
     </>
   );
 }
@@ -215,16 +215,16 @@ function AnimationTab({ panel, item }: InspectorContentProps) {
   const visual = panel.selectedItems.every((entry) => entry.kind !== 'audio');
   return (
     <>
-      {(item.kind === 'video' || item.kind === 'audio' || item.kind === 'sequence') && panel.onItemSpeedChange && <><SectionLabel>{t('变速')}</SectionLabel><SpeedControl item={item} mixed={isMixed(panel, (entry) => entry.playbackRate ?? 1)} onChange={panel.onItemSpeedChange} /></>}
-      {visual && <><SectionLabel onReset={() => panel.onItemZoomChange(null)} resetDisabled={!item.zoom && !isMixed(panel, (entry) => entry.zoom)}>{t('缩放')}</SectionLabel><ZoomControl zoom={item.zoom} mixed={{
+      {(item.kind === 'video' || item.kind === 'audio' || item.kind === 'sequence') && panel.onItemSpeedChange && <><SectionLabel>{t('Speed')}</SectionLabel><SpeedControl item={item} mixed={isMixed(panel, (entry) => entry.playbackRate ?? 1)} onChange={panel.onItemSpeedChange} /></>}
+      {visual && <><SectionLabel onReset={() => panel.onItemZoomChange(null)} resetDisabled={!item.zoom && !isMixed(panel, (entry) => entry.zoom)}>{t('Zoom')}</SectionLabel><ZoomControl zoom={item.zoom} mixed={{
         shape: isMixed(panel, (entry) => entry.zoom?.shape),
         magnification: isMixed(panel, (entry) => entry.zoom?.magnification ?? 1.5),
         focalPointX: isMixed(panel, (entry) => entry.zoom?.focalPointX ?? 0.5),
         focalPointY: isMixed(panel, (entry) => entry.zoom?.focalPointY ?? 0.5),
       }} onChange={panel.onItemZoomChange} getLocalFrame={() => Math.max(0, Math.min(item.durationInFrames - 1, panel.getPlayhead() - item.startFrame))} fps={panel.fps} onSetKeyframe={panel.onSetReframeKeyframe} onRemoveKeyframe={panel.onRemoveReframeKeyframe} /></>}
-      {visual && panel.selectedItems.length === 1 && <><SectionLabel>{t('转场')}</SectionLabel><TransitionControl transition={panel.transition} fps={panel.fps} onAdd={panel.onAddTransition} onSet={panel.onSetTransition} onRemove={panel.onRemoveTransition} audioMode={false} previewStatus={panel.selectedPreviewStatuses?.find((status) => status.kind === 'transition' && status.targetId === panel.transition?.id)} /></>}
-      {item.kind === 'audio' && panel.selectedItems.length === 1 && <><SectionLabel>{t('音频转场')}</SectionLabel><TransitionControl transition={panel.transition} fps={panel.fps} onAdd={panel.onAddTransition} onSet={panel.onSetTransition} onRemove={panel.onRemoveTransition} audioMode /></>}
-      <SectionLabel onReset={() => panel.onItemFadeChange({ fadeInFrames: 0, fadeOutFrames: 0 })} resetDisabled={(item.fadeInFrames ?? 0) === 0 && (item.fadeOutFrames ?? 0) === 0 && !isMixed(panel, (entry) => [entry.fadeInFrames ?? 0, entry.fadeOutFrames ?? 0])}>{t('淡入淡出')}</SectionLabel>
+      {visual && panel.selectedItems.length === 1 && <><SectionLabel>{t('Transitions')}</SectionLabel><TransitionControl transition={panel.transition} fps={panel.fps} onAdd={panel.onAddTransition} onSet={panel.onSetTransition} onRemove={panel.onRemoveTransition} audioMode={false} previewStatus={panel.selectedPreviewStatuses?.find((status) => status.kind === 'transition' && status.targetId === panel.transition?.id)} /></>}
+      {item.kind === 'audio' && panel.selectedItems.length === 1 && <><SectionLabel>{t('Audio Transition')}</SectionLabel><TransitionControl transition={panel.transition} fps={panel.fps} onAdd={panel.onAddTransition} onSet={panel.onSetTransition} onRemove={panel.onRemoveTransition} audioMode /></>}
+      <SectionLabel onReset={() => panel.onItemFadeChange({ fadeInFrames: 0, fadeOutFrames: 0 })} resetDisabled={(item.fadeInFrames ?? 0) === 0 && (item.fadeOutFrames ?? 0) === 0 && !isMixed(panel, (entry) => [entry.fadeInFrames ?? 0, entry.fadeOutFrames ?? 0])}>{t('Fade')}</SectionLabel>
       <FadeControl item={item} mixed={{ fadeInFrames: isMixed(panel, (entry) => entry.fadeInFrames ?? 0), fadeOutFrames: isMixed(panel, (entry) => entry.fadeOutFrames ?? 0) }} fps={panel.fps} onChange={panel.onItemFadeChange} />
     </>
   );
@@ -234,9 +234,9 @@ function SolidColorField({ item, mixed, onChange }: { item: TimelineItem; mixed?
   const t = useT();
   return (
     <>
-      <SectionLabel>{t('纯色')}</SectionLabel>
+      <SectionLabel>{t('Solid')}</SectionLabel>
       <label className="cc-insp-mg-field">
-        <span>{t('填充颜色')}{mixed ? ' —' : ''}</span>
+        <span>{t('Fill Color')}{mixed ? ' —' : ''}</span>
         <input type="color" value={String(item.props?.color ?? '#1a1a1a')} onChange={(event) => onChange('color', event.target.value)} />
       </label>
     </>
@@ -250,7 +250,7 @@ function MotionGraphicFields({ item, schema, mixed, onChange }: {
   onChange: (key: string, value: unknown) => void;
 }) {
   const t = useT();
-  if (schema.length === 0) return <div className="cc-insp-muted">{t('该模板无可编辑属性。')}</div>;
+  if (schema.length === 0) return <div className="cc-insp-muted">{t('This template has no editable properties.')}</div>;
   return (
     <div className="cc-insp-mg-grid">
       {groupInspectorPropSchema(schema).map((group, groupIndex) => group.kind === 'color-row'
@@ -277,24 +277,24 @@ function MotionGraphicFields({ item, schema, mixed, onChange }: {
 function InspectorHint({ item, count }: { item: TimelineItem; count: number }) {
   const t = useT();
   const labels: Partial<Record<TimelineItem['kind'], string>> = {
-    audio: '音频',
-    video: '视频',
-    image: '图片',
+    audio: 'Audio',
+    video: 'Video',
+    image: 'Image',
     gif: 'GIF',
     svg: 'SVG',
-    solid: '纯色',
-    text: '文字',
-    'motion-graphic': '动效图形',
-    sequence: t('嵌套序列'),
+    solid: 'Solid',
+    text: 'Text',
+    'motion-graphic': 'Motion graphic',
+    sequence: t('Nested sequence'),
   };
   const sourceBacked = ['audio', 'video', 'image', 'gif', 'svg'].includes(item.kind);
   return (
     <div className="cc-insp-scope">
-      {count > 1 && <strong>{t('已选择 {n} 个片段', { n: count })}</strong>}
-      <span className="cc-insp-scope-kind">{t(labels[item.kind] ?? '片段')}</span>
+      {count > 1 && <strong>{t('{n} clips selected', { n: count })}</strong>}
+      <span className="cc-insp-scope-kind">{t(labels[item.kind] ?? 'Clip')}</span>
       <span>{sourceBacked
-        ? t('仅作用于当前时间线片段，不修改媒体池中的源文件。')
-        : t('仅作用于当前时间线片段。')}</span>
+        ? t('Affects only this timeline clip; the source file in the media pool is unchanged.')
+        : t('Affects only this timeline clip.')}</span>
     </div>
   );
 }

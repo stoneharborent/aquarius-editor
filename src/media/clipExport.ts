@@ -15,7 +15,7 @@ async function fail(res: Response, verb: string, signal?: AbortSignal): Promise<
   signal?.throwIfAborted();
   const info = (await res.json().catch(() => null)) as { error?: string } | null;
   signal?.throwIfAborted();
-  throw new Error(info?.error ?? t('{verb}失败（{status}）', { verb: t(verb), status: res.status }));
+  throw new Error(info?.error ?? t('{verb} failed ({status})', { verb: t(verb), status: res.status }));
 }
 
 export interface ClipMovExportOptions {
@@ -51,7 +51,7 @@ export async function renderClipMovBlob(
     signal,
   });
   signal?.throwIfAborted();
-  if (!res.ok) await fail(res, '导出', signal);
+  if (!res.ok) await fail(res, 'Export', signal);
   signal?.throwIfAborted();
   const blob = await res.blob();
   signal?.throwIfAborted();
@@ -82,7 +82,7 @@ export async function bakeClipToVideo(state: TimelineState, item: TimelineItem):
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ state: clipState(state, item), codec: 'h264', transparent: false, mode: 'bake' }),
   });
-  if (!res.ok) await fail(res, '转换');
+  if (!res.ok) await fail(res, 'Convert');
   return (await res.json() as { path: string }).path;
 }
 
@@ -94,7 +94,7 @@ async function bakeClipToProres(state: TimelineState, item: TimelineItem): Promi
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ state: clipState(state, item), codec: 'prores', transparent: true, mode: 'bake' }),
   });
-  if (!res.ok) await fail(res, '转换');
+  if (!res.ok) await fail(res, 'Convert');
   return (await res.json() as { path: string }).path;
 }
 
@@ -108,6 +108,6 @@ export async function bakeClipToAlphaWebm(state: TimelineState, item: TimelineIt
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ source }),
   });
-  if (!res.ok) await fail(res, '透明编码');
+  if (!res.ok) await fail(res, 'Alpha encode');
   return (await res.json() as { path: string }).path;
 }

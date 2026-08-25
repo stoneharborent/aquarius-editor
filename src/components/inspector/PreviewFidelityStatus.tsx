@@ -3,12 +3,12 @@ import type { SelectedPreviewStatus } from '../../gl/previewAdapter';
 import { t, useT } from '../../i18n/locale';
 
 function fallbackReasonText(status: SelectedPreviewStatus): string {
-  if (status.fallbackReason === 'webgl-unavailable') return t('WebGL2 不可用');
-  if (status.fallbackReason === 'unsupported-media') return t('素材类型不支持纹理预览');
-  if (status.fallbackReason === 'missing-shader') return t('着色器资源缺失');
-  if (status.fallbackReason === 'shader-error') return t('着色器编译或运行失败');
-  if (status.fallbackReason === 'unsupported-transition') return t('转场不支持 GL');
-  return t('资源尚未就绪');
+  if (status.fallbackReason === 'webgl-unavailable') return t('WebGL2 unavailable');
+  if (status.fallbackReason === 'unsupported-media') return t('Media type does not support texture preview');
+  if (status.fallbackReason === 'missing-shader') return t('Shader resource missing');
+  if (status.fallbackReason === 'shader-error') return t('Shader compilation or runtime failure');
+  if (status.fallbackReason === 'unsupported-transition') return t('Transition does not support GL');
+  return t('Resource not ready yet');
 }
 
 export function PreviewFidelityStatus({ status }: { status?: SelectedPreviewStatus }) {
@@ -16,12 +16,12 @@ export function PreviewFidelityStatus({ status }: { status?: SelectedPreviewStat
   if (!status || status.phase === 'inactive') return null;
   const fallback = status.phase === 'fallback';
   const label = status.phase === 'ready'
-    ? t('真实 GL 预览 · 与导出共用参数')
+    ? t('Real GL preview · shares parameters with export')
     : status.phase === 'waiting'
-      ? t('正在准备真实 GL 预览…')
+      ? t('Preparing real GL preview…')
       : status.adapter === 'css-transition'
-        ? t('CSS 回退预览 · 不代表导出效果')
-        : t('源画面回退 · 当前未显示特效');
+        ? t('CSS fallback preview · does not represent the export')
+        : t('Source fallback · effects not shown');
   return (
     <div role="status" aria-live="polite" style={{
       display: 'flex', alignItems: 'center', gap: 6, minHeight: 24,

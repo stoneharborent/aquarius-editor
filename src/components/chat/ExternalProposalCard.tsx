@@ -15,10 +15,10 @@ function ExternalErrorAlert({ message }: { message: string }) {
   // Bridge errors surface as machine-readable strings; map the common
   // ownership-conflict cases to user-facing copy, then translate via i18n.
   const BRIDGE_ERROR_KEYS: Record<string, string> = {
-    'registration failed: HTTP 409': '工程正在其他窗口编辑，无法注册。请关闭其他窗口后重试。',
-    'poll failed: HTTP 409': '工程正在其他窗口编辑，连接已中断。请关闭其他窗口后重试。',
-    'cancellation poll failed: HTTP 409': '工程正在其他窗口编辑，连接已中断。请关闭其他窗口后重试。',
-    'result failed: HTTP 409': '工程正在其他窗口编辑，结果未能送达。请关闭其他窗口后重试。',
+    'registration failed: HTTP 409': 'This project is being edited in another window; registration failed. Close the other window and try again.',
+    'poll failed: HTTP 409': 'This project is being edited in another window; the connection was interrupted. Close the other window and try again.',
+    'cancellation poll failed: HTTP 409': 'This project is being edited in another window; the connection was interrupted. Close the other window and try again.',
+    'result failed: HTTP 409': 'This project is being edited in another window; the result could not be delivered. Close the other window and try again.',
   };
   const text = t(BRIDGE_ERROR_KEYS[message] ?? message);
   return (
@@ -32,7 +32,7 @@ function GuardDetails({ guard }: { guard: ExternalGuard }) {
   const t = useT();
   return (
     <div style={{ fontSize: 12, color: theme.text, marginBottom: 8, lineHeight: 1.5 }}>
-      {t('工具 {tool} 将作用于当前工程。确认仅绑定下方参数；修改参数后必须重新确认。', {
+      {t('Tool {tool} will affect the current project. Approval is bound only to the parameters below; changed parameters require a new approval.', {
         tool: guard.tool,
       })}
       {!guard.details.length && (
@@ -61,14 +61,14 @@ function GuardActions({ guard, confirmGuard }: {
         onClick={() => confirmGuard(guard.id, true)}
         style={{ border: `0.5px solid ${theme.accent}`, background: 'none', color: theme.text, borderRadius: 6, padding: '5px 14px', fontSize: 12.5, cursor: 'pointer' }}
       >
-        {t('确认')}
+        {t('Confirm')}
       </button>
       <button
         type="button"
         onClick={() => confirmGuard(guard.id, false)}
         style={{ border: `0.5px solid ${theme.border}`, background: 'none', color: theme.textDim, borderRadius: 6, padding: '5px 14px', fontSize: 12.5, cursor: 'pointer' }}
       >
-        {t('拒绝')}
+        {t('Reject')}
       </button>
     </div>
   );
@@ -89,7 +89,7 @@ function PendingGuardDialog({ guard, confirmGuard }: {
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
         <Icon name="wand" size={14} />
-        <strong style={{ fontSize: 12.5 }}>{t('外部 Agent 请求执行真实工程操作')}</strong>
+        <strong style={{ fontSize: 12.5 }}>{t('External agent requests a live-project operation')}</strong>
       </div>
       <GuardDetails guard={guard} />
       <GuardActions guard={guard} confirmGuard={confirmGuard} />
@@ -106,7 +106,7 @@ function ExternalProposal({ external, onPreviewState }: {
   if (!proposal) return null;
   return (
     <ProposalCard
-      proposal={{ ...proposal, title: `${proposal.title} ${t('编辑提案')}` }}
+      proposal={{ ...proposal, title: `${proposal.title} ${t('Edit proposal')}` }}
       onApply={external.applyProposal}
       onReject={external.rejectProposal}
       stale={external.proposalStale}

@@ -12,7 +12,7 @@ const ctx = {} as AgentContext; // followup 不碰编辑器状态
 // ---- 往返：single + multi 字段经 buildFollowupWidget → parseWidgets 无损 ----
 const text = buildFollowupWidget(
   [
-    { id: 'ratio', label: '画幅比例', type: 'single', options: [{ value: '16:9', display: '横屏 16:9' }, { value: '9:16', display: '竖屏 9:16' }], required: true },
+    { id: 'ratio', label: 'Aspect ratio', type: 'single', options: [{ value: '16:9', display: '横屏 16:9' }, { value: '9:16', display: '竖屏 9:16' }], required: true },
     { id: 'topics', label: '重点内容', type: 'multi', options: [{ value: 'a', display: '生平' }, { value: 'b', display: '作品' }], allowOther: true },
   ],
   '开始前需要确认几件事：',
@@ -26,7 +26,7 @@ assert.strictEqual(fields.length, 2, '应解出 2 个字段');
 const [ratio, topics] = fields as [FormSingle, FormMulti];
 assert.strictEqual(ratio.kind, 'single');
 assert.strictEqual(ratio.id, 'ratio');
-assert.strictEqual(ratio.label, '画幅比例');
+assert.strictEqual(ratio.label, 'Aspect ratio');
 assert.strictEqual(ratio.required, true, 'required 应保留');
 assert.deepStrictEqual(ratio.options, [{ value: '16:9', display: '横屏 16:9' }, { value: '9:16', display: '竖屏 9:16' }]);
 assert.strictEqual(topics.kind, 'multi');

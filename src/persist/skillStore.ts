@@ -41,7 +41,6 @@ export function normalizeStoredCustomSkill(value: unknown): CustomSkill | undefi
     id: stored.id,
     slug,
     name: stored.name,
-    nameZh: typeof stored.nameZh === 'string' ? stored.nameZh : stored.name,
     description,
     summary: stored.summary,
     scenarios: stored.scenarios,

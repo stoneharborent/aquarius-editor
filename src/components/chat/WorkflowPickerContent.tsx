@@ -1,4 +1,4 @@
-import { localizedCatalogText, useT } from '../../i18n/locale';
+import { useT } from '../../i18n/locale';
 import { CREATIVE_SKILLS, allCreativeSkills } from '../../agent/skills/skills-catalog';
 import { Icon } from '../icons';
 
@@ -17,17 +17,15 @@ export function WorkflowPickerContent({
 }: WorkflowPickerContentProps) {
   const t = useT();
   const builtinIds = new Set(CREATIVE_SKILLS.map((skill) => skill.id));
-  const skillName = (skill: { name: string; nameZh: string }) => (
-    localizedCatalogText(skill.name, skill.nameZh)
-  );
+  const skillName = (skill: { name: string }) => t(skill.name);
 
   return (
     <>
       <div className="cc-creative-picker-head">
         <span><Icon name="wand" size={15} /></span>
         <div>
-          <strong>{t('选择创作工作流')}</strong>
-          <small>{t('工作流会约束 Agent 的规划与工具调用。')}</small>
+          <strong>{t('Choose a creative workflow')}</strong>
+          <small>{t('The workflow guides the Agent\'s planning and tool use.')}</small>
         </div>
       </div>
       <button
@@ -39,12 +37,12 @@ export function WorkflowPickerContent({
       >
         <span className="cc-creative-mode-icon"><Icon name="sparkles" size={15} /></span>
         <span className="cc-creative-mode-copy">
-          <strong>{t('自由创作')}</strong>
-          <small>{t('不限定工作流，根据当前目标灵活执行。')}</small>
+          <strong>{t('Freeform')}</strong>
+          <small>{t('Work flexibly from the current goal without a fixed workflow.')}</small>
         </span>
         {!creativeMode && <span className="cc-creative-mode-check"><Icon name="check" size={13} strokeWidth={2.4} /></span>}
       </button>
-      <div className="cc-creative-picker-section">{t('专业工作流')}</div>
+      <div className="cc-creative-picker-section">{t('Specialized workflows')}</div>
       <div className="cc-creative-mode-grid">
         {allCreativeSkills().map((skill) => (
           <button
@@ -66,7 +64,7 @@ export function WorkflowPickerContent({
             <span className="cc-creative-mode-copy">
               <span className="cc-creative-mode-title">
                 <strong>{skillName(skill)}</strong>
-                {!builtinIds.has(skill.id) && <em>{t('自定义')}</em>}
+                {!builtinIds.has(skill.id) && <em>{t('Custom')}</em>}
               </span>
               <small>{t(skill.summary)}</small>
             </span>

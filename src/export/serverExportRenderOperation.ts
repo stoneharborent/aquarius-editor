@@ -145,7 +145,7 @@ async function submitExport(
     const error = submitted && typeof submitted === 'object' && 'error' in submitted
       && typeof submitted.error === 'string'
       ? submitted.error
-      : context.t('导出失败 ({status})', { status: submission.status });
+      : context.t('Export failed ({status})', { status: submission.status });
     throw new Error(error);
   }
   return renderId;
@@ -171,7 +171,7 @@ async function readSnapshot(
   if (!response.ok || !validSnapshot) {
     const message = snapshot && typeof snapshot === 'object' && 'error' in snapshot
       && typeof snapshot.error === 'string' ? snapshot.error : undefined;
-    throw new Error(message ?? t('无法读取导出进度 ({status})', { status: response.status }));
+    throw new Error(message ?? t('Could not read export progress ({status})', { status: response.status }));
   }
   return snapshot as ExportJobSnapshot;
 }
@@ -195,7 +195,7 @@ function updateActiveProgress(context: ServerExportPollContext, snapshot: Export
 }
 
 function completeSnapshot(context: ServerExportPollContext, snapshot: ExportJobSnapshot): ExportJobResult {
-  if (!snapshot.result?.path) throw new Error(context.t('导出完成，但没有可下载的文件'));
+  if (!snapshot.result?.path) throw new Error(context.t('Export finished without a downloadable file'));
   context.setProgress((current) => current ? {
     ...current,
     phase: 'finalizing',
@@ -216,7 +216,7 @@ export async function pollExport(
     if (snapshot.status === 'failed') {
       const cause = snapshot.failure
         ? new ExportFailureError(snapshot.failure)
-        : new Error(snapshot.error ?? context.t('导出失败'));
+        : new Error(snapshot.error ?? context.t('Export failed'));
       throw new ServerRenderError(cause);
     }
     if (snapshot.status === 'succeeded') return completeSnapshot(context, snapshot);

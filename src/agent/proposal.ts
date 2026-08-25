@@ -70,9 +70,9 @@ const VERB: Record<string, string> = {
   manage_timelines: '管理序列',
   edit_track: '管理轨道',
   manage_media_pool: '整理素材池',
-  isolate_voice: '人声隔离',
+  isolate_voice: 'Voice Isolation',
   apply_script: '改稿应用',
-  manage_effects: '特效',
+  manage_effects: 'Effects',
   edit_item: '编辑片段',
   browse_library: '浏览资源库',
 };
@@ -88,7 +88,7 @@ function targetOf(args: Record<string, unknown>, actions: AnyAction[]): string {
     if (a.type === 'tl.create') return a.timeline.name;
     if (a.type === 'tl.duplicate' || a.type === 'tl.rename') return a.name;
   }
-  return '时间线';
+  return 'Timeline';
 }
 
 function impactOf(actions: AnyAction[]): string {
