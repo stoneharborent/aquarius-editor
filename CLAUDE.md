@@ -33,8 +33,13 @@ dev/test bench.
 4. **Shortcuts follow Final Cut Pro.** The mapping table `docs/fcp-shortcut-map.md`
    (in this repo) is the law once written; deviations only for actions with no FCP
    equivalent, and they must be documented there.
-5. **English only** in UI strings, comments, and docs (the `zh` locale dictionary is the
-   one place Chinese remains, as a translation target).
+5. **English only** in UI strings, comments, and docs. English is the *source language*:
+   `t('English copy')` uses the English string itself as the translation key, and
+   `src/i18n/dict/zh/` holds the Chinese translation (plus the Chinese language data the
+   runtime needs — agent keyword terms, filler words, CJK font aliases, locale copy
+   tables). The only other place Chinese may appear is a test whose whole purpose is CJK
+   text handling; those files are listed, with the reason, in `scripts/check-i18n.mjs`.
+   `npm run verify:i18n` enforces both halves of this rule.
 6. **Model split (Royce's rule):** Fable plans, reviews, and coordinates; Opus agents
    implement. Same as the wider AquariusOS project.
 7. Plain-language docs — Royce is a beginner at this stack; READMEs and guides assume
