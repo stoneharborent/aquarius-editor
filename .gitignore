@@ -56,7 +56,7 @@ public/media/asr-models/
 
 # ── Private workspace (ignored since 2026-07-18) ──────────────
 # AI assistant project rules, session configuration, skills, and hooks
-CLAUDE.md
+# CLAUDE.md is tracked in this fork — it is the project law (unignored vs upstream)
 AGENTS.md
 .codex/
 .agents/
@@ -93,3 +93,4 @@ public/whisper-cli/
 .npm-cache/
 # Root-level local runtime files
 /etc/
+node_modules.nosync/
