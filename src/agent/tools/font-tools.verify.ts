@@ -101,7 +101,7 @@ const blockedState: TimelineState = {
     durationInFrames: 90,
     name: 'Title',
     kind: 'motion-graphic',
-    props: { fontFamily: 'Comic Sans MS', title: '你好' },
+    props: { fontFamily: 'Comic Sans MS', title: 'Hello' },
   }],
 };
 const refs = collectReferencedFonts(blockedState);

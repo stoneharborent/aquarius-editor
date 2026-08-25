@@ -1,4 +1,5 @@
 import type { AgentToolSchema } from '../../tool-schema';
+import { ZH_FONT_QUERY_EXAMPLES } from '../../../i18n/dict/zh/font-aliases';
 
 export const FONT_TOOL_SCHEMAS: AgentToolSchema[] = [
   {
@@ -8,8 +9,8 @@ export const FONT_TOOL_SCHEMAS: AgentToolSchema[] = [
       '+ locally bundled Chinese foundry faces, source:"bundled"). Use when export reports unsupported',
       'fonts or when picking fontFamily for motion-graphic items / captions. Returns canonical family',
       'names to use verbatim. Substring-matches family AND native-name aliases',
-      '(case/punctuation-insensitive) — e.g. "inter", "playfair", "noto sc", "思源黑体", "得意黑",',
-      '"抖音美好体". loadable=false means catalogued only; prefer a loadable alternative or',
+      `(case/punctuation-insensitive) — e.g. "inter", "playfair", "noto sc", ${ZH_FONT_QUERY_EXAMPLES.map((name) => `"${name}"`).join(', ')}.`,
+      'loadable=false means catalogued only; prefer a loadable alternative or',
       'confirmFontFallback on export.',
     ].join(' '),
     input_schema: {

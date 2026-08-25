@@ -199,4 +199,5 @@ export default {
   'Previous': '上一条',
   'Next': '下一条',
   'No transcript yet': '暂无文字稿',
+  'Chat message {n}': '对话消息 {n}',
 } as Record<string, string>;

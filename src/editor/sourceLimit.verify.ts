@@ -1,6 +1,8 @@
 // Runnable check: `npx tsx src/editor/sourceLimit.verify.ts`.
-// Verify that "the clip cannot be longer than the source asset": conversion of remaining source frames (including variable speed), which clips are not limited
-// (picture/MG/text/word-driven audio), and it is confirmed by real reduce that the right cropping is indeed blocked by this upper bound.
+// Verify that "a clip can't be longer than its source asset": remaining-source-frame
+// conversion (including variable speed), which clip kinds are exempt from the limit
+// (images/MG/text/word-driven audio), and confirm via a real reduce that right-side
+// cropping is indeed blocked by this upper bound.
 import assert from 'node:assert/strict';
 import {
   remainingSourceFrames,
@@ -34,7 +36,7 @@ const stateOf = (items: TimelineItem[]): TimelineState => ({
   assert.equal(sourceFrameAt(incoming, -15), 1248);
   assert.equal(sourceFrameAt(incoming, 0), 1263);
   assert.equal(sourceFrameAt(item({ srcInFrame: 100, playbackRate: 2 }), -15), 70);
-  assert.equal(sourceFrameAt(item({ srcInFrame: 5 }), -15), 0, '源入点不足时不越过素材开头');
+  assert.equal(sourceFrameAt(item({ srcInFrame: 5 }), -15), 0, "when the source in-point is too small, it never goes before the asset's start");
 }
 
 // ── One authoritative timeline/source conversion, including clamped pre-roll windows ──
@@ -50,21 +52,21 @@ const stateOf = (items: TimelineItem[]): TimelineState => ({
   );
 }
 
-// ── Remaining source frames: How much is left after the entry point, variable speed timeline frame = source frame / rate conversion ──
+// ── Remaining source frames: how much is left past the in-point, variable-speed timeline frame = source frame / rate conversion ──
 {
   assert.equal(remainingSourceFrames(item(), 0, assets), 300);
-  assert.equal(remainingSourceFrames(item(), 120, assets), 180, '入点吃掉的部分不算数');
-  assert.equal(remainingSourceFrames(item({ playbackRate: 2 }), 0, assets), 150, '2 倍速时同样的源料只够一半时间线帧');
-  assert.equal(remainingSourceFrames(item({ playbackRate: 0.5 }), 0, assets), 600, '慢放能撑更久');
-  assert.equal(remainingSourceFrames(item(), 999, assets), 1, '入点越过尾部时至少留 1 帧,不返回 0/负数');
+  assert.equal(remainingSourceFrames(item(), 120, assets), 180, "the portion consumed by the in-point doesn't count");
+  assert.equal(remainingSourceFrames(item({ playbackRate: 2 }), 0, assets), 150, 'at 2x speed the same source footage only covers half the timeline frames');
+  assert.equal(remainingSourceFrames(item({ playbackRate: 0.5 }), 0, assets), 600, 'slow motion stretches it further');
+  assert.equal(remainingSourceFrames(item(), 999, assets), 1, 'when the in-point is past the tail, at least 1 frame is kept, never 0 or negative');
 }
 
-// ── If you can’t determine the length, don’t set a limit, so as not to lock something that can be stretched arbitrarily ──
+// ── When the length can't be determined, don't set a limit, so as not to lock something that can be stretched arbitrarily ──
 {
-  assert.equal(remainingSourceFrames(item({ kind: 'image', src: '/m/a.png' }), 0, assets), null, '图片可以任意拉长');
-  assert.equal(remainingSourceFrames(item({ kind: 'motion-graphic', src: undefined }), 0, assets), null, 'MG 是生成的');
+  assert.equal(remainingSourceFrames(item({ kind: 'image', src: '/m/a.png' }), 0, assets), null, 'an image can be stretched arbitrarily long');
+  assert.equal(remainingSourceFrames(item({ kind: 'motion-graphic', src: undefined }), 0, assets), null, 'MG is generated');
   assert.equal(remainingSourceFrames(item({ kind: 'text', src: undefined }), 0, assets), null);
-  assert.equal(remainingSourceFrames(item({ src: '/m/missing.mp4' }), 0, assets), null, '素材表里没有就不猜');
+  assert.equal(remainingSourceFrames(item({ src: '/m/missing.mp4' }), 0, assets), null, "don't guess when it's not in the asset table");
   assert.equal(remainingSourceFrames(item(), 0, []), null);
   assert.equal(remainingSourceFrames(item(), 0, undefined), null);
   assert.equal(
@@ -73,24 +75,24 @@ const stateOf = (items: TimelineItem[]): TimelineState => ({
       0, assets,
     ),
     null,
-    '词驱动音频由 retime 按编辑后词流收口,两套上界不能打架',
+    'word-driven audio is bounded by retime according to the edited word stream; the two upper bounds must not conflict',
   );
 }
 
-// ── Jingzhen reduce: The right crop is blocked by the tail of the asset, and the freeze frame can no longer be pulled out──
+// ── Real reduce: right-side cropping is blocked by the asset's tail, and a freeze frame can no longer be pulled past it ──
 {
   const before = stateOf([item({ durationInFrames: 100 })]);
   const stretched = reduce(before, { type: 'retime', id: 'a', durationInFrames: 5000 });
-  assert.equal(stretched.items[0]!.durationInFrames, 300, '最多用满整条素材');
+  assert.equal(stretched.items[0]!.durationInFrames, 300, 'uses at most the entire asset');
 
   const trimmed = reduce(before, { type: 'retime', id: 'a', durationInFrames: 5000, srcInFrame: 200 });
-  assert.equal(trimmed.items[0]!.durationInFrames, 100, '左裁之后可用长度也跟着变短');
+  assert.equal(trimmed.items[0]!.durationInFrames, 100, 'the available length shrinks accordingly after a left crop');
 
   const shorter = reduce(before, { type: 'retime', id: 'a', durationInFrames: 60 });
-  assert.equal(shorter.items[0]!.durationInFrames, 60, '范围内的裁剪不受影响');
+  assert.equal(shorter.items[0]!.durationInFrames, 60, 'cropping within range is unaffected');
 }
 
-// ──Clips without asset information can still be lengthened (MG/template)──
+// ── Clips without asset information can still be lengthened (MG/template) ──
 {
   const mg = stateOf([item({ kind: 'motion-graphic', src: undefined, durationInFrames: 60 })]);
   assert.equal(reduce(mg, { type: 'retime', id: 'a', durationInFrames: 900 }).items[0]!.durationInFrames, 900);
@@ -131,4 +133,4 @@ const stateOf = (items: TimelineItem[]): TimelineState => ({
     '0.5x split preserves the fractional source boundary instead of skipping ahead',
   );
 }
-console.log('sourceLimit.verify: ok (剩余源帧换算/变速/不设限规则/真 reduce 右裁上界)');
+console.log('sourceLimit.verify: ok (remaining-source-frame conversion / variable speed / no-limit rules / real reduce right-crop bound)');

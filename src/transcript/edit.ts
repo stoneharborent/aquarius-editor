@@ -1,5 +1,6 @@
 import { msToFrame, type TranscriptWord, type TranscriptVariant } from './types';
 import { sourceFramesToTimelineFrames, sourceWindowForTimelineRange } from '../editor/sourceLimit';
+import { ZH_FILLER_WORDS } from '../i18n/dict/zh/agent-terms';
 
 // Transcript-based editing: deleting a word removes its audible source range.
 // The kept audio = maximal runs of NON-deleted words, each run playing the
@@ -324,10 +325,10 @@ export function splitClipTranscript(
 }
 
 // Fixed filler tokens clean_script strips ("mechanical clean" — no LLM).
-const FILLER = new Set(['um', 'umm', 'uh', 'uhh', 'uhm', 'er', 'erm', 'ah', 'hmm', 'mmm', '嗯', '呃', '啊', '唔', '额']);
+const FILLER = new Set<string>(['um', 'umm', 'uh', 'uhh', 'uhm', 'er', 'erm', 'ah', 'hmm', 'mmm', ...ZH_FILLER_WORDS]);
 
 export function isFiller(text: string): boolean {
-  const t = text.toLowerCase().replace(/[^a-z一-鿿]/g, '');
+  const t = text.toLowerCase().replace(/[^a-z\u{4E00}-\u{9FFF}]/gu, '');
   return t.length > 0 && FILLER.has(t);
 }
 

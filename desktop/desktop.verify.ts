@@ -1,5 +1,6 @@
-// 桌面壳纯逻辑检查:env 解析 round-trip、mini-connect 前缀路由语义(插件挂载的
-// 契约)、静态 MIME。跑法:npx tsx desktop/desktop.check.ts(已入 npm test 链)。
+// Pure-logic checks for the desktop shell: env parsing round-trip, mini-connect
+// prefix routing semantics (the contract plugins mount against), and static MIME.
+// Run with: npx tsx desktop/desktop.check.ts (already wired into npm test).
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -15,32 +16,32 @@ import { staticMime } from './static-files.ts';
     "B_SINGLE='x y'",
     'C_COMMENT=val # trailing note',
     'D_EMPTY=',
-    '# 整行注释',
+    '# a whole-line comment',
     'not a kv line',
     '  E_SPACED =  padded  ',
   ].join('\n'));
   assert.equal(env.LLM_API_KEY, 'sk-plain');
-  assert.equal(env.A_QUOTED, 'v#1', '成对引号剥离,内部 # 保留');
+  assert.equal(env.A_QUOTED, 'v#1', 'matched quotes are stripped, internal # is kept');
   assert.equal(env.B_SINGLE, 'x y');
-  assert.equal(env.C_COMMENT, 'val', '未引号值截断于 #');
-  assert.ok(!('D_EMPTY' in env), '空值不入 seed');
+  assert.equal(env.C_COMMENT, 'val', 'unquoted value is truncated at #');
+  assert.ok(!('D_EMPTY' in env), 'empty value is not seeded');
   assert.equal(env.E_SPACED, 'padded');
   console.log('env-file parse: OK');
 }
 
-// ── mini-connect 路由语义 ────────────────────────────────────────────────
+// ── mini-connect routing semantics ────────────────────────────────────────
 {
   assert.equal(matchRoute('/export', '/export'), '/');
-  assert.equal(matchRoute('/export', '/export/job'), '/job', '整段前缀命中');
-  assert.equal(matchRoute('/export', '/exportx'), null, '非段界不命中');
+  assert.equal(matchRoute('/export', '/export/job'), '/job', 'whole-segment prefix matches');
+  assert.equal(matchRoute('/export', '/exportx'), null, 'non-segment-boundary does not match');
   assert.equal(matchRoute('/', '/anything'), '/anything');
-  assert.equal(rewriteUrl('/export/job?a=1', '/export/job'), '/?a=1', 'query 保留');
+  assert.equal(rewriteUrl('/export/job?a=1', '/export/job'), '/?a=1', 'query string is preserved');
   assert.equal(rewriteUrl('/upload?name=x', '/upload'), '/?name=x');
   assert.equal(rewriteUrl('/media/uploads/%E4%B8%AD.mp4', '/media/uploads'), '/%E4%B8%AD.mp4');
   console.log('mini-connect match/rewrite: OK');
 }
 
-// ── mini-connect 分发:next 推进、url 重写/复原、404、异步失败兜 500 ──────
+// ── mini-connect dispatch: next advances, url rewrite/restore, 404, async failure falls back to 500 ──────
 type FakeRes = ServerResponse & { statusCode: number; body: string; ended: boolean };
 function fakeRes(): FakeRes {
   const headers: Record<string, string> = {};
@@ -69,21 +70,21 @@ async function tick(): Promise<void> { await new Promise((r) => setTimeout(r, 0)
 
   const res = fakeRes();
   app.handle(fakeReq('/a/b/c?q=1'), res);
-  assert.deepEqual(seen, ['a:/b/c?q=1', 'ab:/c?q=1', 'root:/a/b/c?q=1'], '逐层重写,兜底层见原 url');
+  assert.deepEqual(seen, ['a:/b/c?q=1', 'ab:/c?q=1', 'root:/a/b/c?q=1'], 'each layer rewrites in turn, the fallback layer sees the original url');
   assert.equal(res.statusCode, 200);
 
   const res404 = fakeRes();
   const app2 = createMiniConnect(() => {});
   app2.use('/only', (_req, res2) => { res2.writeHead(200); res2.end(); });
   app2.handle(fakeReq('/other'), res404);
-  assert.equal(res404.statusCode, 404, '无命中 → 404');
+  assert.equal(res404.statusCode, 404, 'no match → 404');
 
   const res500 = fakeRes();
   const app3 = createMiniConnect((e) => errors.push(e));
   app3.use('/boom', async () => { throw new Error('kaput'); });
   app3.handle(fakeReq('/boom'), res500);
   await tick();
-  assert.equal(res500.statusCode, 500, '异步拒绝 → 500');
+  assert.equal(res500.statusCode, 500, 'async rejection → 500');
   assert.match(res500.body, /kaput/);
   assert.equal(errors.length, 1);
   console.log('mini-connect dispatch: OK');
@@ -92,11 +93,11 @@ async function tick(): Promise<void> { await new Promise((r) => setTimeout(r, 0)
 // ── staticMime ──────────────────────────────────────────────────────────
 {
   assert.equal(staticMime('index.html'), 'text/html; charset=utf-8');
-  assert.equal(staticMime('app.js'), 'text/javascript', 'ES module 严格 MIME');
+  assert.equal(staticMime('app.js'), 'text/javascript', 'strict MIME for ES modules');
   assert.equal(staticMime('style.css'), 'text/css');
   assert.equal(staticMime('font.woff2'), 'font/woff2');
   assert.equal(staticMime('lut.cube'), 'text/plain; charset=utf-8');
-  assert.equal(staticMime('clip.mp4'), 'video/mp4', '媒体走 media-dir 表');
+  assert.equal(staticMime('clip.mp4'), 'video/mp4', 'media goes through the media-dir table');
   console.log('staticMime: OK');
 }
 

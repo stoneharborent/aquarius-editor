@@ -6,31 +6,37 @@ import {
   localizeDesignRole,
   localizeDesignStyleGuide,
 } from './designStyleLocalization';
+import {
+  FONT_ROLE_ZH,
+  PRESET_GUIDE_ZH,
+  PRESET_NAME_ZH,
+  ROLE_ZH,
+} from '../../i18n/dict/zh/design-style';
 
 const modern = DESIGN_STYLE_PRESETS.find((preset) => preset.name === 'Modern Editorial');
-assert.ok(modern, '测试数据应包含 Modern Editorial');
+assert.ok(modern, 'test data should include Modern Editorial');
 
-assert.equal(localizeDesignPresetName(modern.name, 'zh'), '现代杂志编辑风');
+assert.equal(localizeDesignPresetName(modern.name, 'zh'), PRESET_NAME_ZH['Modern Editorial']);
 assert.equal(localizeDesignPresetName(modern.name, 'en'), modern.name);
-assert.equal(localizeDesignRole('background-chart', 'zh'), '图表背景');
-assert.equal(localizeDesignRole('chart-warm-mid', 'zh'), '图表暖色中间调');
+assert.equal(localizeDesignRole('background-chart', 'zh'), ROLE_ZH['background-chart']);
+assert.equal(localizeDesignRole('chart-warm-mid', 'zh'), ROLE_ZH['chart-warm-mid']);
 assert.equal(localizeDesignRole('background-chart', 'en'), 'background-chart');
-assert.equal(localizeDesignFontRole('accent', 'zh'), '强调字体');
-assert.equal(localizeDesignFontRole('callout', 'zh'), '标注字体');
-assert.equal(localizeDesignFontRole('impact', 'zh'), '冲击字体');
+assert.equal(localizeDesignFontRole('accent', 'zh'), FONT_ROLE_ZH.accent);
+assert.equal(localizeDesignFontRole('callout', 'zh'), FONT_ROLE_ZH.callout);
+assert.equal(localizeDesignFontRole('impact', 'zh'), FONT_ROLE_ZH.impact);
 assert.equal(localizeDesignFontRole('accent', 'en'), 'accent');
 assert.equal(
   localizeDesignStyleGuide(modern.style.styleGuide ?? '', 'zh'),
-  '现代杂志编辑风：暖灰纸张、笔记本或报刊网格、衬线标题与清晰的 Roboto 正文。整体像数据记者的批注笔记，以黑灰为主，仅用橙色或黄色强调关键数值和语句。',
+  PRESET_GUIDE_ZH['Modern Editorial'],
 );
 assert.equal(localizeDesignStyleGuide(modern.style.styleGuide ?? '', 'en'), modern.style.styleGuide);
 
 for (const preset of DESIGN_STYLE_PRESETS) {
-  assert.notEqual(localizeDesignPresetName(preset.name, 'zh'), preset.name, `${preset.name} 应提供中文名称`);
+  assert.notEqual(localizeDesignPresetName(preset.name, 'zh'), preset.name, `${preset.name} should have a Chinese name`);
   assert.notEqual(
     localizeDesignStyleGuide(preset.style.styleGuide ?? '', 'zh'),
     preset.style.styleGuide,
-    `${preset.name} 应提供中文品牌指引`,
+    `${preset.name} should have a Chinese style guide`,
   );
 }
 

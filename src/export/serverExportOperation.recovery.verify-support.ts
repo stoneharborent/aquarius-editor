@@ -229,7 +229,7 @@ async function verifyMissingBrowserAuthorityRetainsCompletedRender(): Promise<vo
   assert.equal(recovered?.progress.phase, 'failed');
   assert.equal(recovered?.failure?.stage, 'destination');
   assert.equal(recovered?.failure?.retryable, true);
-  assert.match(recovered?.error ?? '', /重新选择导出位置/);
+  assert.match(recovered?.error ?? '', /reselect the export location/);
   assert.deepEqual(requests, [], 'missing handle authority must retain the completed render');
   assert.deepEqual(await listServerExportJobs(retained.projectId), [retained],
     'missing handle authority must retain the recovery stage for reselection');
@@ -261,7 +261,7 @@ async function verifyMissingBrowserAuthorityRetainsCompletedRender(): Promise<vo
   await new Promise<void>((resolve) => { setTimeout(resolve, 0); });
   const staleRecovery = staleStore.getSnapshot().jobs[0];
   assert.equal(staleRecovery?.progress.phase, 'failed');
-  assert.match(staleRecovery?.error ?? '', /重新选择导出位置/);
+  assert.match(staleRecovery?.error ?? '', /reselect the export location/);
   assert.deepEqual(requests, [], 'stale handle authority must retain the completed render');
   assert.deepEqual(await listServerExportJobs(stale.projectId), [stale],
     'stale handle authority must retain the recovery stage for reselection');

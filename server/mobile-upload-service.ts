@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { isSafeUploadName, uploadDir } from './media-dir.ts';
+import { ZH_MOBILE_UPLOAD_COPY } from '../src/i18n/dict/zh/mobile-upload.ts';
 
 const DEFAULT_SESSION_TTL_MS = 10 * 60_000;
 const DEFAULT_MAX_BYTES = 10 * 1024 * 1024 * 1024;
@@ -166,12 +167,7 @@ function mobilePage(locale: MobilePageLocale): string {
       choose: 'Выбрать файлы', multiple: 'Можно выбрать несколько файлов. Не закрывайте страницу до завершения загрузки.',
       waiting: 'Ожидание загрузки', sent: 'Отправлено', failed: 'Ошибка загрузки', interrupted: 'Соединение прервано',
     },
-    zh: {
-      pageTitle: 'Upload from phone', title: '发送素材到 OpenChatCut',
-      hint: '选择手机里的视频、图片或音频。电脑和手机需连接同一局域网。',
-      choose: '选择素材', multiple: '支持多选，页面保持打开直到全部完成',
-      waiting: '等待上传', sent: '已发送', failed: '上传失败', interrupted: '网络中断',
-    },
+    zh: ZH_MOBILE_UPLOAD_COPY,
   }[copyLocale];
   const scriptCopy = JSON.stringify({ waiting: copy.waiting, sent: copy.sent, failed: copy.failed, interrupted: copy.interrupted });
   return `<!doctype html>

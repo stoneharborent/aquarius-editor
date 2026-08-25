@@ -1,7 +1,7 @@
 // Plugin installation pipeline (browser side): JSON → pure verification → true compilation probe (GLSL via GlRuntime,
 // MG is compiled by template-host sandbox) → LUT .cube is uploaded into a file → registered → stored in the database.
-// Transaction sequence: first register successfully and then save; if any step fails, the registry will be rolled back (leaving no half-installed state).
-// The sandbox runs as usual, and this is the first door.
+// Transaction sequence: register first, then save; if any step fails, the registry is rolled back (leaving no half-installed state).
+// The sandbox runs as usual — this is the first line of defense.
 import { validatePack } from './validate';
 import { listPacks, savePack, registerPack, unregisterPack, type InstalledPack } from './store';
 import type { PluginPack } from './types';
@@ -32,7 +32,7 @@ async function probeShaders(pack: PluginPack): Promise<string[]> {
   try {
     runtime = createGlRuntime(canvas);
   } catch (e) {
-    return [`WebGL 不可用,无法校验 shader:${e instanceof Error ? e.message : String(e)}`];
+    return [`WebGL is unavailable, cannot validate shader: ${e instanceof Error ? e.message : String(e)}`];
   }
   const src = document.createElement('canvas');
   src.width = 2;
@@ -44,7 +44,7 @@ async function probeShaders(pack: PluginPack): Promise<string[]> {
         if (item.type === 'transition') runtime.render(item.frag, src, src, 0.5, {});
         else for (const frag of item.passes ?? [item.frag]) runtime.renderFxChain([{ frag, uniforms: {} }], src);
       } catch (e) {
-        errors.push(`「${item.name}」shader 编译失败:${e instanceof Error ? e.message : String(e)}`);
+        errors.push(`"${item.name}" shader compilation failed: ${e instanceof Error ? e.message : String(e)}`);
       }
     }
   } finally {
@@ -53,7 +53,7 @@ async function probeShaders(pack: PluginPack): Promise<string[]> {
   return errors;
 }
 
-/** MG template true compilation probe (template-host sandbox static side)*/
+/** MG template true compilation probe (template-host sandbox static side). */
 async function probeTemplates(pack: PluginPack): Promise<string[]> {
   const errors: string[] = [];
   const mgItems = pack.items.filter((i) => i.type === 'mg-template');
@@ -62,13 +62,13 @@ async function probeTemplates(pack: PluginPack): Promise<string[]> {
     try {
       await prepareTemplate(item.code);
     } catch (e) {
-      errors.push(`「${item.name}」模板编译失败:${e instanceof Error ? e.message : String(e)}`);
+      errors.push(`"${item.name}" template compilation failed: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
   return errors;
 }
 
-/** LUT.cube is uploaded to /media/uploads file (export bundle symlink / R2 backup natural coverage)*/
+/** LUT .cube is uploaded to a /media/uploads file (export bundle symlink / R2 backup naturally covers it). */
 async function uploadCubes(pack: PluginPack): Promise<{ cubeUrls: Record<string, string>; errors: string[] }> {
   const cubeUrls: Record<string, string> = {};
   const errors: string[] = [];
@@ -82,30 +82,30 @@ async function uploadCubes(pack: PluginPack): Promise<{ cubeUrls: Record<string,
       });
       const body = (await res.json().catch(() => null)) as { path?: string; error?: string } | null;
       if (!res.ok || !body?.path) {
-        errors.push(`「${item.name}」.cube 上传失败:${body?.error ?? `HTTP ${res.status}`}`);
+        errors.push(`"${item.name}" .cube upload failed: ${body?.error ?? `HTTP ${res.status}`}`);
         continue;
       }
       cubeUrls[item.id] = body.path;
     } catch (e) {
-      errors.push(`「${item.name}」.cube 上传失败:${e instanceof Error ? e.message : String(e)}`);
+      errors.push(`"${item.name}" .cube upload failed: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
   return { cubeUrls, errors };
 }
 
-/** Calculate SHA-256 hex (lowercase) of UTF-8 text*/
+/** Calculate SHA-256 hex (lowercase) of UTF-8 text. */
 export async function sha256Hex(text: string): Promise<string> {
   const data = new TextEncoder().encode(text);
   const digest = await crypto.subtle.digest('SHA-256', data);
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/** Install from JSON text (file/paste common). opts.sha256 Optional integrity check.*/
+/** Install from JSON text (file/paste common path). opts.sha256 is an optional integrity check. */
 export async function installFromText(text: string, opts?: InstallFromUrlOpts): Promise<InstallResult> {
   if (opts?.sha256) {
     const got = await sha256Hex(text);
     if (got !== opts.sha256.trim().toLowerCase()) {
-      return err([`SHA-256 不匹配(期望 ${opts.sha256.slice(0, 12)}…,实得 ${got.slice(0, 12)}…)`]);
+      return err([`SHA-256 mismatch (expected ${opts.sha256.slice(0, 12)}…, got ${got.slice(0, 12)}…)`]);
     }
   }
 
@@ -113,7 +113,7 @@ export async function installFromText(text: string, opts?: InstallFromUrlOpts): 
   try {
     json = JSON.parse(text);
   } catch {
-    return err(['不是合法 JSON']);
+    return err(['Not valid JSON']);
   }
   const res = validatePack(json);
   if (!res.ok) return err(res.errors);
@@ -133,18 +133,18 @@ export async function installFromText(text: string, opts?: InstallFromUrlOpts): 
     ...(opts?.source ? { source: opts.source } : {}),
   };
 
-  // Transaction: Remove the registration of the old package with the same ID → Register the new package → Persistence; roll back the registry on failure
+  // Transaction: unregister the old package with the same ID → register the new package → persist; roll back the registry on failure
   const previous = (await listPacks()).find((p) => p.id === installed.id) ?? null;
   if (previous) {
-    try { await unregisterPack(previous); } catch { /* Old package de-registration fails and continues to be overwritten*/ }
+    try { await unregisterPack(previous); } catch { /* old package de-registration failed — keep going and overwrite anyway */ }
   }
   try {
     await registerPack(installed);
   } catch (e) {
     if (previous) {
-      try { await registerPack(previous); } catch { /* Try your best to recover*/ }
+      try { await registerPack(previous); } catch { /* best-effort recovery */ }
     }
-    return err([`注册失败:${e instanceof Error ? e.message : String(e)}`]);
+    return err([`Registration failed: ${e instanceof Error ? e.message : String(e)}`]);
   }
   try {
     await savePack(installed);
@@ -153,20 +153,20 @@ export async function installFromText(text: string, opts?: InstallFromUrlOpts): 
     if (previous) {
       try { await registerPack(previous); } catch { /* ignore */ }
     }
-    return err([`写入本地失败:${e instanceof Error ? e.message : String(e)}`]);
+    return err([`Local write failed: ${e instanceof Error ? e.message : String(e)}`]);
   }
   return { ok: true, pack: installed };
 }
 
-/** Install from URL (gist/raw/remote index, etc.; when cross-domain is blocked by CORS, you will be prompted to use file installation instead)*/
+/** Install from a URL (gist/raw/remote index, etc.). When cross-origin is blocked by CORS, the user is prompted to use file installation instead. */
 export async function installFromUrl(url: string, opts?: InstallFromUrlOpts): Promise<InstallResult> {
   let text: string;
   try {
     const res = await fetch(url);
-    if (!res.ok) return err([`下载失败:HTTP ${res.status}`]);
+    if (!res.ok) return err([`Download failed: HTTP ${res.status}`]);
     text = await res.text();
   } catch (e) {
-    return err([`下载失败(可能被 CORS 拦):${e instanceof Error ? e.message : String(e)}。可下载文件后用「选文件」安装`]);
+    return err([`Download failed (possibly blocked by CORS): ${e instanceof Error ? e.message : String(e)}. You can download the file and install it with "Choose file" instead`]);
   }
   return installFromText(text, {
     ...opts,

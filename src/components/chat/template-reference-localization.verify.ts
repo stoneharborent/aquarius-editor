@@ -20,7 +20,7 @@ const noop = () => undefined;
 const selectedRefs: RefItem[] = [
   { id: 'builtin-template', kind: 'template', name: 'Bar Chart - Annual Sales' },
   { id: 'custom-template', kind: 'template', name: '我的自定义模板' },
-  { id: 'video-asset', kind: 'video', name: '7月7日.mp4' },
+  { id: 'video-asset', kind: 'video', name: 'july-7.mp4' },
 ];
 const originalRefs = structuredClone(selectedRefs);
 const testLocaleId = '\0template-reference-localization-test-locale';
@@ -76,7 +76,7 @@ try {
 
 assert.match(composerMarkup, /@柱状图 · 年度销售/, 'built-in template chips should show their localized catalog name');
 assert.match(composerMarkup, /@我的自定义模板/, 'unmatched custom template chips should keep their original name');
-assert.match(composerMarkup, /@7月7日\.mp4/, 'non-template references should keep the media asset name');
+assert.match(composerMarkup, /@july-7\.mp4/, 'non-template references should keep the media asset name');
 assert.deepEqual(selectedRefs, originalRefs, 'localized display must not mutate the underlying references');
 
 console.log('template-reference-localization.verify: template chips use localized display names');

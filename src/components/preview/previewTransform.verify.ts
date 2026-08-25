@@ -49,9 +49,9 @@ const stateOf = (patch: Partial<TimelineState> = {}): TimelineState => ({
   ...patch,
 });
 
-// 圆角必须落在素材实际可见矩形，而不是铺满整个项目画布。
-// 1:1 画布 contain 一个 16:9 横屏素材时，可见矩形应为 1080×607.5；
-// 405px 需要按这块矩形的短边收敛到 303.75px。
+// Corner radius must apply to the asset's actual visible rect, not the full project canvas.
+// Containing a 16:9 landscape asset in a 1:1 canvas, the visible rect should be 1080×607.5;
+// 405px needs to be clamped to that rect's short edge, giving 303.75px.
 {
   const geometryApi = previewTransformModule as unknown as {
     visibleVisualFrameRect?: (
@@ -64,8 +64,8 @@ const stateOf = (patch: Partial<TimelineState> = {}): TimelineState => ({
       frame: { width: number; height: number },
     ) => number;
   };
-  assert.equal(typeof geometryApi.visibleVisualFrameRect, 'function', '应提供素材可见矩形的共用几何');
-  assert.equal(typeof geometryApi.clampVisualBorderRadius, 'function', '应按素材短边约束圆角');
+  assert.equal(typeof geometryApi.visibleVisualFrameRect, 'function', 'should expose shared geometry for the asset\'s visible rect');
+  assert.equal(typeof geometryApi.clampVisualBorderRadius, 'function', 'should clamp corner radius to the asset\'s short edge');
   if (geometryApi.visibleVisualFrameRect && geometryApi.clampVisualBorderRadius) {
     const frame = geometryApi.visibleVisualFrameRect(
       { width: 1080, height: 1080 },
@@ -100,7 +100,7 @@ const stateOf = (patch: Partial<TimelineState> = {}): TimelineState => ({
   assert.deepEqual(
     visiblePreviewCandidates(state, 15).map(({ item }) => item.id),
     ['late', 'early', 'v1'],
-    '候选顺序必须与合成层相反：最上层优先，同轨后开始的片段在上',
+    'candidate order must mirror composited layering: topmost track first, and later-starting clips on the same track sit on top',
   );
 }
 
@@ -184,7 +184,7 @@ const stateOf = (patch: Partial<TimelineState> = {}): TimelineState => ({
   const third = cyclePreviewCandidate(second.next, { x: 103, y: 102 }, candidates, 4)!;
   assert.equal(third.id, 'top');
   const reset = cyclePreviewCandidate(third.next, { x: 110, y: 100 }, candidates, 4)!;
-  assert.equal(reset.id, 'top', '超出容差后从最上层重新开始');
+  assert.equal(reset.id, 'top', 'once outside tolerance, cycling restarts from the topmost layer');
 }
 
 // Pointer-space movement maps to composition percentages independently per axis.
@@ -217,9 +217,9 @@ assert.deepEqual(
     { x: 960, y: 540 },
     'e',
   );
-  assert.ok(half.crop, '右边内收应产生 crop');
-  assert.ok(Math.abs((half.crop?.right ?? 0) - 0.5) < 1e-6, '右半被遮住 right≈0.5');
-  assert.equal(half.crop?.left ?? 0, 0, '左边 inset 不变');
+  assert.ok(half.crop, 'insetting the right edge should produce a crop');
+  assert.ok(Math.abs((half.crop?.right ?? 0) - 0.5) < 1e-6, 'the right half is hidden, right≈0.5');
+  assert.equal(half.crop?.left ?? 0, 0, 'left inset unchanged');
   const leftIn = edgeCropPreviewTransform(
     { width: 1920, height: 1080 },
     identity,
@@ -227,8 +227,8 @@ assert.deepEqual(
     { x: 480, y: 540 },
     'w',
   );
-  assert.ok(Math.abs((leftIn.crop?.left ?? 0) - 0.25) < 1e-6, '左边内收 left≈0.25');
-  assert.equal(leftIn.crop?.right ?? 0, 0, '右边 inset 不变');
+  assert.ok(Math.abs((leftIn.crop?.left ?? 0) - 0.25) < 1e-6, 'left inset, left≈0.25');
+  assert.equal(leftIn.crop?.right ?? 0, 0, 'right inset unchanged');
 }
 
 const pointAt = (degrees: number): PreviewPoint => {
@@ -250,7 +250,7 @@ const keyboardPreviewNudgePlan = (
     ) => unknown;
   }
 ).keyboardPreviewNudgePlan;
-assert.equal(typeof keyboardPreviewNudgePlan, 'function', '预览变换层应提供方向键微移计划');
+assert.equal(typeof keyboardPreviewNudgePlan, 'function', 'the preview transform layer should provide an arrow-key nudge plan');
 if (keyboardPreviewNudgePlan) {
   const item = visualItem('keyboard', 'V1', { transform: { x: 4, y: -2 } });
   assert.deepEqual(keyboardPreviewNudgePlan(item, 20, 'left'), {
@@ -273,26 +273,26 @@ if (keyboardPreviewNudgePlan) {
   assert.equal(
     keyboardPreviewNudgePlan({ ...item, kind: 'audio' }, 20, 'right'),
     null,
-    '纯音频片段没有预览画面位置，方向键应回退到原快捷键',
+    'a pure-audio clip has no preview-frame position, so arrow keys should fall back to the original shortcut',
   );
   assert.equal(
     keyboardPreviewNudgePlan(item, item.startFrame + item.durationInFrames, 'right'),
     null,
-    '播放头离开片段后，即使预览层仍有焦点也应回退到原快捷键',
+    'once the playhead leaves the clip, it should fall back to the original shortcut even if the preview layer still has focus',
   );
 }
 
 const editorActionsSource = readFileSync(new URL('../../shortcuts/useEditorActions.ts', import.meta.url), 'utf8');
-assert.match(editorActionsSource, /keyboardPreviewNudgePlan/, '全局方向键动作应接入预览微移计划');
+assert.match(editorActionsSource, /keyboardPreviewNudgePlan/, 'the global arrow-key action should hook into the preview nudge plan');
 assert.match(
   editorActionsSource,
   /previewCanvasHasKeyboardFocus/,
-  '只有预览画布处于键盘操作焦点时才可覆盖方向键原有功能',
+  'arrow keys may only override their original behavior while the preview canvas holds keyboard focus',
 );
-assert.match(editorActionsSource, /setItemTransform/, '普通片段方向键微移后应写回 Inspector 共用 transform');
-assert.match(editorActionsSource, /setItemKeyframe/, '已有位置关键帧时应写回当前帧关键帧');
+assert.match(editorActionsSource, /setItemTransform/, 'nudging a plain clip with arrow keys should write back to the shared Inspector transform');
+assert.match(editorActionsSource, /setItemKeyframe/, 'an existing position keyframe should be written back to the keyframe at the current frame');
 const overlaySource = readFileSync(new URL('./PreviewTransformOverlay.tsx', import.meta.url), 'utf8');
-assert.match(overlaySource, /tabIndex=\{0\}/, '预览变换层应可获得键盘焦点');
-assert.match(overlaySource, /event\.currentTarget\.focus\(/, '在预览里点选片段时应激活方向键微移模式');
+assert.match(overlaySource, /tabIndex=\{0\}/, 'the preview transform layer should be able to receive keyboard focus');
+assert.match(overlaySource, /event\.currentTarget\.focus\(/, 'selecting a clip in the preview should activate arrow-key nudge mode');
 
-console.log('previewTransform.verify: ok (候选/画框/关键帧/命中/循环/移动/缩放/旋转/方向键微移)');
+console.log('previewTransform.verify: ok (candidates/frame-rect/keyframes/hit-testing/cycling/move/scale/rotate/arrow-key-nudge)');

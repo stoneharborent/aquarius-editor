@@ -33,7 +33,6 @@ export interface SceneQualityReport {
 }
 
 const GENERIC_PHRASES = [
-  '美丽的', '炫酷', '惊艳', '大气', '高端', '专业感', '现代感', '震撼',
   'a beautiful', 'stunning', 'amazing', 'incredible', 'modern', 'sleek',
   'cutting-edge', 'professional', 'dynamic', 'vibrant', 'breathtaking',
 ] as const;
@@ -81,7 +80,7 @@ function repetitionFindings(scenes: readonly SceneLike[]): SceneFinding[] {
         severity: 'medium',
         dimension: 'repetition',
         scenes: runScenes,
-        message: `场景 ${sceneRangeMessage(runScenes)} 连续使用同一类型「${types[runStart]}」；建议改变镜头类型或构图。`,
+        message: `Scenes ${sceneRangeMessage(runScenes)} repeat the same type "${types[runStart]}" back to back; vary the shot type or composition.`,
       });
     }
     runStart = index;
@@ -99,7 +98,7 @@ function repetitionFindings(scenes: readonly SceneLike[]): SceneFinding[] {
       severity: 'medium',
       dimension: 'repetition',
       scenes: affected,
-      message: `场景 ${sceneRangeMessage(affected)} 重复同一画面描述「${description.slice(0, 80)}」；请为每个镜头指定不同内容或动作。`,
+      message: `Scenes ${sceneRangeMessage(affected)} repeat the same visual description "${description.slice(0, 80)}"; give each shot distinct content or action.`,
     });
   }
   return findings;
@@ -119,7 +118,7 @@ export function reviewScenePlan(scenes: readonly SceneLike[]): SceneQualityRepor
         severity: 'high',
         dimension: 'decorative_visuals',
         scenes: [],
-        message: '场景列表为空，没有可供审阅的分镜。',
+        message: 'The scene list is empty; there are no shots to review.',
       }],
     };
   }
@@ -134,7 +133,7 @@ export function reviewScenePlan(scenes: readonly SceneLike[]): SceneQualityRepor
       severity: purposeless.length / scenes.length >= 0.3 ? 'medium' : 'low',
       dimension: 'decorative_visuals',
       scenes: purposeless,
-      message: `场景 ${sceneRangeMessage(purposeless)} 缺少非空 shotIntent/informationRole；请说明镜头的叙事或信息职责。`,
+      message: `Scenes ${sceneRangeMessage(purposeless)} are missing a non-empty shotIntent/informationRole; state each shot's narrative or informational purpose.`,
     });
   }
 
@@ -147,7 +146,7 @@ export function reviewScenePlan(scenes: readonly SceneLike[]): SceneQualityRepor
       severity: 'medium',
       dimension: 'typography_overreliance',
       scenes: staticScenes,
-      message: `${staticScenes.length}/${scenes.length} 个场景是静态卡片或图表；建议加入实拍、生成视频或有动作的场景。`,
+      message: `${staticScenes.length}/${scenes.length} scenes are static cards or charts; add live-action footage, generated video, or scenes with motion.`,
     });
   }
 
@@ -164,7 +163,7 @@ export function reviewScenePlan(scenes: readonly SceneLike[]): SceneQualityRepor
       severity: 'low',
       dimension: 'generic_language',
       scenes: affected,
-      message: `场景 ${sceneRangeMessage(affected)} 使用泛化措辞「${phrase}」；改写为具体主体、构图、光线、动作或信息。`,
+      message: `Scenes ${sceneRangeMessage(affected)} use the generic phrase "${phrase}"; rewrite it with a concrete subject, composition, lighting, action, or information.`,
     });
   }
 

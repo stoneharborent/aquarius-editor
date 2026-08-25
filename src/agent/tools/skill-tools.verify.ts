@@ -1,7 +1,7 @@
-// 可运行自检:`npx tsx src/agent/tools/skill-tools.check.ts`
-// manage_skill 的 current / activate(创作模式 dump 与切换)契约:current 空/有值两态、
-// activate 校验 id + 经 ctx.setCreativeMode 落地 + 空串清除、宿主未接 setter 的报错。
-// 自定义技能 CRUD 走 IDB(浏览器专属),node 下 refresh 静默跳过——这里只用内置技能验证。
+// Runnable self-check: `npx tsx src/agent/tools/skill-tools.check.ts`
+// manage_skill's current / activate (creative mode dump and switch) contract: current's two states (empty/set),
+// activate validates id + lands via ctx.setCreativeMode + empty string clears, host missing the setter errors.
+// Custom skill CRUD goes through IDB (browser-only); under node, refresh silently skips — this only verifies built-in skills.
 import assert from 'node:assert';
 import { execSkillTool, SKILL_TOOL_NAMES, SKILL_TOOL_SCHEMAS } from './skill-tools';
 import { CREATIVE_SKILLS } from '../skills/skills-catalog';
@@ -10,10 +10,10 @@ import type { AgentContext } from '../context';
 assert.ok(SKILL_TOOL_NAMES.has('manage_skill'));
 const actions = (SKILL_TOOL_SCHEMAS[0].input_schema as unknown as { properties: { action: { enum: string[] } } }).properties.action.enum;
 for (const a of ['list', 'get', 'current', 'activate', 'create', 'update', 'delete']) {
-  assert.ok(actions.includes(a), `schema 应含 action ${a}`);
+  assert.ok(actions.includes(a), `schema should include action ${a}`);
 }
 
-// 假宿主:一个可读写的创作模式槽
+// fake host: a readable/writable creative-mode slot
 let mode: string | null = null;
 const ctx = {
   getCreativeMode: () => mode,
@@ -22,47 +22,47 @@ const ctx = {
 
 const builtinId = CREATIVE_SKILLS[0]?.id ?? null;
 
-// ---- current:未选 → active:null ----
+// ---- current: nothing selected -> active:null ----
 {
   const r = await execSkillTool('manage_skill', { action: 'current' }, ctx) as { active: unknown; note?: string };
-  assert.strictEqual(r.active, null, '未选模式应回 active:null');
-  assert.ok(r.note?.includes('未选'), '应带未选说明');
+  assert.strictEqual(r.active, null, 'no mode selected should return active:null');
+  assert.ok(r.note?.includes('No creative mode'), 'should include a not-selected note');
 }
 
-// ---- activate 内置技能 → 落地 + 回简介;current 读回同一个 ----
-// (node 下 getPluginSkill 用 Vite `?raw`,取不到内置文件 → CREATIVE_SKILLS 为空,
-// 跳过内置激活断言,校验空态下管理契约不崩。)
+// ---- activate a built-in skill -> lands + returns brief; current reads back the same one ----
+// (Under node, getPluginSkill uses Vite `?raw` and can't reach the built-in file -> CREATIVE_SKILLS is empty,
+// so the built-in activation assertions are skipped, only verifying the management contract doesn't crash in the empty state.)
 if (builtinId) {
   const r = await execSkillTool('manage_skill', { action: 'activate', skillId: builtinId }, ctx) as {
     ok?: boolean; active?: { id: string; builtin: boolean }; note?: string;
   };
   assert.strictEqual(r.ok, true);
   assert.strictEqual(r.active?.id, builtinId);
-  assert.strictEqual(r.active?.builtin, true, '内置技能应标 builtin');
-  assert.ok(r.note?.includes('下一条消息'), '应说明注入时机(system 每次 runAgent 构建一次)');
-  assert.strictEqual(mode, builtinId, 'ctx.setCreativeMode 应被调用');
+  assert.strictEqual(r.active?.builtin, true, 'built-in skill should be marked builtin');
+  assert.ok(r.note?.includes('next message'), 'should explain injection timing (system prompt is built once per runAgent)');
+  assert.strictEqual(mode, builtinId, 'ctx.setCreativeMode should be called');
 
   const cur = await execSkillTool('manage_skill', { action: 'current' }, ctx) as { active: { id: string } };
-  assert.strictEqual(cur.active.id, builtinId, 'current 应读回激活的模式');
+  assert.strictEqual(cur.active.id, builtinId, 'current should read back the activated mode');
 
   const unknown = await execSkillTool('manage_skill', { action: 'activate', skillId: 'skill_nope' }, ctx) as { error?: string };
-  assert.ok(unknown.error?.includes('no skill'), '未知 id 应报错');
-  assert.strictEqual(mode, builtinId, '报错不应改动当前模式');
+  assert.ok(unknown.error?.includes('no skill'), 'unknown id should error');
+  assert.strictEqual(mode, builtinId, 'an error should not change the current mode');
 }
 
-// ---- activate 空串 → 清除 ----
+// ---- activate empty string -> clears ----
 {
   const r = await execSkillTool('manage_skill', { action: 'activate', skillId: '' }, ctx) as { ok?: boolean; active?: unknown };
   assert.strictEqual(r.ok, true);
   assert.strictEqual(r.active, null);
-  assert.strictEqual(mode, null, '空串应清除模式');
+  assert.strictEqual(mode, null, 'empty string should clear the mode');
 }
 
-// ---- 宿主未接 setter(旧 check 形制的 ctx)→ 明确报错 ----
+// ---- host has no setter (legacy check-style ctx) -> clear error ----
 {
   const bare = { getCreativeMode: () => null } as unknown as AgentContext;
   const r = await execSkillTool('manage_skill', { action: 'activate', skillId: builtinId ?? 'skill_any' }, bare) as { error?: string };
-  assert.ok(r.error, '无 setCreativeMode 的宿主应报错而非静默');
+  assert.ok(r.error, 'a host without setCreativeMode should error instead of silently no-oping');
 }
 
 console.log('skill-tools.check: ALL PASSED');

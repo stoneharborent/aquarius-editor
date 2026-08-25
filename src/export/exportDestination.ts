@@ -217,16 +217,16 @@ function openDestinationDatabase(): Promise<IDBDatabase> {
     }
   };
   request.onsuccess = () => resolve(request.result);
-  request.onerror = () => reject(request.error ?? new Error('无法打开导出目录存储'));
-  request.onblocked = () => reject(new Error('导出目录存储被其他页面占用'));
+  request.onerror = () => reject(request.error ?? new Error('Could not open the export directory store'));
+  request.onblocked = () => reject(new Error('The export directory store is locked by another page'));
   return promise;
 }
 
 function transactionComplete(transaction: IDBTransaction): Promise<void> {
   const { promise, resolve, reject } = promiseConstructor.withResolvers<void>();
   transaction.oncomplete = () => resolve(undefined);
-  transaction.onerror = () => reject(transaction.error ?? new Error('无法保存导出目录'));
-  transaction.onabort = () => reject(transaction.error ?? new Error('导出目录保存已取消'));
+  transaction.onerror = () => reject(transaction.error ?? new Error('Could not save the export directory'));
+  transaction.onabort = () => reject(transaction.error ?? new Error('Saving the export directory was cancelled'));
   return promise;
 }
 
@@ -238,7 +238,7 @@ async function readBrowserDirectory(): Promise<BrowserExportDirectoryHandle | nu
     const request = transaction.objectStore(STORE_NAME).get(LAST_BROWSER_DIRECTORY_KEY);
     const { promise, resolve, reject } = promiseConstructor.withResolvers<unknown>();
     request.onsuccess = () => resolve(request.result as unknown);
-    request.onerror = () => reject(request.error ?? new Error('无法读取导出目录'));
+    request.onerror = () => reject(request.error ?? new Error('Could not read the export directory'));
     const value = await promise;
     return isBrowserDirectoryHandle(value) ? value : null;
   } catch {
@@ -509,7 +509,7 @@ async function writeBrowserResponse(
       }
     }
     signal?.throwIfAborted();
-    if (bytesWritten === 0) throw new ExportDestinationError('导出文件为空');
+    if (bytesWritten === 0) throw new ExportDestinationError('The exported file is empty.');
     await writable.close();
   } catch (error) {
     await abortWrite(error);
@@ -524,7 +524,7 @@ async function writeBrowserResponse(
 function destinationWriteFailure(error: unknown, targetPath: string): ExportFailureError {
   const existing = exportFailureFrom(error);
   if (existing) return new ExportFailureError(existing);
-  const empty = error instanceof ExportDestinationError && error.key === '导出文件为空';
+  const empty = error instanceof ExportDestinationError && error.key === 'The exported file is empty.';
   return new ExportFailureError(createExportFailure({
     stage: 'destination',
     code: empty ? 'export_output_empty' : 'export_destination_write_failed',
@@ -548,7 +548,7 @@ export async function writeBlobToDestination(
   try {
     signal?.throwIfAborted();
     if (!(blob instanceof Blob)) throw new ExportDestinationError('The exported file content is invalid.');
-    if (blob.size === 0) throw new ExportDestinationError('导出文件为空');
+    if (blob.size === 0) throw new ExportDestinationError('The exported file is empty.');
     if (target.type === 'downloads') {
       signal?.throwIfAborted();
       downloadBlob(blob, outputFilename);
@@ -611,7 +611,7 @@ export async function writeUrlToDestination(
       code: 'export_source_read_failed',
       retryable: response.status >= 500,
       targetPath,
-      message: `读取导出文件失败（HTTP ${response.status}）`,
+      message: `Reading the exported file failed (HTTP ${response.status}).`,
     }));
   }
   try {
@@ -626,7 +626,7 @@ export async function writeUrlToDestination(
     }
     const blob = await response.blob();
     signal?.throwIfAborted();
-    if (blob.size === 0) throw new ExportDestinationError('导出文件为空');
+    if (blob.size === 0) throw new ExportDestinationError('The exported file is empty.');
     downloadBlob(blob, outputFilename);
   } catch (error) {
     await response.body?.cancel().catch(() => undefined);

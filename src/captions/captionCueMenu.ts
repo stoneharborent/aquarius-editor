@@ -1,11 +1,12 @@
 import type { TranscriptWord } from '../transcript/types';
 import type { CaptionsData } from './types';
 import { updateManualCue } from './manualCaptions';
+import { JAPANESE_NATIVE_NAME, KOREAN_NATIVE_NAME } from '../i18n/dict/zh/native-names';
 
 export const CAPTION_CUE_TRANSLATION_LANGS = [
   { label: 'English', flag: '🇺🇸' },
-  { label: '日本語', flag: '🇯🇵' },
-  { label: '한국어', flag: '🇰🇷' },
+  { label: JAPANESE_NATIVE_NAME, flag: '🇯🇵' },
+  { label: KOREAN_NATIVE_NAME, flag: '🇰🇷' },
   { label: 'Español', flag: '🇪🇸' },
   { label: 'Français', flag: '🇫🇷' },
   { label: 'Deutsch', flag: '🇩🇪' },

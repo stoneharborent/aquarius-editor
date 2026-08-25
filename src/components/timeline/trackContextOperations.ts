@@ -8,7 +8,7 @@ export function trackContextMenuLabels(kind: TrackKind): string[] {
   return [
     insert, 'Close gaps', 'Select all', 'Clear', 'Hide track',
     ...(kind === 'caption' ? [] : ['Mute track']),
-    '锁定轨道',
+    'Lock track',
     ...(kind === 'caption' ? ['Caption styles', 'Translate all'] : ['Auto duck']),
     'Delete track',
   ];

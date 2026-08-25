@@ -137,7 +137,7 @@ assert.notStrictEqual(buildCustomTransitionDef('x', VALID_TR).id, buildCustomTra
   assert.ok('name' in s.properties, 'name stays as an optional field');
 }
 
-// ── normalizeShaderArgs: prompt 别名 + name 派生 + type 必填 ──
+// ── normalizeShaderArgs: prompt alias + name derivation + type required ──
 {
   // description is a legacy alias of prompt
   const viaAlias = normalizeShaderArgs({ type: 'effect', description: 'Cinematic teal-orange grade' });
@@ -159,7 +159,7 @@ assert.notStrictEqual(buildCustomTransitionDef('x', VALID_TR).id, buildCustomTra
   assert.ok((normalizeShaderArgs({ type: 'effect' }) as { error: string }).error.includes('prompt'), 'missing prompt errors');
 }
 
-// ── referenceAssetIds 校验（全部发生在 LLM 调用之前;node 下无网络）──
+// ── referenceAssetIds validation (all happens before the LLM call; no network under node) ──
 {
   __resetCustomTransitions();
   const draft = makeDraft(docFromTimeline({

@@ -193,7 +193,7 @@ export function createExportJobStore(now: () => number = Date.now): ExportJobSto
       targetPath: input.targetPath,
       createdAt: startedAt,
       updatedAt: startedAt,
-      busy: '等待导出…',
+      busy: 'Waiting to export…',
       clock: startedAt,
       engineInfo: null,
       engineReason: null,

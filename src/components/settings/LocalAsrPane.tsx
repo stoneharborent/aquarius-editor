@@ -1,4 +1,4 @@
-// Settings → 转写 → 本地模型：模型选择 + 按需下载管理。
+// Settings → Transcription → Local models: model selection + on-demand download management.
 // Models are NOT bundled — users pick and download them on demand through the
 // local hf-proxy (multi-source accelerated download into the disk cache).
 // Whisper is OpenAI's open-source model, so the official OpenAI mark is used.

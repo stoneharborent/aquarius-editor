@@ -66,8 +66,8 @@ const inference = {
     return {
       requestId: request.requestId,
       backend: 'directml' as const,
-      text: '测试完成',
-      chunks: [{ text: '测试', start: 0, end: 0.5 }],
+      text: 'Test complete',
+      chunks: [{ text: 'Test', start: 0, end: 0.5 }],
     };
   },
   semantic: async () => { throw new Error('unused semantic mock'); },
@@ -125,7 +125,7 @@ const result = await tryDesktopNativeAsr({
   onProgress: (value) => { if (value != null) progress.push(value); },
 });
 assert.equal(result?.backend, 'directml');
-assert.equal(result?.result.text, '测试完成');
+assert.equal(result?.result.text, 'Test complete');
 assert.deepEqual(progress, [50]);
 assert.equal(unsubscribes, 1);
 assert.equal(await warmUpDesktopNativeAsr(config), true);

@@ -30,13 +30,10 @@ const REGISTRY_CATEGORY_LABEL: Record<string, Exclude<Category, 'All'>> = {
   mg: 'MG',
   MG: 'MG',
   transition: 'Transitions',
-  转场: 'Transitions',
   fx: 'Effects',
-  特效: 'Effects',
   lut: 'LUT',
   LUT: 'LUT',
   zoom: 'Zoom',
-  缩放: 'Zoom',
 };
 
 export function parseRegistry(value: unknown): RegistryEntry[] {

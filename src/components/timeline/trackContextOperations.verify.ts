@@ -12,9 +12,9 @@ const state: TimelineState = {
   trackOrder: ['C1'], tracks: { C1: { kind: 'caption', captions: {
     enabled: true, template: 'plain', pacing: 'phrase', sourceEntries: [{
       id: 'lane-1', itemId: 'manual:lane-1', words: [
-        { text: '一', start: 1_000, end: 2_000 },
-        { text: '二', start: 4_000, end: 5_500 },
-        { text: '三', start: 5_200, end: 6_000 },
+        { text: 'one', start: 1_000, end: 2_000 },
+        { text: 'two', start: 4_000, end: 5_500 },
+        { text: 'three', start: 5_200, end: 6_000 },
       ],
     }],
   } } },

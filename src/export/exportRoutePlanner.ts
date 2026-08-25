@@ -116,7 +116,7 @@ export async function planVideoExportRoute(options: BrowserExportOptions): Promi
   if (options.codec === 'prores') {
     const mezzanine = {
       id: 'prores-mezzanine',
-      label: 'ProRes 422 HQ · 本机母带',
+      label: 'ProRes 422 HQ · Local master',
       hardware: false,
       transport: 'server' as const,
     };

@@ -1,11 +1,11 @@
-// 素材清理纯逻辑检查:引用做差、级联删的独占判定语义(经内存态 projectStore 走真流程)。
-// 跑法:npx tsx src/persist/mediaCleanup.check.ts(已挂 verify:persist,随 pretest 执行)。
+// Media-cleanup pure-logic check: reference-set difference, and the exclusivity semantics for cascade delete (goes through the real flow via the in-memory projectStore).
+// How to run: npx tsx src/persist/mediaCleanup.check.ts (already wired into verify:persist, runs with pretest).
 import assert from 'node:assert/strict';
 import { collectAllUploadRefs, unreferencedOf } from './mediaCleanup';
 import { createProject, listProjectDocIds, purgeProject } from './projectStore';
 import type { ProjectDoc } from '../editor/types';
 
-// ── unreferencedOf:盘面 − 引用 ──────────────────────────────────────────
+// ── unreferencedOf: files on disk minus references ──────────────────────
 {
   const files = [
     { name: 'a.mp4', bytes: 10, mtimeMs: 1 },
@@ -14,40 +14,40 @@ import type { ProjectDoc } from '../editor/types';
   ];
   const refs = new Set(['/media/uploads/kept.png']);
   const orphans = unreferencedOf(files, refs);
-  assert.deepEqual(orphans.map((f) => f.name), ['a.mp4', '李白_01_开篇.mp3'], '引用的不进无主清单(中文名照常)');
+  assert.deepEqual(orphans.map((f) => f.name), ['a.mp4', '李白_01_开篇.mp3'], 'referenced files never enter the orphan list (Chinese names work as usual)');
   console.log('unreferencedOf: OK');
 }
 
-// ── 引用并集 + 独占判定(内存态 projectStore) ────────────────────────────
+// ── Union of references + exclusivity judgment (in-memory projectStore) ──
 {
   const doc = (src: string): ProjectDoc => ({
     version: 3,
     assets: [{ id: 'a1', name: 'x', kind: 'video', src, durationInFrames: 30 }],
     mediaFolders: [],
-    timelines: [{ id: 'tl1', name: '序列 1', fps: 30, width: 1920, height: 1080, selectedId: null, items: [] } as never],
+    timelines: [{ id: 'tl1', name: 'Sequence 1', fps: 30, width: 1920, height: 1080, selectedId: null, items: [] } as never],
     activeTimelineId: 'tl1',
   } as never);
   const shared = '/media/uploads/shared.mp4';
   const solo = '/media/uploads/solo.mp4';
-  const p1 = await createProject('甲', doc(shared));
-  const p2 = await createProject('乙', doc(shared));
-  const p3 = await createProject('丙', doc(solo));
+  const p1 = await createProject('Alpha', doc(shared));
+  const p2 = await createProject('Beta', doc(shared));
+  const p3 = await createProject('Gamma', doc(solo));
 
   let refs = await collectAllUploadRefs();
-  assert.ok(refs.has(shared) && refs.has(solo), '并集含全部引用');
+  assert.ok(refs.has(shared) && refs.has(solo), 'the union contains every reference');
 
-  // 排除 p3 后 solo 无人引用 → 级联删应删;shared 因 p2 仍在 → 保
+  // after excluding p3, solo has no more references → cascade delete should remove it; shared is kept because p2 still references it
   refs = await collectAllUploadRefs(p3.id);
-  assert.ok(!refs.has(solo) && refs.has(shared), '排除自身后:独占的裸奔,共享的仍被护住');
+  assert.ok(!refs.has(solo) && refs.has(shared), 'after excluding itself: the exclusive file is left exposed, the shared one is still protected');
 
-  // 删掉 p1 后 shared 仍被 p2 引用
+  // after deleting p1, shared is still referenced by p2
   await purgeProject(p1.id);
   refs = await collectAllUploadRefs();
-  assert.ok(refs.has(shared), '复制体在,共享素材引用不丢');
+  assert.ok(refs.has(shared), 'while a copy still exists, the shared asset\'s reference is not lost');
 
   for (const m of [p2, p3]) await purgeProject(m.id);
-  assert.equal((await listProjectDocIds()).length, 0, 'purge 后文档清零');
-  console.log('collectAllUploadRefs/级联语义: OK');
+  assert.equal((await listProjectDocIds()).length, 0, 'documents are zeroed out after purge');
+  console.log('collectAllUploadRefs/cascade semantics: OK');
 }
 
 console.log('\nmediaCleanup.check: ALL PASSED');

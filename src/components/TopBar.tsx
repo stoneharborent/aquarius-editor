@@ -6,6 +6,7 @@ import { GenerationActivity } from './GenerationActivity';
 import { SkinPicker } from './settings/SkinPicker';
 import { McpGuideDialog } from './settings/McpGuide';
 import { ALL_LOCALES, getLocale, setLocale, useT } from '../i18n/locale';
+import { ZH_LOCALE_LABEL } from '../i18n/dict/zh';
 import { invokeAction, bindAction } from '../shortcuts/actionRegistry';
 import { DesktopWindowControls } from './DesktopWindowControls';
 import { TopBarIconButton } from './TopBarIconButton';
@@ -26,7 +27,7 @@ export function LocaleToggle() {
       style={{ minWidth: 30, height: 22, background: 'none', border: `0.5px solid ${theme.border}`, borderRadius: 4, cursor: 'pointer', padding: '0 5px', fontSize: 11, fontWeight: 600, letterSpacing: 0.3, color: theme.textDim, display: 'grid', placeItems: 'center' }}
       onMouseEnter={(e) => { e.currentTarget.style.color = theme.text; e.currentTarget.style.background = theme.panelAlt; }}
       onMouseLeave={(e) => { e.currentTarget.style.color = theme.textDim; e.currentTarget.style.background = 'none'; }}>
-      {locale === 'zh' ? '中' : locale.toUpperCase()}
+      {locale === 'zh' ? ZH_LOCALE_LABEL : locale.toUpperCase()}
     </button>
   );
 }

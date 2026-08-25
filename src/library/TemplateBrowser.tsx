@@ -24,7 +24,7 @@ import {
 // Delete = soft delete (local hidden list), used clips in the timeline are not affected; built-in/plugin entries can be removed from the list.
 // Category ids come straight from the template `category`.
 
-// Category id → Chinese label.
+// Category id → display label.
 const CAT_LABEL: Record<string, string> = {
   'call-to-action': 'Call to Action',
   'data-visualization': 'Data Visualization',
@@ -38,8 +38,6 @@ const CAT_LABEL: Record<string, string> = {
   'social-media': 'Social Media',
   'social-shorts': 'Vertical / Shorts',
   'koubo-scenes': 'Talking-Head Scenes',
-  插件: 'Plugins',
-  扩展: 'Extension',
   uncategorized: 'Uncategorized',
 };
 const catLabel = (id: string) => CAT_LABEL[id] ?? id.replace(/-/g, ' ');

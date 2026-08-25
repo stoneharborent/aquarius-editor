@@ -108,7 +108,7 @@ export function pluginTemplates(packs: InstalledPack[]): Tpl[] {
         id: pluginAssetId(pack.id, item.id),
         name: item.name,
         category: 'Extension',
-        description: item.desc ?? `${pack.name} 扩展模板`,
+        description: item.desc ?? `${pack.name} extension template`,
         width: item.width ?? 1920,
         height: item.height ?? 1080,
         fps: 30,

@@ -88,7 +88,7 @@ function useApplyInspectorSelection(
       ? planInspectorBatch(snapshot, ids, makeActions, supports)
       : planInspectorBatch(snapshot, ids, makeActions);
     if (!plan.ok) {
-      showAppToast(translate('无法将此属性应用到全部选中片段。'));
+      showAppToast(translate('Could not apply this property to all selected clips.'));
       return false;
     }
     commands.batch(plan.actions, label);
@@ -131,7 +131,7 @@ function useAgentContext(options: AgentContextOptions): AgentContext {
     audio: AUDIO_ASSETS,
     getProjectId: () => projectId,
     openProject: async (nextProjectId: string) => {
-      if (!(await flushBeforeLeaveRef.current())) return { ok: false, error: '当前工程保存失败，已阻止切换工程' };
+      if (!(await flushBeforeLeaveRef.current())) return { ok: false, error: 'Failed to save the current project; project switch was blocked' };
       if (nextProjectId === projectId) return { ok: true };
       window.location.hash = `#/editor/${nextProjectId}`;
       return { ok: true };

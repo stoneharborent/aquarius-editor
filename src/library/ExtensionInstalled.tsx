@@ -70,7 +70,7 @@ function InstalledCard({ pack, props }: { pack: InstalledPack; props: InstalledP
           </div>
           <span style={{ color: theme.textDim, fontSize: 10, whiteSpace: 'nowrap' }}>{t(pack.enabled ? 'Enabled' : 'Disabled')}</span>
           <button type="button" onClick={() => props.onExpand(expanded ? null : pack.id)} aria-expanded={expanded} style={secondaryButton()}>
-            {t(expanded ? 'Collapse' : '查看内容')}
+            {t(expanded ? 'Collapse' : 'View content')}
           </button>
         </div>
       </div>

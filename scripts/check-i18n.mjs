@@ -20,11 +20,47 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE_ROOT = path.join(ROOT, 'src');
 const DICT_ROOT = path.join(SOURCE_ROOT, 'i18n', 'dict');
 const ZH_DICT_ROOT = path.join(DICT_ROOT, 'zh');
-const CJK = /[㐀-鿿]/;
+const CJK = /[\u3400-\u9fff]/;
 
-// Chinese-language *data* (word lists the caption segmenter needs) lives with the zh dictionary,
-// so nothing outside it is allowed to hold Chinese text.
-const ALLOW_CJK_FILES = new Set();
+// Chinese-language *data* the runtime needs (segmenter word lists, agent keyword lists, CJK font
+// aliases, per-locale copy tables) lives with the zh dictionary, so no production source file is
+// allowed to hold Chinese text.
+//
+// The exception below is tests. Every file here exists *because* it exercises CJK text handling —
+// caption segmentation and pagination, CJK paragraph joining, SQLite FTS5 Chinese search, CJK
+// filenames through import/export/transfer, multi-byte token budgets, CJK font resolution, or the
+// zh locale itself. Their Chinese content is the fixture under test; translating it away would
+// delete the coverage. Nothing but a test belongs on this list.
+const ALLOW_CJK_FILES = new Set([
+  'src/agent/ai-sdk.verify.ts',
+  'src/agent/codex/runtime.verify.ts',
+  'src/agent/context-compaction.verify.ts',
+  'src/agent/harness-context-checkpoint.verify-helper.ts',
+  'src/agent/harness-context.verify.ts',
+  'src/agent/selection-refs.verify.ts',
+  'src/agent/tool-result-compaction.verify.ts',
+  'src/agent/tools/followup-tools.verify.ts',
+  'src/agent/tools/font-tools.verify.ts',
+  'src/agent/tools/search-tools.verify.ts',
+  'src/agent/tools/stock-tools.verify.ts',
+  'src/agent/tools/transcript-tools.verify.ts',
+  'src/agent/tools/upload-tools.verify-import.ts',
+  'src/agent/useServerRun.verify.ts',
+  'src/captions/captionPagination.verify.ts',
+  'src/captions/exportCaptions.verify.ts',
+  'src/captions/segmenter.verify.ts',
+  'src/components/chat/template-reference-localization.verify.ts',
+  'src/export/fcpxml.verify.ts',
+  'src/fonts/notoSansOffline.verify.ts',
+  'src/media/searchMedia.verify.ts',
+  'src/media/transcriptParagraphs.verify.ts',
+  'src/persist/mediaCleanup.verify.ts',
+  'src/persist/migrations/migrations.verify.source-metadata.ts',
+  'src/persist/projectTransfer.verify.ts',
+  'src/transcript/assemblyai-resume.verify.ts',
+  'src/transcript/phrases.verify.ts',
+  'src/transcript/variants.verify.ts',
+]);
 
 function relativeSourcePath(filePath) {
   return path.relative(ROOT, filePath).split(path.sep).join('/');

@@ -1,5 +1,6 @@
 export { FOLLOWUP_TOOL_SCHEMAS, FOLLOWUP_TOOL_NAMES } from './schemas/followup-tools';
 import type { AgentContext } from '../context';
+import { ZH_OTHER_OPTION_PREFIXES } from '../../i18n/dict/zh/agent-terms';
 
 type Args = Record<string, unknown>;
 
@@ -72,7 +73,8 @@ function isOtherOption(option: NormalizedOption): boolean {
   const value = option.value.toLowerCase();
   const display = option.display.toLowerCase();
   return value === '__other__' || value === 'other' || value === 'custom'
-    || display.startsWith('其他') || display.startsWith('other');
+    || ZH_OTHER_OPTION_PREFIXES.some((prefix) => display.startsWith(prefix))
+    || display.startsWith('other');
 }
 
 function attrs(values: Record<string, string | boolean | undefined>): string {

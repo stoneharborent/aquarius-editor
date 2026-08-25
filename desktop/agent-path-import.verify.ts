@@ -13,9 +13,9 @@ const roots = ['/Volumes/素材盘', '/Users/qinpx/Movies'];
 assert.equal(pathAllowedByRoots(roots, '/Volumes/素材盘/20260101/A001.mp4'), true, 'direct child file is allowed');
 assert.equal(pathAllowedByRoots(roots, '/Volumes/素材盘/20260101/sub/A002.mp4'), true, 'deep child is allowed');
 assert.equal(pathAllowedByRoots(roots, '/Volumes/素材盘'), true, 'the root itself is allowed');
-assert.equal(pathAllowedByRoots(roots, '/Users/qinpx/Movies/短片'), true, 'second root child is allowed');
+assert.equal(pathAllowedByRoots(roots, '/Users/qinpx/Movies/short-clip'), true, 'second root child is allowed');
 assert.equal(pathAllowedByRoots(roots, '/Volumes/素材盘2/20260101/A001.mp4'), false, 'prefix look-alike sibling is rejected');
-assert.equal(pathAllowedByRoots(roots, '/Volumes/其他盘/A.mp4'), false, 'unrelated path is rejected');
+assert.equal(pathAllowedByRoots(roots, '/Volumes/other-drive/A.mp4'), false, 'unrelated path is rejected');
 assert.equal(pathAllowedByRoots(roots, '/Users/qinpx/Desktop/A.mp4'), false, 'path outside both roots is rejected');
 assert.equal(pathAllowedByRoots([], '/Volumes/素材盘/A.mp4'), false, 'empty root list authorizes nothing');
 assert.equal(pathAllowedByRoots(roots, '/Volumes/素材盘'), true, 'root boundary itself allowed');
@@ -30,14 +30,14 @@ assert.equal(
   '/Volumes/素材盘',
   'granting the same root is idempotent',
 );
-assert.throws(() => appendAgentImportRoot('', '/Volumes/素材,盘'), /逗号/);
+assert.throws(() => appendAgentImportRoot('', '/Volumes/素材,盘'), /comma/);
 
 const blocked: AgentPathImportResult = {
   imported: [], unsupportedFiles: [], duplicateCount: 0,
   errors: [{
     path: '/Volumes/素材盘',
     code: 'IMPORT_ROOTS_NOT_CONFIGURED',
-    error: '尚未添加本地素材目录',
+    error: 'No local media directory has been added yet',
   }],
 };
 const imported: AgentPathImportResult = {

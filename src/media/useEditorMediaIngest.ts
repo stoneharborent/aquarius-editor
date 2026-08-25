@@ -152,7 +152,7 @@ function poolImportHooks(run: PoolImportRun, onProgress?: (ratio: number) => voi
 async function importAssetToPool(file: File, onProgress: ((ratio: number) => void) | undefined, lifecycle: ImportLifecycle | undefined, context: Pick<EditorMediaIngestOptions, 'commands' | 'stateRef' | 't'>, startAssetTranscription: StartAssetTranscription): Promise<MediaAsset> {
   const existing = findMediaNameConflict(context.stateRef.current.assets ?? [], file.name);
   if (existing && !window.confirm(context.t(
-    '素材「{name}」已存在。覆盖会同步替换已在时间线中使用的该素材。',
+    'Asset "{name}" already exists. Overwriting it will also replace this asset wherever it is used on the timeline.',
     { name: existing.name },
   ))) throw new MediaImportCancelledError();
   const run: PoolImportRun = {

@@ -14,14 +14,13 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000015',
     slug: 'livestream-to-clips',
     name: 'Livestream to Clips',
-    summary: '把带货、游戏、访谈、教学、娱乐、体育、音乐或混合直播录屏剪成有证据、可发布的高光切片。',
+    summary: 'Cut livestream recordings — shopping, gaming, interviews, teaching, entertainment, sports, music, or mixed — into evidence-backed, publish-ready highlight clips.',
     scenarios: [
       'livestream-to-clips',
       'live-highlights',
       'stream-clips',
       'gaming-highlights',
-      'commerce-clips',
-      '直播切片'
+      'commerce-clips'
     ]
   },
   {
@@ -140,12 +139,10 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000014',
     slug: 'news-rough-cut',
     name: 'News Rough Cut',
-    summary: '把新闻素材粗剪为一条内容完整、逻辑清晰、节奏紧凑的新闻短视频，不加任何外部声音。',
+    summary: 'Rough-cut news footage into a complete, logically clear, tightly-paced news short, without adding any external sound.',
     scenarios: [
       'news-rough-cut',
       'news-cut',
-      '新闻剪辑',
-      '粗剪新闻',
       'news footage',
       'rough-cut-news'
     ]
@@ -154,16 +151,13 @@ export const CREATIVE_SKILL_METADATA: CreativeSkillMetadata[] = [
     id: '11111111-1240-4000-8000-000000000013',
     slug: 'skill-creator',
     name: 'Skill Creator',
-    summary: '把重复流程或想法做成可复用的自定义技能（SKILL.md），并安装到本机技能目录。',
+    summary: 'Turn a repeated workflow or idea into a reusable custom skill (SKILL.md) and install it to the local skills directory.',
     scenarios: [
       'create-skill',
       'skill-creator',
       'make-a-skill',
       'new-skill',
-      'workflow-capture',
-      '创建技能',
-      '写技能',
-      '把流程做成技能'
+      'workflow-capture'
     ]
   }
 ];

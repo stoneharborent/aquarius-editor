@@ -21,16 +21,16 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
     ],
   };
   const xml = timelineToFcpxml(state, { title: 'Check\u0000\uFFFE Project' });
-  assert.ok(xml.trim().startsWith('<?xml'), 'XML 声明开头');
-  assert.ok(xml.trim().endsWith('</fcpxml>'), 'fcpxml 收尾');
-  assert.equal((xml.match(/<fcpxml /g) ?? []).length, 1, '单根元素');
+  assert.ok(xml.trim().startsWith('<?xml'), 'starts with the XML declaration');
+  assert.ok(xml.trim().endsWith('</fcpxml>'), 'ends with </fcpxml>');
+  assert.equal((xml.match(/<fcpxml /g) ?? []).length, 1, 'single root element');
   for (const tag of ['<resources>', '<library>', '<sequence', '<spine>']) {
-    assert.ok(xml.includes(tag), `缺少 ${tag}`);
+    assert.ok(xml.includes(tag), `missing ${tag}`);
   }
-  assert.ok(xml.includes('frameDuration="1/30s"'), 'fps 30 → frameDuration 1/30s');
-  assert.ok(xml.includes('Title &amp; &lt;Intro&gt;'), '名字要转义');
-  assert.ok(!xml.includes('Title & <Intro>'), '未转义原文不得泄漏');
-  assert.ok(!/undefined|NaN/.test(xml), '输出不得含 undefined/NaN');
+  assert.ok(xml.includes('frameDuration="1/30s"'), 'fps 30 -> frameDuration 1/30s');
+  assert.ok(xml.includes('Title &amp; &lt;Intro&gt;'), 'the name must be escaped');
+  assert.ok(!xml.includes('Title & <Intro>'), 'the unescaped original text must not leak through');
+  assert.ok(!/undefined|NaN/.test(xml), 'output must not contain undefined/NaN');
   const invalidXmlChar = [...xml].find((char) => {
     const codePoint = char.codePointAt(0)!;
     return !(codePoint === 0x09 || codePoint === 0x0a || codePoint === 0x0d
@@ -41,10 +41,10 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
   assert.equal(invalidXmlChar, undefined,
     'FCPXML sink emits only XML 1.0-legal characters in attributes and comments');
   // MG no media → placeholder gap;audio → asset-clip
-  assert.equal(clipsOf(xml).length, 1, '仅音频出 asset-clip');
-  assert.equal((xml.match(/<gap name="MG:/g) ?? []).length, 2, '两个 MG 占位 gap');
+  assert.equal(clipsOf(xml).length, 1, 'only the audio item produces an asset-clip');
+  assert.equal((xml.match(/<gap name="MG:/g) ?? []).length, 2, 'two MG placeholder gaps');
   // Track → lane: video positive, audio negative
-  assert.equal(attr(clipsOf(xml)[0]!, 'lane'), '-1', '音频挂负 lane');
+  assert.equal(attr(clipsOf(xml)[0]!, 'lane'), '-1', 'audio is placed on a negative lane');
 }
 
 // ── P0-①: Audio transcript editing → multiple paragraphs, aligned with keptSegments one by one ──
@@ -62,15 +62,15 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
     tracks: { A1: { kind: 'audio' } }, trackOrder: ['A1'],
     items: [{
       id: 'vo', track: 'A1', startFrame: 0, durationInFrames: edited, kind: 'audio',
-      name: '配音', src: '/media/uploads/vo.wav', transcript, deletedWordIdx: [1],
+      name: 'Voiceover', src: '/media/uploads/vo.wav', transcript, deletedWordIdx: [1],
     }],
   };
   const clips = clipsOf(timelineToFcpxml(state));
-  assert.equal(clips.length, segs.length, `导出段数须等于播放段数(${segs.length})`);
+  assert.equal(clips.length, segs.length, `exported segment count must equal the playback segment count (${segs.length})`);
   segs.forEach((seg, i) => {
-    assert.equal(attr(clips[i]!, 'offset'), `${seg.fromFrame}/30s`, `第 ${i + 1} 段时间线位置`);
-    assert.equal(attr(clips[i]!, 'duration'), `${seg.durFrames}/30s`, `第 ${i + 1} 段时长`);
-    assert.equal(attr(clips[i]!, 'start'), `${seg.srcStartFrame}/30s`, `第 ${i + 1} 段源入点`);
+    assert.equal(attr(clips[i]!, 'offset'), `${seg.fromFrame}/30s`, `segment ${i + 1} timeline position`);
+    assert.equal(attr(clips[i]!, 'duration'), `${seg.durFrames}/30s`, `segment ${i + 1} duration`);
+    assert.equal(attr(clips[i]!, 'start'), `${seg.srcStartFrame}/30s`, `segment ${i + 1} source in-point`);
   });
   // Regression red line: deleted words must not be overwritten by a paragraph (source frames 30–90)
   const covers = clips.some((c) => {
@@ -78,10 +78,10 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
     const d = Number(attr(c, 'duration').split('/')[0]);
     return s < 90 && s + d > 30;
   });
-  assert.ok(!covers, '删掉的口癖不得出现在任何一段里');
+  assert.ok(!covers, 'a deleted filler word must not appear inside any segment');
   // The asset duration should cover the farthest source frame actually used (duration after editing 60 < used 120)
   const assetDur = timelineToFcpxml(state).match(/<asset [^>]*duration="([^"]*)"/)?.[1];
-  assert.equal(assetDur, '120/30s', 'asset 时长按真实用到的源区间');
+  assert.equal(assetDur, '120/30s', 'asset duration is based on the actual source range used');
 }
 
 // ── The deletion of words in the video file does not change the picture → it is still a single segment (same semantics as the rendering layer) ──
@@ -91,12 +91,12 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
     tracks: { V1: { kind: 'video' } }, trackOrder: ['V1'],
     items: [{
       id: 'cam', track: 'V1', startFrame: 0, durationInFrames: 60, kind: 'video',
-      name: '机位', src: '/media/uploads/cam.mp4',
+      name: 'Camera', src: '/media/uploads/cam.mp4',
       transcript: [{ text: 'a', start: 0, end: 1000 }, { text: 'b', start: 1000, end: 2000 }],
       deletedWordIdx: [0],
     }],
   };
-  assert.equal(clipsOf(timelineToFcpxml(state)).length, 1, 'video 件保持单段连续播放');
+  assert.equal(clipsOf(timelineToFcpxml(state)).length, 1, 'a video item stays one continuous segment');
 }
 
 // ── P0-②: Convert the asset path to absolute file:// ──
@@ -104,37 +104,37 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
   assert.equal(
     resolveAssetSrc('/media/uploads/a.mp4', '/Users/me/proj/public/media/uploads'),
     'file:///Users/me/proj/public/media/uploads/a.mp4',
-    'POSIX 绝对路径',
+    'POSIX absolute path',
   );
   assert.equal(
     resolveAssetSrc('/media/uploads/%E9%87%87%E8%AE%BF.mp4', '/Users/me/媒体'),
     'file:///Users/me/%E5%AA%92%E4%BD%93/%E9%87%87%E8%AE%BF.mp4',
-    '中文目录与文件名逐段编码',
+    'CJK directory and filename are percent-encoded segment by segment',
   );
   assert.equal(
     resolveAssetSrc('/media/uploads/b roll.mov', '/Users/me/clips/'),
     'file:///Users/me/clips/b%20roll.mov',
-    '空格编码 + 目录尾斜杠归一',
+    'spaces are encoded and a trailing directory slash is normalized',
   );
   assert.equal(
     resolveAssetSrc('/media/uploads/a.mp4', 'D:\\Media\\Uploads'),
     'file:///D:/Media/Uploads/a.mp4',
-    'Windows 盘符路径(冒号保持原样)',
+    'Windows drive-letter path (colon kept as-is)',
   );
   assert.equal(
     resolveAssetSrc('\\\\server\\共享 空间\\旅行.最终版.001.MOV'),
     'file://server/%E5%85%B1%E4%BA%AB%20%E7%A9%BA%E9%97%B4/%E6%97%85%E8%A1%8C.%E6%9C%80%E7%BB%88%E7%89%88.001.MOV',
-    'Windows UNC 路径保留主机并逐段编码',
+    'Windows UNC path keeps the host and encodes each segment',
   );
   assert.equal(
     resolveAssetSrc('https://cdn.example.com/a.mp4', '/Users/me/clips'),
     'https://cdn.example.com/a.mp4',
-    '远程地址原样透传,不谎报本地路径',
+    'a remote URL passes through unchanged and is never misreported as a local path',
   );
   assert.equal(
     resolveAssetSrc('/media/uploads/a.mp4'),
     'file:///media/uploads/a.mp4',
-    '无 mediaDir 时退回原路径(导出仍可出,素材离线)',
+    'falls back to the original path when there is no mediaDir (export still works, media is offline)',
   );
 
   const state: TimelineState = {
@@ -143,11 +143,11 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
     items: [{ id: 'a', track: 'A1', startFrame: 0, durationInFrames: 30, kind: 'audio', name: 'A', src: '/media/uploads/采访.wav' }],
   };
   const xml = timelineToFcpxml(state, { mediaDir: '/Users/me/clips' });
-  assert.ok(xml.includes('src="file:///Users/me/clips/'), '导出串到 asset 的 src 上');
-  assert.ok(xml.includes('name="采访.wav"'), 'asset 名字用可读的解码后文件名');
+  assert.ok(xml.includes('src="file:///Users/me/clips/'), 'the resolved path is written onto the asset src');
+  assert.ok(xml.includes('name="采访.wav"'), 'the asset name uses the readable, decoded filename');
   const assetOpen = xml.match(/<asset(?=[\s>])[^>]*>/)?.[0] ?? '';
-  assert.ok(!/\ssrc=/.test(assetOpen), 'FCPXML 1.10 asset 不再使用旧版 src 属性');
-  assert.ok(xml.includes('<media-rep kind="original-media"'), '旧工程以内部分片作为 original-media 回退');
+  assert.ok(!/\ssrc=/.test(assetOpen), 'FCPXML 1.10 assets no longer use the legacy src attribute');
+  assert.ok(xml.includes('<media-rep kind="original-media"'), 'legacy projects fall back to the internal working copy as original-media');
 }
 
 // ── Issue #27: preserve immutable original-media identity beside the internal working copy ──
@@ -157,21 +157,21 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
   const originalFilePath = '/Users/me/旅行/旅行.最终版.001.MOV';
   const item = {
     id: 'clip-1', track: 'V1', startFrame: 0, durationInFrames: 30, kind: 'video' as const,
-    name: '用户改过的显示名', src: internalSrc, sourceFilename, originalFilePath,
+    name: 'User-edited display name', src: internalSrc, sourceFilename, originalFilePath,
   };
   const state: TimelineState = {
     fps: 30, width: 1920, height: 1080, selectedId: null,
     tracks: { V1: { kind: 'video' } }, trackOrder: ['V1'],
     items: [item],
     assets: [{
-      id: 'asset-1', name: '另一个显示名', kind: 'video', src: internalSrc,
+      id: 'asset-1', name: 'Another display name', kind: 'video', src: internalSrc,
       durationInFrames: 30, sourceFilename, originalFilePath,
     }],
   };
   const xml = timelineToFcpxml(state, { mediaDir: '/Users/me/.openchatcut/media' });
   const assetOpen = xml.match(/<asset(?=[\s>])[^>]*>/)?.[0] ?? '';
-  assert.ok(!/\ssrc=/.test(assetOpen), 'asset 地址只能存在于 media-rep');
-  assert.ok(assetOpen.includes('name="旅行.最终版.001.MOV"'), '可编辑显示名不得覆盖原始文件名');
+  assert.ok(!/\ssrc=/.test(assetOpen), 'the asset address may only live in media-rep');
+  assert.ok(assetOpen.includes('name="旅行.最终版.001.MOV"'), "an editable display name must not override the original filename");
   assert.ok(xml.includes('kind="original-media" src="file:///Users/me/%E6%97%85%E8%A1%8C/%E6%97%85%E8%A1%8C.%E6%9C%80%E7%BB%88%E7%89%88.001.MOV"'));
   assert.ok(xml.includes('kind="proxy-media" src="file:///Users/me/.openchatcut/media/8e45fd6f-8da8-4d6a-8a4f-339d6a8fd747.mp4"'));
   // <pathurl> is the FCPXML-standard location element DaVinci Resolve reads;
@@ -187,7 +187,7 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
     xml.includes('src="file:///Users/me/%E6%97%85%E8%A1%8C/%E6%97%85%E8%A1%8C.%E6%9C%80%E7%BB%88%E7%89%88.001.MOV"'),
     'the src attribute keeps its percent-encoded form for NLEs that require it',
   );
-  assert.equal((xml.match(/suggestedFilename="旅行\.最终版\.001"/g) ?? []).length, 2, '原片与代理建议文件名共用去除最终扩展名的原始 stem');
+  assert.equal((xml.match(/suggestedFilename="旅行\.最终版\.001"/g) ?? []).length, 2, 'the original and proxy suggested filenames share the original stem with the final extension stripped');
 
   const encodedSeparatorXml = timelineToFcpxml({
     ...state,
@@ -201,20 +201,20 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
   assert.ok(!encodedSeparatorXml.includes('suggestedFilename="旅行.最终版.001"'));
 
   const withoutPool = timelineToFcpxml({ ...state, assets: undefined }, { mediaDir: '/Users/me/.openchatcut/media' });
-  assert.ok(withoutPool.includes('kind="original-media" src="file:///Users/me/%E6%97%85%E8%A1%8C/'), '移除池素材后回退时间线来源元数据');
+  assert.ok(withoutPool.includes('kind="original-media" src="file:///Users/me/%E6%97%85%E8%A1%8C/'), 'falls back to timeline-item source metadata once the pool asset is removed');
 
   const windowsXml = timelineToFcpxml({
     ...state,
     assets: [{ ...state.assets![0]!, originalFilePath: 'D:\\媒体\\旅行.最终版.001.MOV' }],
   }, { mediaDir: 'D:\\OpenChatCut\\media' });
-  assert.ok(windowsXml.includes('src="file:///D:/%E5%AA%92%E4%BD%93/%E6%97%85%E8%A1%8C.%E6%9C%80%E7%BB%88%E7%89%88.001.MOV"'), 'Windows 原片路径合法编码');
+  assert.ok(windowsXml.includes('src="file:///D:/%E5%AA%92%E4%BD%93/%E6%97%85%E8%A1%8C.%E6%9C%80%E7%BB%88%E7%89%88.001.MOV"'), 'Windows original-media path is validly encoded');
 
   const uncXml = timelineToFcpxml({
     ...state,
     assets: [{ ...state.assets![0]!, originalFilePath: '\\\\server\\共享 空间\\旅行.最终版.001.MOV' }],
   }, { mediaDir: '\\\\server\\OpenChatCut\\media' });
-  assert.ok(uncXml.includes('kind="original-media" src="file://server/%E5%85%B1%E4%BA%AB%20%E7%A9%BA%E9%97%B4/%E6%97%85%E8%A1%8C.%E6%9C%80%E7%BB%88%E7%89%88.001.MOV"'), 'UNC 原片路径合法编码');
-  assert.ok(uncXml.includes('kind="proxy-media" src="file://server/OpenChatCut/media/8e45fd6f-8da8-4d6a-8a4f-339d6a8fd747.mp4"'), 'UNC 代理路径合法编码');
+  assert.ok(uncXml.includes('kind="original-media" src="file://server/%E5%85%B1%E4%BA%AB%20%E7%A9%BA%E9%97%B4/%E6%97%85%E8%A1%8C.%E6%9C%80%E7%BB%88%E7%89%88.001.MOV"'), 'UNC original-media path is validly encoded');
+  assert.ok(uncXml.includes('kind="proxy-media" src="file://server/OpenChatCut/media/8e45fd6f-8da8-4d6a-8a4f-339d6a8fd747.mp4"'), 'UNC proxy-media path is validly encoded');
 }
 
 // ── Resolve variants retain existing differences ──
@@ -224,9 +224,9 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
     items: [{ id: 'a', track: 'A1', startFrame: 0, durationInFrames: 30, kind: 'audio', name: 'a', src: '/media/uploads/a.mp3' }],
   };
   const resolveXml = timelineToFcpxml(state, { nleFormat: 'fcp_xml_resolve' });
-  assert.ok(resolveXml.includes('colorSpace="1-1-1 (Rec. 709)"'), 'Resolve 变体带 Rec.709');
-  assert.ok(resolveXml.includes('<event name="OpenChatCut Export (Resolve)">'), 'Resolve 事件名');
-  assert.ok(!timelineToFcpxml(state).includes('colorSpace'), '默认变体不带 colorSpace');
+  assert.ok(resolveXml.includes('colorSpace="1-1-1 (Rec. 709)"'), 'the Resolve variant carries Rec.709');
+  assert.ok(resolveXml.includes('<event name="OpenChatCut Export (Resolve)">'), 'the Resolve event name');
+  assert.ok(!timelineToFcpxml(state).includes('colorSpace'), 'the default variant has no colorSpace');
 }
 
-console.log('fcpxml.verify: ok (结构/转义/lane/分段/原始与代理媒体/FCPXML 1.10/Resolve 变体)');
+console.log('fcpxml.verify: ok (structure/escaping/lane/segmentation/original & proxy media/FCPXML 1.10/Resolve variant)');

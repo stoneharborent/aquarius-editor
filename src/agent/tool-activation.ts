@@ -3,6 +3,7 @@ import type { ProviderOptions } from '@ai-sdk/provider-utils';
 import type { AgentToolSchema } from './tool-schema';
 import { hasMutationRoutingIntent, routedToolSelection } from './tool-routing';
 import { activatedToolNamesForResult } from './skills/skill-tool-activation';
+import { ZH_READ_ONLY_TERMS } from '../i18n/dict/zh/agent-terms';
 
 const BOOT_TOOL_NAMES: Record<string, true> = {
   ToolSearch: true,
@@ -15,7 +16,7 @@ const BOOT_TOOL_NAMES: Record<string, true> = {
 };
 
 const READ_ONLY_TERMS = [
-  '不要修改', '不要编辑', '只读',
+  ...ZH_READ_ONLY_TERMS,
   'read only', 'read-only', 'do not edit', "don't edit", 'without editing',
 ];
 

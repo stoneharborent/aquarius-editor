@@ -19,9 +19,9 @@ assert.strictEqual(slugs.length, 11, 'expected 11 creative skills');
 for (const slug of slugs) {
   const raw = readFileSync(join(SKILLS_DIR, slug, 'SKILL.md'), 'utf8');
   const { name, description, body } = parseSkillFrontmatter(raw);
-  assert.strictEqual(name, slug, `${slug}: frontmatter name 应等于 slug`);
-  assert.ok(description.length > 20, `${slug}: description 解析非空`);
-  assert.ok(body.trim().length > 500, `${slug}: 创作技能正文有实质内容`);
+  assert.strictEqual(name, slug, `${slug}: frontmatter name should equal the slug`);
+  assert.ok(description.length > 20, `${slug}: description parses non-empty`);
+  assert.ok(body.trim().length > 500, `${slug}: creative skill body has substantive content`);
 }
 for (const s of CREATIVE_SKILL_METADATA) {
   assert.ok(s.id && s.name && s.slug, `skill ${s.name} is well-formed`);

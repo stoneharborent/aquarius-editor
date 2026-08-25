@@ -11,26 +11,28 @@ import { analyzeAssetGeometry } from '../../geometry/visual-geometry';
 
 // auto_reframe — Custom tool.
 // reframe originally only had the "write/render" infrastructure (builtin:zoom + reserved
-// __openchatcutReframeCurve = ReframeCurveV1), there is no "sample video → detect subject → automatically generate key frames"
-// Agent tool. This tool connects the heuristic detection of src/reframe/detect.ts to EditorCore:
-// Sampling target video → detect focus every intervalFrames → write frame by frame setReframeKeyframe,
-// Let a cropping window like 16:9→9:16 follow the subject. Pixel sampling can only be run in the browser (headless and graceful error reporting).
+// __openchatcutReframeCurve = ReframeCurveV1); there was no "sample video → detect subject →
+// auto-generate keyframes" agent tool. This tool wires the heuristic detection in
+// src/reframe/detect.ts up to EditorCore: sample the target video → detect the focal point
+// every intervalFrames → write setReframeKeyframe frame by frame, so a crop window like
+// 16:9→9:16 follows the subject. Pixel sampling only runs in the browser (fails gracefully
+// when headless).
 
 type Args = Record<string, unknown>;
 
-/** Prefix matching parsing target clip (same semantics as findItem of tools.ts/effect-tools.ts) */
+/** Resolve the target clip by prefix match (same semantics as findItem in tools.ts/effect-tools.ts) */
 function findItem(items: TimelineItem[], id: unknown): TimelineItem | null {
   const q = String(id ?? '');
   if (!q) return null;
   return items.find((it) => it.id === q || it.id.startsWith(q)) ?? null;
 }
 
-/** Use media src to create an off-screen <video>, wait for the metadata to be ready (get videoWidth/Height), and time out */
+/** Create an off-screen <video> from the media src, wait for metadata to be ready (to get videoWidth/Height), with a timeout */
 function loadVideo(src: string): Promise<HTMLVideoElement> {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
     video.muted = true;
-    video.crossOrigin = 'anonymous'; // Same source /media/uploads has no impact; avoid contaminating read pixels when crossing sources
+    video.crossOrigin = 'anonymous'; // no effect for same-origin /media/uploads; avoids tainting read pixels for cross-origin sources
     video.preload = 'auto';
     const cleanup = (): void => {
       video.removeEventListener('loadedmetadata', onOk);
@@ -42,7 +44,7 @@ function loadVideo(src: string): Promise<HTMLVideoElement> {
     };
     const onErr = (): void => {
       cleanup();
-      reject(new Error(`auto_reframe: 视频加载失败 (${src})`));
+      reject(new Error(`auto_reframe: video failed to load (${src})`));
     };
     video.addEventListener('loadedmetadata', onOk, { once: true });
     video.addEventListener('error', onErr, { once: true });
@@ -54,7 +56,7 @@ function loadVideo(src: string): Promise<HTMLVideoElement> {
   });
 }
 
-/** Clear all existing reframe keyframes for this clip (automatic reframe = full replacement, not superposition)*/
+/** Clear all existing reframe keyframes for this clip (auto reframe replaces entirely rather than layering)*/
 function clearReframe(ctx: AgentContext, item: TimelineItem): void {
   const kfs = item.zoom?.reframeCurve?.keyframes ?? [];
   for (const k of kfs) ctx.commands.removeReframeKeyframe(item.id, k.frame);
@@ -63,20 +65,20 @@ function clearReframe(ctx: AgentContext, item: TimelineItem): void {
 export async function execReframeTool(name: string, args: Args, ctx: AgentContext): Promise<unknown> {
   if (name !== 'auto_reframe') return { error: `unknown tool ${name}` };
 
-  // —— Boundary verification: environment (pixel sampling requires a browser) ——
+  // —— Environment guard: pixel sampling requires a browser ——
   if (typeof document === 'undefined' || typeof HTMLVideoElement === 'undefined') {
-    return { error: 'auto_reframe 需要浏览器环境(视频像素采样),当前无 DOM,无法运行。' };
+    return { error: 'auto_reframe needs a browser environment (video pixel sampling); no DOM is available here, so it cannot run.' };
   }
 
   const state: TimelineState = ctx.getState();
   const videos = state.items.filter((it) => it.kind === 'video');
   const item = findItem(videos, args.itemId);
   if (!item) {
-    return { error: `找不到视频 clip ${args.itemId ?? '(缺 itemId)'}`, available: videos.map((v) => ({ itemId: v.id, name: v.name })) };
+    return { error: `no video clip ${args.itemId ?? '(missing itemId)'}`, available: videos.map((v) => ({ itemId: v.id, name: v.name })) };
   }
-  if (!item.src) return { error: `clip ${item.id} 没有可采样的视频源(src 缺失)` };
+  if (!item.src) return { error: `clip ${item.id} has no sampleable video source (src is missing)` };
 
-  // ——Parameter cleaning——
+  // —— Parameter cleanup ——
   const intervalFrames = Number.isFinite(Number(args.intervalFrames)) ? Math.max(1, Math.floor(Number(args.intervalFrames))) : undefined;
   const sensitivity = Number.isFinite(Number(args.sensitivity)) ? Math.max(0, Math.min(1, Number(args.sensitivity))) : undefined;
   const smooth = Number.isFinite(Number(args.smooth)) ? Math.max(0, Math.min(1, Number(args.smooth))) : undefined;
@@ -124,7 +126,7 @@ export async function execReframeTool(name: string, args: Args, ctx: AgentContex
       });
 
     if (!keyframes.length) {
-      return { error: `auto_reframe: 未能从 clip ${item.id} 采到任何帧(视频可能不可读)`, keyframes: 0 };
+      return { error: `auto_reframe: could not sample any frames from clip ${item.id} (the video may not be readable)`, keyframes: 0 };
     }
 
     clearReframe(ctx, item);
@@ -139,12 +141,12 @@ export async function execReframeTool(name: string, args: Args, ctx: AgentContex
       smooth: smooth ?? DEFAULT_REFRAME_SMOOTH,
       source: usedGeometry ? 'geometry' : 'energy-grid',
       note: usedGeometry
-        ? '基于人像/人脸几何生成焦点（无需像素采样）。'
+        ? 'Focal points generated from person/face geometry (no pixel sampling needed).'
         : magnification <= 1.05
-          ? '画布与源画幅接近，裁切倍率≈1；关键帧已写入，换竖屏画布后更明显。'
-          : 'reframe 关键帧已写入；用 view_timeline_frames 自检裁切是否跟主体。',
+          ? 'Canvas aspect is close to the source, so the crop magnification is ≈1; keyframes were written and will show more clearly once the canvas is switched to portrait.'
+          : 'Reframe keyframes were written; use view_timeline_frames to check the crop is tracking the subject.',
     };
   } catch (err: unknown) {
-    return { error: err instanceof Error ? err.message : 'auto_reframe 失败' };
+    return { error: err instanceof Error ? err.message : 'auto_reframe failed' };
   }
 }

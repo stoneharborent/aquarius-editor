@@ -136,7 +136,7 @@ export async function analyzeClipSilence(
   const { installSileroVad } = await import('./silero-vad');
   installSileroVad();
   const res = await fetch(src, { signal: context.signal });
-  if (!res.ok) throw new Error(`加载音频失败: ${src} (HTTP ${res.status})`);
+  if (!res.ok) throw new Error(`Failed to load audio: ${src} (HTTP ${res.status})`);
   const arrayBuffer = await res.arrayBuffer();
   const audioContext = new OfflineAudioContext(1, 1, 44100);
   const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);

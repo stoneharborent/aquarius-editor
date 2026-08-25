@@ -119,7 +119,7 @@ export function TrackContextMenu({
       <Separator />
       <MenuItem label={t(hidden ? 'Show track' : 'Hide track')} icon={hidden ? 'eyeOff' : 'eye'} checked={hidden} onClick={run(onToggleHidden)} />
       {kind !== 'caption' && <MenuItem label={t(muted ? 'Unmute' : 'Mute track')} icon={muted ? 'volumeOff' : 'volume'} checked={muted} onClick={run(onToggleMuted)} />}
-      <MenuItem label={t(locked ? 'Unlock track' : '锁定轨道')} icon={locked ? 'lock' : 'unlock'} checked={locked} onClick={run(onToggleLocked)} />
+      <MenuItem label={t(locked ? 'Unlock track' : 'Lock track')} icon={locked ? 'lock' : 'unlock'} checked={locked} onClick={run(onToggleLocked)} />
       <MenuItem label={t('Rename track')} icon="pencil" onClick={run(onRename)} />
       <Separator />
       {kind === 'caption' ? (

@@ -159,4 +159,5 @@ export default {
   'The caption file has no usable content': '字幕文件没有可用内容',
   'Could not create a caption track': '无法创建字幕轨道',
   'Failed to read the caption file': '读取字幕文件失败',
+  'My style {date}': '我的样式 {date}',
 } as Record<string, string>;

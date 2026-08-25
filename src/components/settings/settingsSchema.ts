@@ -170,9 +170,7 @@ export const SETTINGS_CATEGORIES: readonly SettingsCategory[] = [
             modelSelect('ATLASCLOUD_MUSIC_MODEL', 'Music model', 'minimax/music-2.6', ['minimax/music-2.6']),
           ] },
           { key: 'music/sonilo', vendor: 'sonilo', title: 'Sonilo',
-            note: '按成片生成：把渲染好的视频交给 Sonilo，配乐跟着画面节奏走（可选一句风格提示，不填也行）。'
-              + '配乐自带授权、可商用（以条款为准）；每条音轨附 license_id 留档。'
-              + '同一个 Key 也用于按成片生成音效（submit_sound，免版税）。',
+            note: 'Generates from the finished cut: hand Sonilo the rendered video and the music follows its pacing (one optional style hint; works without one). Music is licensed, safe for commercial use (terms apply); each track comes with a license_id record. The same key also powers video-matched sound effects (submit_sound, royalty-free).',
             fields: [
               secret('SONILO_API_KEY', 'API Key'),
               text('SONILO_BASE_URL', 'Base URL', 'Default https://api.sonilo.com'),
@@ -199,16 +197,13 @@ export const SETTINGS_CATEGORIES: readonly SettingsCategory[] = [
       { key: 'storage', title: 'Default project location', hint: 'The default location for new projects and generated media, plus optional R2 cloud backup.',
         vendors: [
           { key: 'storage/projects', vendor: 'localdisk', title: 'Default project location',
-            note: '新建工程、历史版本和应用生成的素材保存在这里。桌面端从外部拖入的文件和文件夹保留在原位置，'
-              + '工程只建立引用；浏览器运行时会上传托管副本。修改后重启应用生效。',
+            note: 'New projects, version history, and app-generated media are stored here. In the desktop app, external files and folders stay in place and are referenced; browser sessions upload a managed copy. Changes take effect after restarting the app.',
             fields: [
               directory('OPENCHATCUT_DATA_DIR', 'Default project location', 'Default app data folder',
                 'On desktop, click "Choose folder"; you can also type an absolute path (~/ accepted). Clear it to return to the default folder.'),
             ] },
           { key: 'storage/r2', vendor: 'r2', title: 'Cloudflare R2',
-            note: '未配置时素材只存本机。配置后：每次上传同步写入 R2（桶保持私有，'
-              + '读取经本地服务回源，src 路径不变）；本机缺文件时自动从云端取回。改动即时生效。'
-              + 'R2 控制台建桶 → R2 API Token（Object Read & Write）即可拿到下面四个值。',
+            note: 'Without this, media stays on this machine. Once configured, uploads are also written to R2; missing local files are restored through the local service while source URLs stay unchanged. Changes apply immediately. Create a bucket and an Object Read & Write API token in R2 to get the four values below.',
             fields: [
               { name: 'R2_ENABLED', label: 'Cloud sync', kind: 'toggle',
                 note: 'When off, new uploads stay local only (keys kept, files already in the cloud unaffected); re-enable to resume write-through.' },
@@ -226,9 +221,7 @@ export const SETTINGS_CATEGORIES: readonly SettingsCategory[] = [
       { key: 'sandbox', title: 'Sandbox Execution', hint: 'run_code · Run ffmpeg / node / python in a cloud sandbox.',
         vendors: [
           { key: 'sandbox/e2b', vendor: 'e2b', title: 'E2B',
-            note: '云端隔离 Linux 沙箱，不触碰本机文件。Agent 用它跑 run_code：ffprobe 探测素材时长 / '
-              + '尺寸编码、ffmpeg 转码 / 抽帧 / 加工音视频、执行 node / python 技能脚本，结果回传后'
-              + '由本地工具应用到时间线。未配置只影响这些工具，剪辑与预览不受影响。',
+            note: 'An isolated Linux sandbox in the cloud — never touches local files. The Agent uses it for run_code: ffprobe to probe media duration / dimensions / codecs, ffmpeg to transcode / extract frames / process AV, and node / python skill scripts; results come back and local tools apply them to the timeline. Leaving it unset only affects these tools — editing and preview are unaffected.',
             fields: [
               secret('E2B_API_KEY', 'API Key'),
               text('E2B_TEMPLATE', 'Template ID (optional)', undefined,

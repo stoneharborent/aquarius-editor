@@ -83,7 +83,7 @@ const FIELD_DETAILS: ReadonlyArray<readonly [string, ApprovalDetailKind, string]
   ['repo', 'target', 'Repository'],
   ['slug', 'target', 'Install directory'],
   ['provider', 'parameter', 'Provider'],
-  ['track', 'target', '轨道'],
+  ['track', 'target', 'Track'],
   ['skill', 'target', 'Skill'],
   ['assetId', 'target', 'Asset ID'],
   ['projectId', 'target', 'Project ID'],

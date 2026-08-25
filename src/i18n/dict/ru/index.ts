@@ -185,7 +185,6 @@ export const RU: Record<string, string> = {
   'Drag onto the preview to create and edit a caption anywhere': 'Можно перетащить в любую точку превью для создания и редактирования субтитров',
   'Double-click to edit caption': 'Двойной клик — редактировать субтитр',
   'Aa': 'Aa',
-  'A': '字',
   'Clean White': 'Простой белый',
   'Cinema White': 'Кинотеатральный белый',
   'Fresh Highlight': 'Свежий с подсветкой',

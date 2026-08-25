@@ -19,7 +19,7 @@ const flagBtn = (active: boolean): React.CSSProperties => ({
 interface TrackHeadProps {
   trackId: TrackId;
   kind: TrackKind;
-  /** Stable title, e.g. 视频1 / V1 — never the custom name. */
+  /** Stable title, e.g. Video 1 / V1 — never the custom name. */
   trackName: string;
   /** Optional custom name rendered as a second row under the title. */
   customName?: string;

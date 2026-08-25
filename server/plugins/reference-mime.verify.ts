@@ -1,11 +1,14 @@
 // Runnable check: `npx tsx server/plugins/reference-mime.verify.ts`.
 //
-// Take the real code path: put several temporary files with different extensions in the upload directory, and call the real reference assets for suppliers
-// mediaDataUrl(), asserts that the data: prefix indicates the **real type**.
+// Exercises the real code path: writes several temporary files with different
+// extensions into the upload directory, then calls the actual reference-asset
+// mediaDataUrl() and asserts that the data: prefix reports the **real type**.
 //
-// There is originally a copy of MIME here that only recognizes 6 extensions, and the rest are all image/jpeg - `.heic`
-// `.avif` `.gif` `.mov` These types can indeed enter /media/uploads and will be labeled image/jpeg
-// Send to vendor along with non-JPEG bytes.
+// There used to be a copy of the MIME table here that only recognized 6
+// extensions, with everything else falling back to image/jpeg - `.heic`,
+// `.avif`, `.gif`, `.mov` can all legitimately land in /media/uploads and were
+// getting mislabeled as image/jpeg, sending non-JPEG bytes to the vendor
+// under a JPEG content type.
 import assert from 'node:assert/strict';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -42,10 +45,10 @@ try {
     const url = await mediaDataUrl(`/media/uploads/${name}`);
     assert.ok(
       url.startsWith(`data:${mime};base64,`),
-      `.${ext} 应标成 ${mime},实得 ${url.slice(0, url.indexOf(';base64'))}`,
+      `.${ext} should be labeled ${mime}, got ${url.slice(0, url.indexOf(';base64'))}`,
     );
   }
-  console.log(`reference-mime.verify: ok (${CASES.length} 种扩展名都标了真实类型,没有兜底成 image/jpeg)`);
+  console.log(`reference-mime.verify: ok (all ${CASES.length} extensions got their real type, none fell back to image/jpeg)`);
 } finally {
   await Promise.all(written.map((file) => rm(file, { force: true })));
 }

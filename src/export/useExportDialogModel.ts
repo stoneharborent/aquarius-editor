@@ -50,7 +50,7 @@ export const EXPORT_TABS = [
   { key: 'mg', label: 'Motion layers', summary: 'ProRes 4444', icon: 'sparkles' },
   { key: 'subtitles', label: 'Caption file', summary: 'SRT / TXT', icon: 'captions' },
   { key: 'xml', label: 'Edit project', summary: 'FCPXML', icon: 'clipboard' },
-  { key: 'jianying', label: 'JianYing Draft', summary: 'CapCut / 剪映', icon: 'video' },
+  { key: 'jianying', label: 'JianYing Draft', summary: 'CapCut', icon: 'video' },
 ] as const satisfies ReadonlyArray<{ key: ExportTab; label: string; summary: string; icon: IconName }>;
 
 export const EXPORT_ACTION_LABELS: Record<ExportTab, string> = {

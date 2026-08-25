@@ -70,7 +70,7 @@ async function writeCompletedWithLease(
     renewing = true;
     void renewServerExportDelivery(renderId, claim)
       .then((active) => {
-        if (!active) controller.abort(new Error('导出恢复所有权已失效'));
+        if (!active) controller.abort(new Error('Export recovery ownership has expired'));
       })
       .catch((error: unknown) => controller.abort(error))
       .finally(() => { renewing = false; });
@@ -102,7 +102,7 @@ async function saveCompleted(
   } : current);
   const renewed = await renewServerExportDelivery(renderId, claim);
   if (!renewed || !await checkServerExportDelivery(renderId, renewed)) {
-    throw new ExportDestinationError('导出恢复所有权已失效，请重试');
+    throw new ExportDestinationError('Export recovery ownership has expired, please try again');
   }
   signal?.throwIfAborted();
   const ext = exportMediaExtension(format, codec);
@@ -113,7 +113,7 @@ async function saveCompleted(
   try {
     if (ambiguousDownload) await markServerExportDeliveryAmbiguous(renderId, renewed);
     if (!await checkServerExportDelivery(renderId, renewed)) {
-      throw new ExportDestinationError('导出恢复所有权已失效，请重试');
+      throw new ExportDestinationError('Export recovery ownership has expired, please try again');
     }
     await writeCompletedWithLease(
       context,
@@ -199,7 +199,7 @@ interface ResumePersistedServerExportsOptions {
   t: Translate;
 }
 
-const RESELECT_RECOVERY_DESTINATION = '导出目标授权已失效，请重新选择导出位置后重试';
+const RESELECT_RECOVERY_DESTINATION = 'Export destination authorization has expired; please reselect the export location and try again';
 
 function recoveredContext(
   record: PersistedServerExportJob,

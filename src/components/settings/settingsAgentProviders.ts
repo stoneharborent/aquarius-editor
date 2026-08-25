@@ -92,10 +92,10 @@ const VISION_PAGE: SettingsVendorPage = {
 
 export const PROXY_PAGE: SettingsVendorPage = {
   key: 'agent/proxy', vendor: 'proxy', title: 'Network proxy', kind: 'settings',
-  note: '国内网络访问海外模型（Gemini / OpenAI / Anthropic / Mistral 等）失败时，'
-    + '可在此填写本地代理地址（如 http://127.0.0.1:7890）。'
-    + '留空则使用系统环境变量（HTTPS_PROXY / HTTP_PROXY）。'
-    + '生效范围：Agent 模型、AI 生成、模型下载、R2 云同步。',
+  note: 'If requests to overseas models (Gemini / OpenAI / Anthropic / Mistral, etc.) fail from '
+    + 'behind a restrictive network, enter a local proxy address here (e.g. http://127.0.0.1:7890). '
+    + 'Leave it blank to fall back to the system environment variables (HTTPS_PROXY / HTTP_PROXY). '
+    + 'Applies to: Agent models, AI generation, model downloads, and R2 cloud sync.',
   fields: [text('PROXY_URL', 'Proxy URL', 'Example: http://127.0.0.1:7890')],
 };
 

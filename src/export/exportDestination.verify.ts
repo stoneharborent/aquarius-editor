@@ -290,14 +290,14 @@ async function verifyEmptyOutputIsRejected(): Promise<void> {
     () => writeBlobToDestination(destination, 'empty.mp4', new Blob()),
     (error) => error instanceof ExportFailureError
       && error.failure.code === 'export_output_empty'
-      && error.message === '导出文件为空',
+      && error.message === 'The exported file is empty.',
   );
   assert.equal(opens, 0, 'an empty blob is rejected before opening its destination');
 
   globalThis.fetch = (async () => new Response(new Uint8Array())) as typeof fetch;
   await assert.rejects(
     () => writeUrlToDestination(destination, 'empty.mp4', '/media/uploads/empty.mp4'),
-    /导出文件为空/,
+    /The exported file is empty\./,
   );
   assert.equal(opens, 1);
   assert.equal(aborts, 1, 'an empty response aborts its opened writable');
@@ -364,7 +364,7 @@ async function verifyDesktopRestoreAndStreaming(): Promise<void> {
     [`/api/export-destinations/${grant.grantId}/chosen.fcpxml`],
     'desktop single-file saves must honor the native picker filename',
   );
-  await assert.rejects(() => writeBlobToDestination(destination, '../clip.mp4', new Blob()), /导出文件名无效/);
+  await assert.rejects(() => writeBlobToDestination(destination, '../clip.mp4', new Blob()), /The export filename is invalid\./);
   failDestination = true;
   await assert.rejects(
     () => writeBlobToDestination(destination, 'clip.mp4', new Blob(['racer'])),

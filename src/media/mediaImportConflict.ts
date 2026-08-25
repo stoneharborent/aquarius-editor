@@ -13,7 +13,7 @@ export function findMediaNameConflict<T extends { id: string; name: string }>(
   return assets.find((asset) => normalizeMediaName(asset.name) === normalized);
 }
 
-/** User chose “取消上传” in the shared same-name import prompt. */
+/** User chose "Cancel Upload" in the shared same-name import prompt. */
 export class MediaImportCancelledError extends Error {
   constructor() {
     super(t('Cancelled uploading a same-name asset'));
@@ -36,9 +36,7 @@ export function mediaImportErrorMessage(error: unknown): string {
   if (/failed to fetch|networkerror|network request failed|load failed/i.test(message)) {
     return t('Network connection failed; check your network and retry');
   }
-  const compatibilityDetail = message.match(/^视频兼容性处理失败：(.+)$/u)?.[1]?.trim();
-  if ((compatibilityDetail && !/[\u3400-\u9fff]/u.test(compatibilityDetail))
-    || /video compatibility (?:check|processing) failed|media normalization failed|\bffmpeg\b|\bffprobe\b|timed out after/i.test(message)) {
+  if (/video compatibility (?:check|processing) failed|media normalization failed|\bffmpeg\b|\bffprobe\b|timed out after/i.test(message)) {
     return t('Video compatibility processing failed; retry');
   }
   const httpFailure = message.match(/\bHTTP\s+(\d{3})\b/i);

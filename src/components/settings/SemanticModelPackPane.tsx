@@ -12,8 +12,8 @@ const SEMANTIC_PACK_ID = 'visual-semantics-lite' as const;
 const PACK_POLL_MS = 1500;
 
 /**
- * 画面语义搜索模型包管理（设置 → 本地模型 → 画面语义搜索）。
- * 只负责模型包的探测 / 下载 / 状态；索引与搜索在媒体池面板内完成。
+ * Manages the visual semantic search model pack (Settings → Local models → Visual semantic search).
+ * Only handles probing / downloading / status for the model pack; indexing and search happen in the media pool panel.
  */
 export function SemanticModelPackPane() {
   const t = useT();

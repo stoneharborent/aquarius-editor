@@ -52,56 +52,56 @@ try {
   assert.deepEqual(
     assetMenuSelectionIds('asset-b', new Set(['asset-a', 'asset-b']), ['asset-a', 'asset-b', 'asset-c']),
     ['asset-a', 'asset-b'],
-    '右键已选素材必须保留整个多选集',
+    'right-clicking an already-selected asset must keep the whole multi-selection',
   );
-  assert.equal(duplicateAssetName('项目素材.mp4', 'copy'), '项目素材 copy.mp4');
-  assert.equal(duplicateAssetName('无扩展名', 'copy'), '无扩展名 copy');
+  assert.equal(duplicateAssetName('Project Media.mp4', 'copy'), 'Project Media copy.mp4');
+  assert.equal(duplicateAssetName('No Extension', 'copy'), 'No Extension copy');
   assert.deepEqual(
     assetMenuSelectionIds('asset-c', new Set(['asset-a', 'asset-b']), ['asset-a', 'asset-b', 'asset-c']),
     ['asset-c'],
-    '右键未选素材必须只操作当前素材',
+    'right-clicking an unselected asset must only act on that asset',
   );
   assert.equal(
     assetMenuFavoriteValue([{ favorite: true }, { favorite: false }]),
     true,
-    '批量收藏只要其中一个未收藏，就应统一收藏',
+    'bulk favorite should favorite everything as long as at least one is not yet favorited',
   );
   assert.equal(
     assetMenuFavoriteValue([{ favorite: true }, { favorite: true }]),
     false,
-    '批量取消收藏只在全部已收藏时发生',
+    'bulk unfavorite should only happen when everything is already favorited',
   );
   assert.deepEqual(
     batchAssetRename([
-      { id: 'asset-a', name: '原片.mp4' },
-      { id: 'asset-b', name: '封面.png' },
-    ], '项目素材'),
+      { id: 'asset-a', name: 'original.mp4' },
+      { id: 'asset-b', name: 'cover.png' },
+    ], 'Project Media'),
     [
-      { id: 'asset-a', name: '项目素材.mp4' },
-      { id: 'asset-b', name: '项目素材 2.png' },
+      { id: 'asset-a', name: 'Project Media.mp4' },
+      { id: 'asset-b', name: 'Project Media 2.png' },
     ],
-    '批量重命名必须保留各素材扩展名，并给后续素材添加稳定序号',
+    'batch rename must preserve each asset\'s extension and add a stable sequence number to subsequent assets',
   );
 
   const markup = renderToStaticMarkup(createElement(AssetMenuDestinations, {
-    assetName: '7月7日.mp4',
+    assetName: 'july-7.mp4',
     onAddTimeline: () => undefined,
     onAddChat: () => undefined,
   }));
 
-  assert.match(markup, /添加到：/);
-  assert.match(markup, />时间线</);
-  assert.match(markup, />AI 对话框</);
-  assert.ok(markup.indexOf('>AI 对话框<') < markup.indexOf('>时间线<'), 'AI 对话框应位于左侧，时间线应位于右侧');
-  assert.match(markup, /aria-label="添加 7月7日.mp4 到时间线"/);
-  assert.match(markup, /aria-label="添加 7月7日.mp4 到 AI 对话框"/);
+  assert.match(markup, /Add to:/);
+  assert.match(markup, />Timeline</);
+  assert.match(markup, />AI chat</);
+  assert.ok(markup.indexOf('>AI chat<') < markup.indexOf('>Timeline<'), 'AI chat should appear on the left, Timeline on the right');
+  assert.match(markup, /aria-label="Add july-7\.mp4 to timeline"/);
+  assert.match(markup, /aria-label="Add july-7\.mp4 to AI chat"/);
 
   const documentMarkup = renderToStaticMarkup(createElement(AssetMenuDestinations, {
     assetName: 'script.md',
     onAddChat: () => undefined,
   }));
-  assert.match(documentMarkup, />AI 对话框</);
-  assert.doesNotMatch(documentMarkup, />时间线</);
+  assert.match(documentMarkup, />AI chat</);
+  assert.doesNotMatch(documentMarkup, />Timeline</);
 
   const blankMenuMarkup = renderToStaticMarkup(createElement(BlankMediaMenuActions, {
     clipboardCount: 2,
@@ -120,18 +120,18 @@ try {
     onSort: () => undefined,
     onType: () => undefined,
   }));
-  assert.match(blankMenuMarkup, /粘贴副本 \(2\)/);
-  assert.match(blankMenuMarkup, />全选</);
-  assert.match(blankMenuMarkup, />上传素材</);
-  assert.match(blankMenuMarkup, />本地语义搜索</);
-  assert.match(blankMenuMarkup, />手机传素材</);
-  assert.match(blankMenuMarkup, />新建文件夹</);
-  assert.match(blankMenuMarkup, /aria-label="素材排序"/);
-  assert.match(blankMenuMarkup, /aria-label="筛选素材"/);
+  assert.match(blankMenuMarkup, /Paste copies \(2\)/);
+  assert.match(blankMenuMarkup, />Select all</);
+  assert.match(blankMenuMarkup, />Upload media</);
+  assert.match(blankMenuMarkup, />Local semantic search</);
+  assert.match(blankMenuMarkup, />Upload from phone</);
+  assert.match(blankMenuMarkup, />New folder</);
+  assert.match(blankMenuMarkup, /aria-label="Sort media"/);
+  assert.match(blankMenuMarkup, /aria-label="Filter media"/);
 
   const overlaySource = await readFile(new URL('./MediaPoolOverlays.tsx', import.meta.url), 'utf8');
-  assert.doesNotMatch(overlaySource, /className="cc-asset-menu-backdrop"/, '素材菜单不应使用全屏遮罩阻断直接右键另一素材');
-  assert.match(overlaySource, /document\.addEventListener\('pointerdown', closeOutside, true\)/, '素材菜单应通过外部点击关闭');
+  assert.doesNotMatch(overlaySource, /className="cc-asset-menu-backdrop"/, 'the asset menu should not use a full-screen backdrop that blocks directly right-clicking another asset');
+  assert.match(overlaySource, /document\.addEventListener\('pointerdown', closeOutside, true\)/, 'the asset menu should close via an outside click');
 } finally {
   await vite.close();
 }

@@ -1,6 +1,7 @@
-// 跑那些 import 链里带 Vite 专属 `?raw` / .frag 的 .check.ts(裸 tsx 解析不了)。
-// esbuild 打成单文件 ESM(?raw → 文件文本),node 直接跑。
-// 用法:node scripts/run-check.mjs <check 文件路径>
+// Runs .check.ts files whose import chain uses Vite-only `?raw` / .frag loaders
+// (plain tsx can't resolve those). esbuild bundles it into a single ESM file
+// (?raw -> file text), and node runs that directly.
+// Usage: node scripts/run-check.mjs <path to check file>
 import { build } from 'esbuild';
 import { readFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -16,7 +17,7 @@ if (!entry) {
 const rawPlugin = {
   name: 'vite-raw',
   setup(b) {
-    // `import x from './y.frag?raw'` → y.frag 的文件内容字符串(对齐 Vite 语义)
+    // `import x from './y.frag?raw'` -> the raw file contents of y.frag (matches Vite semantics)
     b.onResolve({ filter: /\?raw$/ }, (args) => ({
       path: resolve(args.resolveDir, args.path.slice(0, -'?raw'.length)),
       namespace: 'raw-text',

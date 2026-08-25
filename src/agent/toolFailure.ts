@@ -1,4 +1,5 @@
 import { getLocale } from '../i18n/locale';
+import { zhToolFailureSummary } from '../i18n/dict/zh/agent-terms';
 
 export interface ToolExecutionOutcome {
   readonly success: boolean;
@@ -84,7 +85,7 @@ export class ToolFailureTracker {
       .join('; ');
     const locale = getLocale();
     if (locale === 'zh') {
-      return `有工具调用失败，未能完成请求（${details}）。本次没有成功执行的记录。`;
+      return zhToolFailureSummary(details);
     }
     if (locale === 'ru') {
       return `Запрос не выполнен из-за сбоя инструмента (${details}). Успешное выполнение этой операции не зафиксировано.`;

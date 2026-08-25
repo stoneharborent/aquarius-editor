@@ -9,9 +9,9 @@ const markup = renderToStaticMarkup(
 assert.match(
   markup,
   /class="cc-add-solid-canvas-card"/,
-  '我的素材网格第一格应提供添加纯色背景/画布快捷卡片',
+  'the first slot in the media grid should provide an "Add solid background/canvas" shortcut card',
 );
-assert.match(markup, />添加纯色背景\/画布</, '快捷卡片应显示明确操作名称');
-assert.match(markup, /aria-label="添加纯色背景\/画布"/, '整张卡片应是可访问的添加操作');
+assert.match(markup, />Add solid background\/canvas</, 'the shortcut card should display a clear action name');
+assert.match(markup, /aria-label="Add solid background\/canvas"/, 'the whole card should be an accessible add action');
 
 console.log('add-solid-canvas-card.verify: first-grid action card OK');

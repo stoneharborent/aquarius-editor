@@ -137,7 +137,7 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
             const headConfig = meta.kind === 'caption' ? { ...config, hidden } : config;
             const locked = config.locked ?? false;
             const kindLabel = meta.kind === 'video' ? 'Video' : meta.kind === 'audio' ? 'Music' : 'Captions';
-            // Stable title (类型+序号) plus optional custom name as a second row,
+            // Stable title (type + sequence number) plus optional custom name as a second row,
             // so track naming never drifts when AI creates tracks with its own labels.
             const titleName = locale === 'en' ? alias : `${t(kindLabel)}${alias.slice(1)}`;
             const customName = config.name || undefined;

@@ -32,7 +32,7 @@ const catalog = [
   schema('sync_cuts_to_music'),
 ];
 
-const neutral = new ToolActivation(catalog, [{ role: 'user', content: '你好' }]);
+const neutral = new ToolActivation(catalog, [{ role: 'user', content: 'Hello' }]);
 assert.deepEqual(neutral.names(), [
   'ToolSearch',
   'load_skill',
@@ -72,29 +72,29 @@ assert.deepEqual(
   'bare provider names do not activate speech tools without TTS/transcription intent',
 );
 
-const routed = new ToolActivation(catalog, [{ role: 'user', content: '把 V1 轨道片段移动并剪辑一下' }]);
+const routed = new ToolActivation(catalog, [{ role: 'user', content: 'Move and edit the clip on the V1 track.' }]);
 assert.ok(routed.names().includes('edit_item'));
 assert.ok(routed.names().includes('edit_track'));
 assert.ok(routed.names().includes('ToolSearch'), 'routed requests keep ToolSearch available for deferred tools');
 assert.ok(!routed.names().includes('submit_export'));
 const backgroundFillRouted = new ToolActivation(catalog, [
-  { role: 'user', content: '把 V1 画面的模糊背景填充强度调到 70%' },
+  { role: 'user', content: 'Set the blur background fill strength on V1 to 70%.' },
 ]);
 assert.ok(
   backgroundFillRouted.names().includes('edit_item'),
   'background-fill requests expose edit_item',
 );
 const captionEditRouted = new ToolActivation(catalog, [
-  { role: 'user', content: '多加一些字幕' },
+  { role: 'user', content: 'Add a few more subtitles.' },
 ]);
 assert.ok(
   captionEditRouted.names().includes('edit_item'),
   'caption requests expose the timeline text-item editor',
 );
 const routedAndExport = new ToolActivation(catalog, [
-  { role: 'user', content: '把 V1 轨道片段移动并剪辑一下' },
-  { role: 'assistant', content: '已完成。' },
-  { role: 'user', content: '准备导出 ProRes 成片' },
+  { role: 'user', content: 'Move and edit the clip on the V1 track.' },
+  { role: 'assistant', content: 'Done.' },
+  { role: 'user', content: 'Get the final cut ready to export as ProRes.' },
 ]);
 assert.ok(routedAndExport.names().includes('submit_export'));
 assert.equal(
@@ -103,8 +103,8 @@ assert.equal(
   'semantic routes follow only the current request',
 );
 const routedContinuation = new ToolActivation(catalog, [
-  { role: 'user', content: '把 V1 轨道片段移动并剪辑一下' },
-  { role: 'assistant', content: '已完成。' },
+  { role: 'user', content: 'Move and edit the clip on the V1 track.' },
+  { role: 'assistant', content: 'Done.' },
   { role: 'user', content: 'Continue' },
 ]);
 assert.deepEqual(
@@ -113,7 +113,7 @@ assert.deepEqual(
   'a neutral continuation returns to the boot tool set',
 );
 const activePlanCrossesDomains = new ToolActivation(catalog, [
-  { role: 'user', content: '你联网搜索啊' },
+  { role: 'user', content: 'Go search the web for this.' },
 ]);
 assert.ok(activePlanCrossesDomains.names().includes('ToolSearch'));
 const discoveredTimelineTools = activePlanCrossesDomains.withSearchResult({
@@ -124,13 +124,13 @@ assert.ok(
   'a web-routed request can discover a timeline tool after import completes',
 );
 const audioRouted = new ToolActivation(catalog, [
-  { role: 'user', content: '看看当前可用音频条目有多少，只报数量' },
+  { role: 'user', content: 'Check how many audio entries are currently available; just report the count.' },
 ]);
 assert.ok(audioRouted.names().includes('list_audio'), 'natural-language audio requests expose the audio catalog');
 const stockMusicEdit = new ToolActivation(catalog, [
   {
     role: 'user',
-    content: '联网在 Pixabay 搜索视频，导入后按音乐每 2 拍卡点剪辑',
+    content: 'Search Pixabay online for stock video, import it, then cut to the music every 2 beats.',
   },
 ]);
 assert.ok(
@@ -140,7 +140,7 @@ assert.ok(
 assert.ok(stockMusicEdit.names().includes('music_edit_plan'));
 assert.ok(stockMusicEdit.names().includes('sync_cuts_to_music'));
 const readOnlyTimeline = new ToolActivation(catalog, [
-  { role: 'user', content: '查看当前时间线，只告诉我片段信息，不要修改' },
+  { role: 'user', content: "View the current timeline; just tell me the clip info, don't edit anything." },
 ]);
 assert.deepEqual(
   readOnlyTimeline.names(),
@@ -148,7 +148,7 @@ assert.deepEqual(
   'read-only timeline requests do not expose editing schemas',
 );
 for (const prompt of [
-  '只查看标题内容，不要修改',
+  "Just look at the title text; don't edit it.",
   "Tell me what the title says; don't edit.",
 ]) {
   const readOnlyTitle = new ToolActivation(catalog, [{ role: 'user', content: prompt }]);
@@ -159,7 +159,7 @@ for (const prompt of [
   );
 }
 const naturalReadOnlyMusic = new ToolActivation(catalog, [
-  { role: 'user', content: '只读查看音乐分析，不要修改' },
+  { role: 'user', content: "Read-only, just look at the music analysis; don't edit anything." },
 ], ['sync_cuts_to_music']);
 assert.ok(naturalReadOnlyMusic.names().includes('music_edit_plan'));
 assert.equal(
@@ -176,10 +176,10 @@ assert.equal(
   'natural-language read-only hints cannot turn ToolSearch into mutation authority',
 );
 for (const prompt of [
-  '不要修改原片，只加标题',
-  '给原片加个标题，其他不要修改',
+  "Don't edit the footage; just add a title.",
+  "Add a title to the footage; don't edit anything else.",
   "Don't edit the footage; adding a title is okay.",
-  '不要修改其他内容，只删除标题',
+  "Don't edit anything else; just delete the title.",
   "Don't edit the footage; removing the title is okay.",
 ]) {
   const mixedIntent = new ToolActivation(catalog, [{ role: 'user', content: prompt }]);
@@ -191,7 +191,7 @@ for (const prompt of [
 const askOnlyCatalog = catalog.filter((tool) => tool.name !== 'edit_item' && tool.name !== 'edit_track'
   && tool.name !== 'sync_cuts_to_music');
 const askOnlyMixedIntent = new ToolActivation(askOnlyCatalog, [
-  { role: 'user', content: '不要修改原片，只加标题' },
+  { role: 'user', content: "Don't edit the footage; just add a title." },
 ], ['edit_item', 'sync_cuts_to_music']);
 assert.equal(
   askOnlyMixedIntent.names().some((name) => name === 'edit_item' || name === 'sync_cuts_to_music'),
@@ -199,7 +199,7 @@ assert.equal(
   'askOnly catalog is the hard mutation-suppression authority',
 );
 const discoveryRouted = new ToolActivation(catalog, [
-  { role: 'user', content: '先看看有哪些音频相关能力，只列出最匹配的三个能力名称' },
+  { role: 'user', content: 'First check what audio-related capabilities are available; just list the top three matching capability names.' },
 ]);
 assert.ok(
   discoveryRouted.names().includes('list_audio'),
@@ -289,7 +289,7 @@ assert.equal(zeroResultContinuation.names().includes('ToolSearch'), true,
   'a zero-match search survives follow-up clarification');
 
 const routedActivation = new ToolActivation(catalog, [
-  { role: 'user', content: '把 V1 片段移动一下' },
+  { role: 'user', content: 'Move the V1 clip a bit.' },
 ]);
 const routedSearch = routedActivation.withSearchResult({
   results: [{ name: 'submit_export' }],
@@ -301,7 +301,7 @@ assert.deepEqual(
   'ToolSearch persists only schemas explicitly discovered by that result',
 );
 const neutralAfterRoutedSearch = new ToolActivation(catalog, [
-  { role: 'user', content: '把 V1 片段移动一下' },
+  { role: 'user', content: 'Move the V1 clip a bit.' },
   {
     role: 'tool',
     content: [{
@@ -382,8 +382,8 @@ const restored = new ToolActivation(catalog, restoredMessages);
 assert.ok(restored.names().includes('web_crawl'));
 const expiredSearch = new ToolActivation(catalog, [
   ...restoredMessages,
-  { role: 'assistant', content: '网页能力已经列出。' },
-  { role: 'user', content: '查看当前时间线，不要修改' },
+  { role: 'assistant', content: 'Web capabilities have been listed.' },
+  { role: 'user', content: "View the current timeline; don't edit it." },
 ]);
 assert.equal(
   expiredSearch.names().includes('web_crawl'),
@@ -409,7 +409,7 @@ assert.equal(admitted.admit('web_crawl'), admitted,
 // available to the model on the next step without sending the full catalog.
 assert.equal(new Set(TOOL_SCHEMAS.map((tool) => tool.name)).size, TOOL_SCHEMAS.length,
   'canonical tool names are unique');
-const fullActivation = new ToolActivation(TOOL_SCHEMAS, [{ role: 'user', content: '你好' }]);
+const fullActivation = new ToolActivation(TOOL_SCHEMAS, [{ role: 'user', content: 'Hello' }]);
 for (const tool of TOOL_SCHEMAS) {
   if (tool.name === 'ToolSearch') continue;
   const result = await execCoreTool(

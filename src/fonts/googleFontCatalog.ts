@@ -1,4 +1,5 @@
 import { LOCAL_CJK_FONTS, normalizeFontKey } from './localFonts';
+import { ZH_GOOGLE_FONT_ALIASES } from '../i18n/dict/zh/font-aliases';
 
 export interface FontCatalogEntry {
   family: string;
@@ -25,7 +26,7 @@ export const GOOGLE_FONT_CATALOG: readonly GoogleFontCatalogEntry[] = [
   { family: 'Fredoka', aliases: [], loadable: true, source: 'google' },
   { family: 'Inter', aliases: [], loadable: true, source: 'google' },
   { family: 'Inter Tight', aliases: [], loadable: true, source: 'google' },
-  { family: 'LXGW WenKai TC', aliases: ['LXGW WenKai', '霞鹜文楷'], loadable: true, source: 'google' },
+  { family: 'LXGW WenKai TC', aliases: ['LXGW WenKai', ZH_GOOGLE_FONT_ALIASES['LXGW WenKai TC']!], loadable: true, source: 'google' },
   { family: 'Libre Baskerville', aliases: [], loadable: true, source: 'google' },
   { family: 'Montserrat', aliases: [], loadable: true, source: 'google' },
   { family: 'Mulish', aliases: [], loadable: true, source: 'google' },
@@ -42,7 +43,7 @@ export const GOOGLE_FONT_CATALOG: readonly GoogleFontCatalogEntry[] = [
   { family: 'Special Elite', aliases: [], loadable: true, source: 'google' },
   { family: 'Unbounded', aliases: [], loadable: true, source: 'google' },
   { family: 'VT323', aliases: [], loadable: true, source: 'google' },
-  { family: 'ZCOOL QingKe HuangYou', aliases: ['站酷庆科黄油体'], loadable: true, source: 'google' },
+  { family: 'ZCOOL QingKe HuangYou', aliases: [ZH_GOOGLE_FONT_ALIASES['ZCOOL QingKe HuangYou']!], loadable: true, source: 'google' },
 ];
 
 export const FONT_CATALOG: readonly FontCatalogEntry[] = [

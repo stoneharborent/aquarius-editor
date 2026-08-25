@@ -24,7 +24,7 @@ const num = (v: unknown): number | undefined => (typeof v === 'number' && Number
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v.trim() : undefined);
 const color = (v: unknown): MarkerColor | undefined => (COLORS.includes(v as MarkerColor) ? (v as MarkerColor) : undefined);
 
-/** "3" / "3-5" / "2,4-6" (tolerate s prefix, such as "s3-s4") → remove duplicate segment numbers in ascending order; illegal return null.*/
+/** "3" / "3-5" / "2,4-6" (tolerates an "s" prefix, e.g. "s3-s4") → de-duplicated segment numbers in ascending order; invalid input returns null. */
 function parseSegmentSpec(spec: string): number[] | null {
   const out = new Set<number>();
   for (const part of spec.split(',')) {
@@ -40,15 +40,16 @@ function parseSegmentSpec(spec: string): number[] | null {
 
 interface SegmentAnchor { fromFrame: number; durationFrames: number; note: string }
 
-/** transcriptSegments → {fromFrame, durationFrames, note}. Segment number and read_script's [sN]
- *  The same set of numbers (buildModel); the frame bits are converted with word-level timestamps by makeWordFrameMapper (same origin as the playback layer,
- *  Keep the word frame consistent); note = keptText of the selected segment (that is, the text displayed by read_script).*/
+/** transcriptSegments → {fromFrame, durationFrames, note}. Segment numbers are the same
+ *  numbering as read_script's [sN] (buildModel); frames are derived from word-level
+ *  timestamps via makeWordFrameMapper (same source as the playback layer, keeping word/frame
+ *  alignment consistent); note = the keptText of the selected segment (the text read_script displays). */
 function resolveTranscriptSegments(state: TimelineState, spec: string, trackFilter?: string): SegmentAnchor | { error: string } {
   const sns = parseSegmentSpec(spec);
-  if (!sns) return { error: `transcriptSegments "${spec}" 无法解析——用 read_script 输出的 [sN] 编号,如 "3"、"3-5" 或 "2,4-6"` };
+  if (!sns) return { error: `transcriptSegments "${spec}" could not be parsed -- use the [sN] numbers from read_script's output, e.g. "3", "3-5", or "2,4-6"` };
   const model = buildModel(state);
   const tracks = trackFilter ? model.filter((t) => t.track.toLowerCase() === trackFilter.toLowerCase()) : model;
-  if (trackFilter && !tracks.length) return { error: `transcriptTrack "${trackFilter}" 不存在或该轨无内容` };
+  if (trackFilter && !tracks.length) return { error: `transcriptTrack "${trackFilter}" does not exist or has no content` };
 
   // Each transcribed region (= a transcribed clip) is indexed by sn; candidate = region containing all selected segments
   const candidates: { track: string; itemId: string; rows: Map<number, SegRow> }[] = [];
@@ -61,15 +62,15 @@ function resolveTranscriptSegments(state: TimelineState, spec: string, trackFilt
     }
   }
   if (!candidates.length) {
-    return { error: `找不到同时包含段 ${sns.join(',')} 的转写区域——先 read_script 核对 [sN] 编号${trackFilter ? '' : ',或传 transcriptTrack 缩小范围'}` };
+    return { error: `no transcribed region contains segments ${sns.join(',')} -- check the [sN] numbers with read_script first${trackFilter ? '' : ', or pass transcriptTrack to narrow it down'}` };
   }
   if (candidates.length > 1) {
-    return { error: `段 ${sns.join(',')} 在多个转写区域出现(${candidates.map((c) => `${c.track}:${c.itemId.slice(0, 8)}`).join(' / ')})——传 transcriptTrack 消歧,或直接给 fromFrame` };
+    return { error: `segments ${sns.join(',')} appear in multiple transcribed regions (${candidates.map((c) => `${c.track}:${c.itemId.slice(0, 8)}`).join(' / ')}) -- pass transcriptTrack to disambiguate, or give fromFrame directly` };
   }
 
   const cand = candidates[0]!;
   const item = state.items.find((it) => it.id === cand.itemId);
-  if (!hasOperationalTranscript(item)) return { error: `转写区域对应的 clip ${cand.itemId} 已无当前转写,请重新 read_script` };
+  if (!hasOperationalTranscript(item)) return { error: `clip ${cand.itemId} for this transcribed region no longer has a current transcript; run read_script again` };
   const deleted = new Set(item.deletedWordIdx ?? []);
   const mapper = makeWordFrameMapper(item, state.fps);
   const firstRow = cand.rows.get(sns[0]!)!;
@@ -78,7 +79,7 @@ function resolveTranscriptSegments(state: TimelineState, spec: string, trackFilt
   const lastGi = [...lastRow.wordGis].reverse().find((g) => !deleted.has(g));
   const f0 = firstGi === undefined ? null : mapper(firstGi);
   const f1 = lastGi === undefined ? null : mapper(lastGi);
-  if (!f0 || !f1) return { error: `段 ${sns.join(',')} 的词已被删除或不在播放范围内,无法定位帧——read_script 核对后重试` };
+  if (!f0 || !f1) return { error: `the words in segments ${sns.join(',')} have been deleted or fall outside the playback range, so the frame can't be located -- check with read_script and retry` };
   const note = sns.map((n) => cand.rows.get(n)!.keptText).join(' ');
   return { fromFrame: f0.fromFrame, durationFrames: Math.max(0, f1.toFrame - f0.fromFrame), note };
 }

@@ -1,7 +1,7 @@
 ---
 name: talking-head-guide
 description: |
-  Guide for editing videos where the primary content is people talking — talking-head / 口播, interview / 访谈, lecture, tutorial, podcast, course content, and similar talking-driven formats. Use when the user wants speech editing on a talking video (剪口播 / 口播剪辑 / 去口癖 / clean up fillers / smooth speech), motion graphics layered onto talking video (口播加 MG / 加动画), or B-roll on a talking video (加 B-roll / add B-roll). For motion graphics specifically, use this together with the active Motion Graphics skill/workflow available in the current OpenChatCut environment — this skill adds talking-specific guidance (speech-rhythm timing, frame-aware placement, subject/caption protection, placement verification).
+  Guide for editing videos where the primary content is people talking — talking-head, interview, lecture, tutorial, podcast, course content, and similar talking-driven formats. Use when the user wants speech editing on a talking video (clean up fillers, remove verbal tics, smooth speech), motion graphics layered onto talking video (add MG, add animation), or B-roll on a talking video (add B-roll). For motion graphics specifically, use this together with the active Motion Graphics skill/workflow available in the current OpenChatCut environment — this skill adds talking-specific guidance (speech-rhythm timing, frame-aware placement, subject/caption protection, placement verification).
 user-invocable: true
 ---
 
@@ -9,22 +9,22 @@ user-invocable: true
 
 ## What this skill covers
 
-**Required input**: an existing talking-head / 口播 video uploaded to the project. If the user wants to start without one (e.g., generate a fresh talking-head from scratch), this skill doesn't apply.
+**Required input**: an existing talking-head video uploaded to the project. If the user wants to start without one (e.g., generate a fresh talking-head from scratch), this skill doesn't apply.
 
-**When the user enters this workflow without a source video uploaded yet, ask via a widget surface — bundle the file upload with the treatment selection in one flow**, not two separate turns or a markdown "drag your file in" instruction. Load `widget-forms` for the host-specific route. Never tell the user to "拖进编辑器" / "点击素材库的上传按钮"; that's friction with no upside.
+**When the user enters this workflow without a source video uploaded yet, ask via a widget surface — bundle the file upload with the treatment selection in one flow**, not two separate turns or a markdown "drag your file in" instruction. Load `widget-forms` for the host-specific route. Never tell the user to "drag it into the editor" or "click the upload button in the media library"; that's friction with no upside.
 
 When the task creates or targets a OpenChatCut project for the user, surface the editor link early so they can watch progress, and re-confirm the visible editor matches the project before final delivery.
 
 Independent treatments that can be applied to talking-head videos. Pick the ones that match what the user wants — not all are needed every time.
 
-- **A-roll editing** (中文称 **语音剪辑** / 含 **去口癖、停顿、重复**) — transcript-based speech editing. Common operations include cleanup, highlight extraction, restructure, opening hook, and others as needed for the aligned outcome.
-- **Motion graphics overlay** (英文展示给用户时写全称 **Motion Graphics**，不要缩成 "MG"；中文产品术语固定为 **MG 动画**——不要叫"动效""字幕条""动态字幕"等其它说法) — reinforce key information, structured content, and topic transitions with on-screen motion graphics
+- **A-roll editing** (includes removing verbal tics, pause cleanup, and repetition removal) — transcript-based speech editing. Common operations include cleanup, highlight extraction, restructure, opening hook, and others as needed for the aligned outcome.
+- **Motion graphics overlay** (spell it out in full as **Motion Graphics** when shown to the user — don't shorten it to "MG") — reinforce key information, structured content, and topic transitions with on-screen motion graphics
 - **B-roll** (industry term — keep as "B-roll" in any language, do not translate) — cover jump cuts or visualize what's being said
-- **Background music** (中文 **背景音乐**) — set mood and smooth micro-gaps
-- **Captions** (中文 **字幕**) — on-screen text for accessibility
-- **AI Voice Isolation** (中文 **AI 人声隔离**) — clean or isolate spoken human voice with DeepFilterNet3, picture untouched. See the `voice-isolation` skill.
+- **Background music** — set mood and smooth micro-gaps
+- **Captions** — on-screen text for accessibility
+- **AI Voice Isolation** — clean or isolate spoken human voice with DeepFilterNet3, picture untouched. See the `voice-isolation` skill.
 
-> 用户语言为中文时，在 widget options / choices options / 对话文案里**严格使用上面括号里的产品术语**——别自己再翻译一遍，会跟产品其它地方对不上。
+> **Use the exact product terminology given above — don't paraphrase it — so wording stays consistent with the rest of the product.**
 
 ## What shapes the edit
 
@@ -83,7 +83,7 @@ These principles apply to all A-roll tasks, not only cleanup.
 - **Be conservative when boundaries are uncertain.** If unsure whether a cut harms meaning, logic, or listening flow, keep it or make a smaller cut.
 - **Confirm complex changes first.** For complex restructuring, aggressive shortening, structural changes, or generated hooks, confirm target length, structure direction, and what to preserve with the user before editing.
 - **Explain content, never indices.** You MUST NOT explain edits to the user with internal addresses such as `[sN]`, `[cN]`, `[gap]`, word indices, clip ids, or segment ids. The user cannot see those addresses and will not understand what they mean. Use the actual spoken content, a short quote, or a plain-language description of the edit.
-- **Never name a screen position for a panel.** When you invite the user to review or fine-tune the result, call it "the Transcript panel" (中文「文字稿面板」) — never a direction (left / right / side / 左侧 / 右侧). The layout is rearrangeable and the panel does not sit in a fixed corner.
+- **Never name a screen position for a panel.** When you invite the user to review or fine-tune the result, call it "the Transcript panel" — never a direction (left / right / side). The layout is rearrangeable and the panel does not sit in a fixed corner.
 
 ### Cleanup goals and decisions
 
@@ -336,7 +336,7 @@ Choose the editing goal and content boundaries first, then choose the tool. Do n
 - `clean_script`: use for mechanical first-pass cleanup: bulk removal of fixed meaningless fillers and batch silence compression/adjustment. It can process silence even when `timeline.md` is currently rendered without silence markers. Do not use it for context-dependent fillers, retakes, repeated sentences, or semantic decisions.
 - `read_script` + `apply_script`: the main transcript-based editing surface. Use it for real semantic editing: deleting words, sentences, pauses, reordering, or pulling library content onto the timeline.
 - `manage_transcript` action `fix`: only fixes ASR mistakes or speaker attribution. It does not cut audio and does not change what the viewer hears.
-- Caption SEGMENTATION (分句 / where pages break) is INDEPENDENT of the transcript and controlled by two per-word primitives only: to SPLIT one card into two, set `display_text` `forcePageBreak:true` on the word that should START the new card; to MERGE a card up into the previous one, set `display_text` `keepWithPrevious:true` on that card's FIRST word (works for any break — no box resizing, no wordsPerPage fiddling). To drop a repeated/false-start word, use `display_text` `hidden:true`. Box width / fontSize / `wordsPerPage` are style & density knobs, NOT per-boundary segmentation levers — do not widen the box or raise wordsPerPage to merge or split a specific card. NEVER edit the transcript to fix a caption line break — `manage_transcript fix` is only for an ASR-misheard WORD (content), not layout. `read_captions` shows each page's `break=` reason and per-word keys for these edits.
+- Caption SEGMENTATION (where pages break) is INDEPENDENT of the transcript and controlled by two per-word primitives only: to SPLIT one card into two, set `display_text` `forcePageBreak:true` on the word that should START the new card; to MERGE a card up into the previous one, set `display_text` `keepWithPrevious:true` on that card's FIRST word (works for any break — no box resizing, no wordsPerPage fiddling). To drop a repeated/false-start word, use `display_text` `hidden:true`. Box width / fontSize / `wordsPerPage` are style & density knobs, NOT per-boundary segmentation levers — do not widen the box or raise wordsPerPage to merge or split a specific card. NEVER edit the transcript to fix a caption line break — `manage_transcript fix` is only for an ASR-misheard WORD (content), not layout. `read_captions` shows each page's `break=` reason and per-word keys for these edits.
 - `find_transcript`: only locates when a phrase is spoken. It does not edit. If the next step is cutting spoken content, return to Script.
 - `Edit` / `Write`: use these to modify `timeline.md`. The edit only reaches the timeline after `apply_script`.
 
@@ -557,7 +557,7 @@ After editing, read back the exact item ids you changed. An asset appearing in t
 
 ## Multicam (multiple camera angles of the same take)
 
-When the user has **two or more cameras recording the same moment** — cues like "both angles", "the same interview", "multi angles", "alternate angle", "cut to the other angle", "angle switch", 换角度, 两个机位 — switching to another angle means the picture changes but the **audio and lip-sync must stay matched** to the take.
+When the user has **two or more cameras recording the same moment** — cues like "both angles", "the same interview", "multi angles", "alternate angle", "cut to the other angle", "angle switch" — switching to another angle means the picture changes but the **audio and lip-sync must stay matched** to the take.
 
 **Do not hand-compute source offsets with `edit_item` to line angles up.** Manual offsets drift wherever the underlying reference angle was cut, and the drift only shows up later as out-of-sync lips. Use the **`multicam_sync`** tool instead: it runs the editor's audio-based alignment engine and repositions each angle clip so its picture matches the reference angle's audio. Pass the angle clips' `itemIds` (the reference plus the follower angle(s)); optionally name the `referenceItemId`.
 

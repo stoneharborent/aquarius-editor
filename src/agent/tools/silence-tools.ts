@@ -1,8 +1,8 @@
 export { SILENCE_TOOL_SCHEMAS, SILENCE_TOOL_NAMES } from './schemas/silence-tools';
-// remove_silence - delete dead air (silent segment): native WebAudio analysis, no network connection.
-// Detected in src/audio/silence.ts (relative voice level + absolute lower limit + breathing port),
-// Edit in src/editor/silenceRebuild.ts(split/remove string batch, one step undo,
-// Co-orbital ripple closure). The word-level path for transcribing clip belongs to clean_script, which is a gatekeeper here.
+// remove_silence - removes dead air (silent segments) via native WebAudio analysis; no network calls.
+// Detection lives in src/audio/silence.ts (relative voice level + absolute floor + breath-pause gating);
+// editing lives in src/editor/silenceRebuild.ts (split/remove as one action batch, single-step undo,
+// with co-located ripple closure). The word-level path for transcribed clips belongs to clean_script; this tool gates on it.
 import type { AgentContext } from '../context';
 import type { TimelineItem } from '../../editor/types';
 import type { Action } from '../../editor/reduce';
@@ -31,7 +31,7 @@ export async function execSilenceTool(name: string, args: Args, ctx: AgentContex
     return {
       ok: true,
       edited: [],
-      note: 'VAD 静音删除功能未启用；为避免把音乐、噪声或低声讲话当静音，未执行删除。',
+      note: 'VAD silence removal is disabled; skipping removal to avoid mistaking music, noise, or quiet speech for silence.',
     };
   }
   const params = {
@@ -51,7 +51,7 @@ export async function execSilenceTool(name: string, args: Args, ctx: AgentContex
   const assetsBySrc = new Map((ctx.getDoc().assets ?? [])
     .filter((asset) => !!asset.src)
     .map((asset) => [asset.src, asset]));
-  /** The number of frames deleted from the previous clip on the same track → Shift left by this amount before planning subsequent clips.*/
+  /** Frames already removed from an earlier clip on the same track → shift subsequent clips left by this amount before planning them. */
   const trackShift = new Map<string, number>();
 
   const ordered = [...targets].sort((a, b) => a.track === b.track ? a.startFrame - b.startFrame : String(a.track).localeCompare(String(b.track)));
@@ -95,7 +95,7 @@ export async function execSilenceTool(name: string, args: Args, ctx: AgentContex
         })),
       });
     } catch (e) {
-      skipped.push({ itemId: item.id, note: `分析失败: ${e instanceof Error ? e.message : String(e)}` });
+      skipped.push({ itemId: item.id, note: `analysis failed: ${e instanceof Error ? e.message : String(e)}` });
     }
   }
 
@@ -107,6 +107,6 @@ export async function execSilenceTool(name: string, args: Args, ctx: AgentContex
     ok: true,
     edited,
     ...(skipped.length ? { skipped } : {}),
-    ...(edited.length ? {} : { note: '未发现可删的死气段(阈值内没有足够长的静音)' }),
+    ...(edited.length ? {} : { note: 'no removable dead air found (no silence long enough within the threshold)' }),
   };
 }

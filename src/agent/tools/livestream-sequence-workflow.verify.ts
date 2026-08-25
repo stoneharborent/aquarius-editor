@@ -35,8 +35,8 @@ const ctx: AgentContext = {
 const created = await execTimelineTool('manage_timelines', {
   action: 'create',
   timelines: [
-    { name: '01-产品痛点-30秒-9:16', ratio: '9:16' },
-    { name: '02-功能演示-45秒-9:16', ratio: '9:16' },
+    { name: '01-Product Pain Point-30s-9:16', ratio: '9:16' },
+    { name: '02-Feature Demo-45s-9:16', ratio: '9:16' },
   ],
 }, ctx) as { ok?: boolean; created?: Array<{ id: string; name: string }> };
 assert.equal(created.ok, true);

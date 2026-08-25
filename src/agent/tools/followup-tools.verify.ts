@@ -73,10 +73,10 @@ const answer = formatWidgetAnswer(parsed.fields, {
 }, parsed.messagePrefix);
 assert.equal(answer, [
   'Apply these choices:',
-  '- What should change?：Use tighter pacing',
-  '- Choose a look：Noir',
-  '- Choose a voice：Use the calm narrator',
-  '- Choose workflows：Talking head、App promo',
+  '- What should change?: Use tighter pacing',
+  '- Choose a look: Noir',
+  '- Choose a voice: Use the calm narrator',
+  '- Choose workflows: Talking head, App promo',
 ].join('\n'));
 
 const compatibility = parseWidgets('<widget><form-single id="length" label="Length" options="30|30 sec,60|60 sec" allow_other="true"/></widget>');

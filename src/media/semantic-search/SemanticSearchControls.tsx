@@ -260,12 +260,12 @@ function SearchResults({ state, names, t }: ViewProps & { names: Map<string, str
   </div>;
 }
 
-function describeTextHit(ref: string): string {
+function describeTextHit(ref: string, t: Translate): string {
   const separator = ref.lastIndexOf(':');
   if (separator <= 0) return ref;
   const prefix = ref.slice(0, separator);
   const tail = ref.slice(separator + 1);
-  if (prefix.startsWith('chat:')) return `聊天第 ${Number(tail) + 1} 条`;
+  if (prefix.startsWith('chat:')) return t('Chat message {n}', { n: Number(tail) + 1 });
   if (tail === 'captions') return 'Captions';
   if (tail === 'transcript') return 'Transcription';
   return ref;
@@ -276,7 +276,7 @@ function TextResults({ state, t }: ViewProps & { names: Map<string, string> }) {
   return <div className="cc-semantic-results">
     <strong>{t('Related text ({n})', { n: state.textHits.length })}</strong>
     {state.textHits.slice(0, 5).map((hit) => <span key={`${hit.kind}:${hit.ref}`}>
-      <b>{describeTextHit(hit.ref)}</b>
+      <b>{describeTextHit(hit.ref, t)}</b>
       <em>{hit.kind}</em>
     </span>)}
   </div>;

@@ -38,7 +38,7 @@ assert.ok(empty.error);
 
 const ok = await execFrictionTool('report_user_friction', {
   category: 'blocked',
-  summary: '用户说导出一直失败',
+  summary: 'Export keeps failing, according to the user.',
 }, ctx) as { ok: boolean; id: string; localDev: boolean };
 assert.strictEqual(ok.ok, true);
 assert.ok(ok.id);

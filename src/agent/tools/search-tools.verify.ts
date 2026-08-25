@@ -33,8 +33,8 @@ async function main(): Promise<void> {
   assert.ok(calls[0]!.url.includes('/api/project-store/search?q='), 'must hit the search endpoint');
   assert.ok(calls[0]!.url.includes(encodeURIComponent('背景音乐音量')), 'query must be encoded');
   assert.equal(hits[0]!.kind, 'chat');
-  assert.equal(hits[0]!.where, '工程 p-1 第 3 条消息', 'chat ref must map to a message position');
-  assert.equal(hits[1]!.where, '工程 p-2 的字幕');
+  assert.equal(hits[0]!.where, 'Project p-1, message #3', 'chat ref must map to a message position');
+  assert.equal(hits[1]!.where, 'Captions in project p-2');
   assert.ok(hits[0]!.score >= hits[1]!.score, 'scores must descend');
 
   // ── project scoping + limit ──

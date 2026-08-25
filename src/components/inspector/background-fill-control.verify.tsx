@@ -13,19 +13,19 @@ const markup = renderToStaticMarkup(
   />,
 );
 
-assert.match(markup, /aria-label="背景填充强度"[^>]*type="range"[^>]*value="75"/);
-assert.match(markup, /aria-label="背景填充强度"/);
+assert.match(markup, /aria-label="Background fill intensity"[^>]*type="range"[^>]*value="75"/);
+assert.match(markup, /aria-label="Background fill intensity"/);
 assert.equal((markup.match(/role="radio"/g) ?? []).length, 4, 'four percentage shortcuts stay visible');
-assert.match(markup, />强烈 75%<\/small>/, 'quick shortcuts expose their exact percentages');
+assert.match(markup, />Strong 75%<\/small>/, 'quick shortcuts expose their exact percentages');
 assert.match(markup, /aria-checked="true"[^>]*class="selected"/);
-assert.match(markup, />全部应用<\/button>/);
-assert.match(markup, /用片段副本填满画布空白/);
+assert.match(markup, />Apply to all<\/button>/);
+assert.match(markup, /Fill empty canvas areas with a copy of the clip/);
 
 const disabled = renderToStaticMarkup(
   <BackgroundFillControlView enabled={false} strength={50} translate={(key) => key}
     onChange={() => undefined} />,
 );
-assert.doesNotMatch(disabled, /aria-label="背景填充强度"/, 'disabled fills keep the strength controls collapsed');
+assert.doesNotMatch(disabled, /aria-label="Background fill intensity"/, 'disabled fills keep the strength controls collapsed');
 
 for (const enabled of [false, true]) {
   const mixed = renderToStaticMarkup(

@@ -41,7 +41,7 @@ const PROVIDER_LABELS: Record<LlmProvider, string> = {
   xiaomi: 'Xiaomi',
   mistral: 'Mistral',
   xai: 'xAI',
-  'xai-oauth': 'xAI (订阅登录)',
+  'xai-oauth': 'xAI (Subscription sign-in)',
   openrouter: 'OpenRouter',
   ollama: 'Ollama',
   lmstudio: 'LM Studio',

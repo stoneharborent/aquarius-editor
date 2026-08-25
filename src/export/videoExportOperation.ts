@@ -119,7 +119,7 @@ function switchToBrowser(context: VideoExportContext, engine: ExportEngineInfo, 
   context.setRenderEngine('browser');
   context.setEngineInfo(engine);
   context.setEngineReason(reason);
-  context.setBusy(context.t('切换 WebCodecs…'));
+  context.setBusy(context.t('Switching to WebCodecs…'));
   context.setProgress((current) => current ? {
     ...current,
     phase: 'preparing',
@@ -273,7 +273,7 @@ async function runServerThenBrowser(
   } catch (error) {
     if (isAbortError(error)) throw error;
     if (!isServerRenderError(error) || plan.browser.status !== 'supported') throw error;
-    const reason = error.message || '本机渲染失败';
+    const reason = error.message || 'Local rendering failed';
     switchToBrowser(context, plan.browserEngine, reason);
   }
   const startedAt = performance.now();

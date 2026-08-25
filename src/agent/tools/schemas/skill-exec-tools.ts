@@ -5,13 +5,13 @@ export const RUN_SKILL_SCRIPT_TOOL_NAMES = new Set(['run_skill_script']);
 export const RUN_SKILL_SCRIPT_TOOL_SCHEMAS: AgentToolSchema[] = [
   {
     name: 'run_skill_script',
-    description: '在本机执行已安装技能目录内的脚本（白名单命令：bash/sh/node/npm/npx/python3/python/uv/uvx/ffmpeg/ffprobe/mkdir/cp/chmod），工作目录锁定在技能目录。用于运行技能自带的确定性脚本（如 render.mjs、check-deps.sh），云沙箱无法访问本机技能文件。超时默认 60s、上限 120s；输出最多 512KB。',
+    description: 'Runs a script from an installed skill directory locally (whitelisted commands: bash/sh/node/npm/npx/python3/python/uv/uvx/ffmpeg/ffprobe/mkdir/cp/chmod), with the working directory locked to the skill directory. Use it to run deterministic scripts bundled with a skill (e.g. render.mjs, check-deps.sh) — the cloud sandbox cannot access local skill files. Timeout defaults to 60s, capped at 120s; output capped at 512KB.',
     input_schema: {
       type: 'object',
       properties: {
-        skill: { type: 'string', description: '技能 slug（load_skill 返回的 skill 字段）' },
-        command: { type: 'string', description: '命令（首个词必须是白名单内可执行文件），如 bash scripts/check-deps.sh 或 node scripts/render.mjs' },
-        timeout: { type: 'number', description: '可选：超时毫秒，默认 60000，上限 120000' },
+        skill: { type: 'string', description: 'Skill slug (the skill field returned by load_skill)' },
+        command: { type: 'string', description: 'Command (the first word must be a whitelisted executable), e.g. bash scripts/check-deps.sh or node scripts/render.mjs' },
+        timeout: { type: 'number', description: 'Optional: timeout in milliseconds, defaults to 60000, capped at 120000' },
       },
       required: ['skill', 'command'],
     },

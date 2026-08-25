@@ -35,7 +35,7 @@ interface BreakPoint {
   orphanRisk: boolean;
 }
 
-const CJK_START = /[㐀-鿿぀-ヿ가-힯]/u;
+const CJK_START = /[\u{3400}-\u{9FFF}\u{3040}-\u{30FF}\u{AC00}-\u{D7AF}]/u;
 const PUNCT_ONLY = /^[\p{P}]+$/u;
 const CJK_PUNCT_CHARS = /[，。！？；：、“”‘’（）【】《》「」『』〈〉〔〕｛｝〖〗…—～·]|[｡､]/;
 const LATIN_PUNCT_CHARS = /[.,!?;:'"()[\]{}/\\@#$%^&*\-+=<>|~`]/;

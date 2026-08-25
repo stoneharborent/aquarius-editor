@@ -33,7 +33,7 @@ assert.equal(resolveLlmBaseUrl('openai', 'https://api.openai.com', ''), 'https:/
 assert.equal(resolveLlmBaseUrl('anthropic', 'https://relay.test/api', ''), 'https://relay.test/api/v1');
 assert.equal(llmOperationPath('kimi'), '/chat/completions');
 
-// ── llmHeaders: Inject upstream authentication according to the protocol (google=x-goog-api-key;anthropic=x-api-key; the rest Bearer) ──
+// ── llmHeaders: inject upstream auth per protocol (google=x-goog-api-key; anthropic=x-api-key; everything else Bearer) ──
 {
   const { KEY_NAMES, seedKeystore } = await import('./keystore.ts');
   const { llmErrorMessage, llmHeaders } = await import('./plugins/llm-proxy.ts');
@@ -46,12 +46,12 @@ assert.equal(llmOperationPath('kimi'), '/chat/completions');
     LLM_API_KEY: 'ak-1',
   } as Record<string, string>);
   const reqFor = (provider: string) => ({ headers: { 'x-openchatcut-provider': provider } } as never);
-  assert.deepEqual(llmHeaders(reqFor('gemini')), { 'x-goog-api-key': 'gk-1' }, 'gemini 原生协议注入 x-goog-api-key');
-  assert.deepEqual(llmHeaders(reqFor('minimax')), { authorization: 'Bearer mk-1' }, 'openai-compatible 厂商 Bearer');
-  assert.deepEqual(llmHeaders(reqFor('anthropic')), { 'x-api-key': 'ak-1', 'anthropic-version': '2023-06-01' }, 'anthropic x-api-key(经遗留迁移)');
-  assert.deepEqual(llmHeaders(reqFor('xai-oauth')), {}, 'xAI OAuth 不回退到可能失效的持久化 token');
-  assert.match(llmErrorMessage(401, reqFor('gemini')), /Gemini.*设置.*API Key/, '认证错误给设置入口');
-  assert.match(llmErrorMessage(429, reqFor('openai')), /额度不足.*稍后重试/, '限流错误给额度提示');
+  assert.deepEqual(llmHeaders(reqFor('gemini')), { 'x-goog-api-key': 'gk-1' }, 'gemini native protocol injects x-goog-api-key');
+  assert.deepEqual(llmHeaders(reqFor('minimax')), { authorization: 'Bearer mk-1' }, 'openai-compatible vendor uses Bearer');
+  assert.deepEqual(llmHeaders(reqFor('anthropic')), { 'x-api-key': 'ak-1', 'anthropic-version': '2023-06-01' }, 'anthropic x-api-key (legacy-migrated)');
+  assert.deepEqual(llmHeaders(reqFor('xai-oauth')), {}, 'xAI OAuth does not fall back to a possibly-stale persisted token');
+  assert.match(llmErrorMessage(401, reqFor('gemini')), /Gemini.*API key.*Settings/i, 'auth error should point to the settings entry point');
+  assert.match(llmErrorMessage(429, reqFor('openai')), /out of credit.*try again later/, 'rate-limit error should mention the quota');
 }
 
 const switched = expandLlmProviderPatch(new Map([['LLM_PROVIDER', 'openai']]), 'anthropic');

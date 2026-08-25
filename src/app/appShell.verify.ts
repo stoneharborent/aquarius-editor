@@ -4,7 +4,7 @@ import { loadInitialProjects, type ProjectStartupSource } from './appShell';
 import type { ProjectMeta } from '../persist/projectStoreCoordinators';
 import { syncDesktopNativeInferenceEnabled } from '../transcript/desktop-inference-preference';
 
-const demo = { id: 'demo', name: '示例工程', updatedAt: 1 };
+const demo = { id: 'demo', name: 'Sample Project', updatedAt: 1 };
 
 function source(options: {
   projects?: ProjectMeta[];

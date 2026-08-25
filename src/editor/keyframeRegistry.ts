@@ -38,12 +38,12 @@ export const KEYFRAME_PROPERTY_REGISTRY: Record<KeyframeProp, KeyframePropertyDe
     toTransformPatch: (scale) => uniformScalePatch(scale),
   },
   scaleX: {
-    id: 'scaleX', label: '横向缩放', ...scaleRange, supports: visual,
+    id: 'scaleX', label: 'Scale X', ...scaleRange, supports: visual,
     getBaseValue: (item) => resolveClipScaleAxes(item.transform).scaleX,
     toTransformPatch: (scaleX) => ({ scaleX }),
   },
   scaleY: {
-    id: 'scaleY', label: '纵向缩放', ...scaleRange, supports: visual,
+    id: 'scaleY', label: 'Scale Y', ...scaleRange, supports: visual,
     getBaseValue: (item) => resolveClipScaleAxes(item.transform).scaleY,
     toTransformPatch: (scaleY) => ({ scaleY }),
   },

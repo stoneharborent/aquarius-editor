@@ -15,30 +15,30 @@ const base = { baseStart: 100, baseDuration: 50, points: [] as SnapPoint[], thre
     { frame: 100, type: 'item-end', itemId: 'x' },
     { frame: 108, type: 'playhead' },
   ];
-  assert.equal(findClosestSnapPoint(points, 104, THRESHOLD)?.type, 'playhead', '各差 4 帧时播放头优先');
+  assert.equal(findClosestSnapPoint(points, 104, THRESHOLD)?.type, 'playhead', 'at equal 4-frame distance, the playhead wins');
 
   const farPlayhead: SnapPoint[] = [{ frame: 106, type: 'playhead' }];
-  assert.equal(findClosestSnapPoint(farPlayhead, 100, THRESHOLD)?.type, 'playhead', '6 帧仍在播放头的 1.5 倍半径内');
+  assert.equal(findClosestSnapPoint(farPlayhead, 100, THRESHOLD)?.type, 'playhead', '6 frames is still within the playhead\'s 1.5x radius');
   const farEdge: SnapPoint[] = [{ frame: 106, type: 'item-end', itemId: 'x' }];
-  assert.equal(findClosestSnapPoint(farEdge, 100, THRESHOLD), null, '同样 6 帧,片段边缘已经够不着');
+  assert.equal(findClosestSnapPoint(farEdge, 100, THRESHOLD), null, 'the same 6 frames is already out of reach for a clip edge');
 }
 
 // ── Hysteresis: Move slightly after sucking and still bite the same frame ──
 {
   const points: SnapPoint[] = [{ frame: 120, type: 'item-start', itemId: 'x' }];
   const first = snapDraggedEdges({ ...base, points, mode: 'move', rawDelta: 18 }); // Probe 118
-  assert.equal(first.snapAt, 120, '进入半径先吸住');
+  assert.equal(first.snapAt, 120, 'snaps as soon as it enters the radius');
   assert.equal(first.deltaF, 20);
   assert.ok(first.hold);
 
-  // Go outside 5 frames: if there is no hysteresis, it will be released (exceeding the threshold 4), if there is hysteresis, it will continue to bite (but not past 4×1.5=6)
+  // Move out 5 frames: without hysteresis it would release (past the threshold of 4); with hysteresis it should keep holding (but not past 4x1.5=6)
   const held = snapDraggedEdges({ ...base, points, mode: 'move', rawDelta: 25, hold: first.hold });
-  assert.equal(held.snapAt, 120, '未走出释放半径,保持吸附');
+  assert.equal(held.snapAt, 120, 'still within the release radius, stays snapped');
   assert.equal(held.deltaF, 20);
 
   const released = snapDraggedEdges({ ...base, points, mode: 'move', rawDelta: 27, hold: first.hold });
-  assert.equal(released.snapAt, null, '走出 1.5 倍半径后松开');
-  assert.equal(released.deltaF, 27, '松开后回到原始位移');
+  assert.equal(released.snapAt, null, 'releases after moving past the 1.5x radius');
+  assert.equal(released.deltaF, 27, 'reverts to the raw delta once released');
 
   // Do not pass hold = old behavior: the same displacement will not bite
   const stateless = snapDraggedEdges({ ...base, points, mode: 'move', rawDelta: 25 });
@@ -57,9 +57,9 @@ const base = { baseStart: 100, baseDuration: 50, points: [] as SnapPoint[], thre
 {
   const points: SnapPoint[] = [{ frame: 155, type: 'item-start', itemId: 'x' }];
   const moved = snapDraggedEdges({ ...base, points, mode: 'move', rawDelta: 4 }); // Tail edge probe 154
-  assert.equal(moved.hold?.edge, 'end', 'move 时吸住的是尾边');
+  assert.equal(moved.hold?.edge, 'end', 'during move, the tail edge is what snaps');
   const trimmed = snapDraggedEdges({ ...base, points, mode: 'trim-left', rawDelta: 4, hold: moved.hold });
-  assert.equal(trimmed.snapAt, null, 'trim-left 只看头边,尾边的 hold 不适用');
+  assert.equal(trimmed.snapAt, null, "trim-left only looks at the head edge, so a tail-edge hold doesn't apply");
 }
 
 // ── trim-right only detects the tail edge, and there is still hysteresis ──
@@ -69,7 +69,7 @@ const base = { baseStart: 100, baseDuration: 50, points: [] as SnapPoint[], thre
   assert.equal(first.snapAt, 160);
   assert.equal(first.deltaF, 10);
   const held = snapDraggedEdges({ ...base, points, mode: 'trim-right', rawDelta: 15, hold: first.hold });
-  assert.equal(held.snapAt, 160, `释放半径是 ${THRESHOLD * STICKY_RELEASE} 帧`);
+  assert.equal(held.snapAt, 160, `the release radius is ${THRESHOLD * STICKY_RELEASE} frames`);
 }
 
 // ── When there is no target at all, the displacement is returned ──
@@ -89,8 +89,8 @@ const base = { baseStart: 100, baseDuration: 50, points: [] as SnapPoint[], thre
   const before = probes.map((frame) => findClosestSnapPoint(points, frame, 10));
   const sorted = sortTimelineSnapPoints(points);
   const after = probes.map((frame) => findClosestSnapPoint(sorted, frame, 10));
-  assert.deepEqual(after, before, '排序后二分搜索必须保持相等距离与边界结果');
+  assert.deepEqual(after, before, 'after sorting, binary search must preserve equal-distance and boundary results');
   assert.equal(findClosestSnapPoint(sorted, 100, 10)?.itemId, 'earlier-in-registry');
 }
 
-console.log('snap.verify: ok (类型加权/迟滞保持与释放/目标消失即松开/边归属/trim-right)');
+console.log('snap.verify: ok (type weighting/hysteresis hold & release/immediate release on vanished target/edge ownership/trim-right)');

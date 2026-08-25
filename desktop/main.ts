@@ -154,7 +154,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
   ipcMain.handle('openchatcut:select-export-directory', trustedDesktopHandler(trustedOrigin, async (event) => {
     const parent = BrowserWindow.fromWebContents(event.sender);
     const options: OpenDialogOptions = {
-      title: '选择导出目录',
+      title: 'Choose export directory',
       defaultPath: app.getPath('videos'),
       properties: ['openDirectory', 'createDirectory'],
     };
@@ -163,7 +163,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
       : await dialog.showOpenDialog(options);
     if (result.canceled || !result.filePaths[0]) return null;
     const directory = await validatedDirectory(result.filePaths[0]);
-    if (!directory) throw new Error('所选导出目录不可用');
+    if (!directory) throw new Error('The selected export directory is unavailable.');
     const grant = createExportDirectoryGrant(directory);
     activeExportDirectory = { directory, grant };
     await persistExportDirectory(exportStatePath, directory, grant.grantId);
@@ -178,7 +178,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
     }
     const parent = BrowserWindow.fromWebContents(event.sender);
     const options: SaveDialogOptions = {
-      title: '选择导出文件',
+      title: 'Choose export file',
       defaultPath: join(app.getPath('videos'), suggestedFilename),
     };
     const result = parent
@@ -188,7 +188,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
     const filename = basename(result.filePath);
     if (!validDesktopExportFilename(filename)) throw new Error('The export filename is invalid.');
     const directory = await validatedDirectory(dirname(result.filePath));
-    if (!directory) throw new Error('所选导出目录不可用');
+    if (!directory) throw new Error('The selected export directory is unavailable.');
     const grant = createExportDirectoryGrant(directory);
     activeExportDirectory = { directory, grant };
     await persistExportDirectory(exportStatePath, directory, grant.grantId);
@@ -342,7 +342,7 @@ async function boot(): Promise<void> {
       chooseRoot: async (requestedPath) => {
         const parent = BrowserWindow.fromWebContents(event.sender);
         const options: OpenDialogOptions = {
-          title: '选择允许 Agent 访问的素材文件夹',
+          title: 'Choose the media folder to grant the agent access to',
           defaultPath: agentImportPickerDefaultPath(requestedPath),
           properties: ['openDirectory'],
         };

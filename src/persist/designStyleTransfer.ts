@@ -36,10 +36,10 @@ function normalizeRecipe(value: unknown): DesignStyleRecipe {
   if (!value || typeof value !== 'object') throw new Error('Recipe file structure is invalid');
   const recipe = value as Partial<DesignStyleRecipe>;
   if (recipe.format !== FORMAT || recipe.version !== VERSION) throw new Error('Recipe file version is not supported');
-  const name = normalizedText(recipe.name, '配方名称');
+  const name = normalizedText(recipe.name, 'Recipe name is invalid');
   const style = normalizeStyle(recipe.style);
   const scenarios = normalizeScenarios(recipe.scenarios);
-  const thumbnailUrl = optionalText(recipe.thumbnailUrl, '缩略图地址');
+  const thumbnailUrl = optionalText(recipe.thumbnailUrl, 'Thumbnail URL is invalid');
   return {
     format: FORMAT,
     version: VERSION,
@@ -58,36 +58,36 @@ function normalizeStyle(value: unknown): DesignStyle {
   const colors = style.colors.map((entry) => {
     if (!entry || typeof entry !== 'object') throw new Error('Recipe color structure is invalid');
     return {
-      role: normalizedText((entry as { role?: unknown }).role, '颜色角色'),
-      value: normalizedText((entry as { value?: unknown }).value, '颜色值'),
+      role: normalizedText((entry as { role?: unknown }).role, 'Color role is invalid'),
+      value: normalizedText((entry as { value?: unknown }).value, 'Color value is invalid'),
     };
   });
   const fonts = style.fonts.map((entry) => {
     if (!entry || typeof entry !== 'object') throw new Error('Recipe font structure is invalid');
     return {
-      role: normalizedText((entry as { role?: unknown }).role, '字体角色'),
-      family: normalizedText((entry as { family?: unknown }).family, '字体名称'),
+      role: normalizedText((entry as { role?: unknown }).role, 'Font role is invalid'),
+      family: normalizedText((entry as { family?: unknown }).family, 'Font family is invalid'),
     };
   });
-  const styleGuide = optionalText(style.styleGuide, '工程创作指引');
+  const styleGuide = optionalText(style.styleGuide, 'Project editing guide is invalid');
   return { colors, fonts, ...(styleGuide ? { styleGuide } : {}) };
 }
 
 function normalizeScenarios(value: unknown): string[] | undefined {
   if (value === undefined) return undefined;
   if (!Array.isArray(value) || value.length > MAX_ENTRIES) throw new Error('Recipe scenarios are invalid');
-  const scenarios = [...new Set(value.map((entry) => normalizedText(entry, '适用场景')))];
+  const scenarios = [...new Set(value.map((entry) => normalizedText(entry, 'Recipe scenario is invalid')))];
   return scenarios.length > 0 ? scenarios : undefined;
 }
 
-function normalizedText(value: unknown, label: string): string {
-  if (typeof value !== 'string') throw new Error(`${label}无效`);
+function normalizedText(value: unknown, invalidMessage: string): string {
+  if (typeof value !== 'string') throw new Error(invalidMessage);
   const result = value.trim();
-  if (!result || result.length > MAX_TEXT_LENGTH) throw new Error(`${label}无效`);
+  if (!result || result.length > MAX_TEXT_LENGTH) throw new Error(invalidMessage);
   return result;
 }
 
-function optionalText(value: unknown, label: string): string | undefined {
+function optionalText(value: unknown, invalidMessage: string): string | undefined {
   if (value === undefined || value === '') return undefined;
-  return normalizedText(value, label);
+  return normalizedText(value, invalidMessage);
 }

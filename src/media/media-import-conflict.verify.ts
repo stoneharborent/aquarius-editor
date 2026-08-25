@@ -16,9 +16,9 @@ import {
 import { uploadedMediaRelinkPatch } from './mediaAssetRelink';
 import { createImportContentIdentityHooks } from './importContentIdentity';
 
-assert.equal(normalizeMediaName('  旅行封面.PNG  '), '旅行封面.png');
+assert.equal(normalizeMediaName('  travel-cover.PNG  '), 'travel-cover.png');
 assert.equal(normalizeMediaName('ＡＢＣ.mp4'), 'abc.mp4');
-assert.equal(findMediaNameConflict([{ id: 'a', name: '旅行封面.PNG' }], '旅行封面.png')?.id, 'a');
+assert.equal(findMediaNameConflict([{ id: 'a', name: 'travel-cover.PNG' }], 'travel-cover.png')?.id, 'a');
 assert.equal(isMediaImportCancelled(new MediaImportCancelledError()), true);
 assert.equal(
   mediaImportErrorMessage(new Error('part 3 failed (503)')),

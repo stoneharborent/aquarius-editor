@@ -74,7 +74,7 @@ export function TimelineTabs({ doc, commands }: TimelineTabsProps) {
       <button onClick={() => commands.createTimeline()} title={t('New sequence')} style={tabBtn}>{t('＋ Sequence')}</button>
       <button onClick={() => commands.duplicateTimeline(doc.activeTimelineId)} title={t('Duplicate current sequence')} style={{ ...tabBtn, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Icon name="copy" size={13} />{t('Copy')}</button>
       <button
-        onClick={() => commands.duplicateTimeline(doc.activeTimelineId, { retarget: { width: 1080, height: 1920, fit: 'cover' }, name: '竖屏' })}
+        onClick={() => commands.duplicateTimeline(doc.activeTimelineId, { retarget: { width: 1080, height: 1920, fit: 'cover' }, name: 'Vertical' })}
         title={t('Duplicate the current sequence as a 9:16 vertical (long-to-short)')}
         style={{ ...tabBtn, display: 'inline-flex', alignItems: 'center', gap: 4 }}
       ><Icon name="swap" size={13} />{t('Vertical copy')}</button>

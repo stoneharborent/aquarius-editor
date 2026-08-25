@@ -31,7 +31,7 @@ function parseAuthorizedRoots(raw: string): string[] {
 
 export function appendAgentImportRoot(raw: string, root: string): string {
   const clean = root.trim();
-  if (!clean || /[\r\n,]/.test(clean)) throw new Error('所选目录名称不能包含逗号或换行符');
+  if (!clean || /[\r\n,]/.test(clean)) throw new Error('The selected directory name cannot contain commas or line breaks');
   return [...new Set([...parseAuthorizedRoots(raw), clean])].join(',');
 }
 
@@ -55,7 +55,7 @@ function outsideRootsError(path: string, roots: readonly string[]): AgentPathImp
   return {
     path,
     code: 'PATH_OUTSIDE_IMPORT_ROOTS',
-    error: `该路径不在已添加的本地素材目录中。已添加的目录：${roots.join(', ')}`,
+    error: `This path is not inside any configured local media directory. Configured directories: ${roots.join(', ')}`,
   };
 }
 
@@ -76,7 +76,7 @@ async function planCandidates(paths: readonly string[]): Promise<{
   if (!configuredRoots.length) return {
     candidates,
     errors: paths.map((path) => ({ path, code: 'IMPORT_ROOTS_NOT_CONFIGURED',
-      error: '尚未添加本地素材目录。请在弹出的系统窗口中选择允许 Agent 访问的文件夹。' })),
+      error: 'No local media directory has been added yet. Choose a folder to allow Agent access to in the system dialog that opens.' })),
   };
   for (const path of paths) {
     if (!pathAllowedByRoots(configuredRoots, path)) {

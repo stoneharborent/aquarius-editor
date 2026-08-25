@@ -20,7 +20,7 @@ import { fcpxmlBackgroundFillCount } from './fcpxml';
 import { loadJianYingDraftPreference, saveJianYingDraftPreference, type JianYingDraftStore } from './jianyingDraftPreference';
 import { useState } from 'react';
 
-/** macOS default store for the Chinese JianYing (剪映专业版) app; drafts in 6.0+
+/** macOS default store for JianYing Pro, CapCut's Chinese sibling app; drafts in 6.0+
  * are encrypted and capcut-cli cannot decrypt them, hence the ≤5.9 note. */
 const JIANYING_STORE = '~/Movies/JianyingPro/User Data/Projects/com.lveditor.draft';
 
@@ -321,7 +321,7 @@ function JianyingTab({ state, base }: { state: TimelineState; base: string }) {
               <br />
               {outcome.draftPath}
               {outcome.warnings.length > 0 && (
-                <><br />{outcome.warnings.join('；')}</>
+                <><br />{outcome.warnings.join('; ')}</>
               )}
             </p>
           </div>

@@ -14,11 +14,11 @@ import {
 const state: TimelineState = { fps: 30, width: 1920, height: 1080, items: [], selectedId: null };
 
 // ── Prompt tokens: @t / @r / @q / @[ / plain @name ────────────────────────
-assert.equal(refPromptToken({ name: '00:05.2 时间点', kind: 'timepoint' }), '@t[00:05.2 时间点]');
+assert.equal(refPromptToken({ name: '00:05.2 timepoint', kind: 'timepoint' }), '@t[00:05.2 timepoint]');
 assert.equal(refPromptToken({ name: 'V1 00:03.0-00:07.0', kind: 'timerange' }), '@t[V1 00:03.0-00:07.0]');
-assert.equal(refPromptToken({ name: '画面区域（2 个片段）', kind: 'canvas-region' }), '@r[画面区域（2 个片段）]');
-assert.equal(refPromptToken({ name: '“今天我们…”（8 词）', kind: 'transcript-selection' }), '@q[“今天我们…”（8 词）]');
-assert.equal(refPromptToken({ name: '口播A.mp4', kind: 'item' }), '@[口播A.mp4]');
+assert.equal(refPromptToken({ name: 'Frame region (2 clip(s))', kind: 'canvas-region' }), '@r[Frame region (2 clip(s))]');
+assert.equal(refPromptToken({ name: '"Today we..." (8 word(s))', kind: 'transcript-selection' }), '@q["Today we..." (8 word(s))]');
+assert.equal(refPromptToken({ name: 'VoiceoverA.mp4', kind: 'item' }), '@[VoiceoverA.mp4]');
 assert.equal(refPromptToken({ name: 'b-roll.mp4', kind: 'video' }), '@b-roll.mp4', 'pool assets keep the legacy plain form');
 
 // ── timecode formatting ──────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ assert.equal(formatFrameTime(2721, 30), '01:30.7');
 // ── timepoint / timerange builders ───────────────────────────────────────────
 const tp = timepointRef(156, state);
 assert.equal(tp.kind, 'timepoint');
-assert.equal(tp.name, '00:05.2 时间点');
+assert.equal(tp.name, '00:05.2 timepoint');
 assert.deepEqual(
   { fps: tp.metadata.fps, timelineFrameStart: (tp.metadata as { timelineFrameStart: number }).timelineFrameStart },
   { fps: 30, timelineFrameStart: 156 },
@@ -44,7 +44,7 @@ assert.equal(tr.metadata.timelineFrameEnd, 210, 'end is exclusive');
 assert.equal(tr.metadata.trackAlias, 'V1');
 
 // ── timeline pick gesture resolution ─────────────────────────────────────────
-const clip: TimelineItem = { id: 'item_1', track: 'V1', startFrame: 30, durationInFrames: 120, name: '口播A', kind: 'video', src: '/m/a.mp4' };
+const clip: TimelineItem = { id: 'item_1', track: 'V1', startFrame: 30, durationInFrames: 120, name: 'VoiceoverA', kind: 'video', src: '/m/a.mp4' };
 const stateWithClip: TimelineState = { ...state, items: [clip] };
 
 const rulerClick = resolveTimelinePick({ origin: 'ruler', startFrame: 100, endFrame: 101 }, 3, stateWithClip);
@@ -56,7 +56,7 @@ assert.equal(rulerDrag?.kind, 'timerange', 'ruler drag → timerange');
 const clipClick = resolveTimelinePick({ origin: 'clip', startFrame: 50, endFrame: 51, item: clip }, 3, stateWithClip);
 assert.ok(clipClick && clipClick.kind === 'item', 'clip click → item reference');
 assert.equal(clipClick.id, 'item_1');
-assert.equal(clipClick.name, '口播A');
+assert.equal(clipClick.name, 'VoiceoverA');
 assert.equal(clipClick.metadata.timelineFrameStart, 30);
 assert.equal(clipClick.metadata.timelineFrameEnd, 150);
 assert.equal(clipClick.metadata.trackAlias, 'V1');
@@ -88,7 +88,7 @@ assert.equal(itemRectInComposition({ ...clip, kind: 'audio' }, 1920, 1080), null
 
 // ── itemsInRegion: visual, visible, at-frame, intersecting ─────────────────
 const audioClip: TimelineItem = { id: 'a1', track: 'A1', startFrame: 0, durationInFrames: 300, name: 'BGM', kind: 'audio', src: '/m/b.mp3' };
-const laterClip: TimelineItem = { id: 'item_3', track: 'V2', startFrame: 200, durationInFrames: 50, name: '后段', kind: 'video', src: '/m/c.mp4' };
+const laterClip: TimelineItem = { id: 'item_3', track: 'V2', startFrame: 200, durationInFrames: 50, name: 'LaterClip', kind: 'video', src: '/m/c.mp4' };
 const hiddenClip: TimelineItem = { id: 'item_4', track: 'V2', startFrame: 0, durationInFrames: 300, name: 'Hide', kind: 'video', src: '/m/d.mp4' };
 const regionState: TimelineState = {
   ...state,
@@ -102,12 +102,12 @@ assert.deepEqual(offRegion, [], 'region misses the transformed rect');
 
 const cr = canvasRegionRef({ x: 0, y: 0, width: 400, height: 400 }, 60, regionState);
 assert.ok(cr.kind === 'canvas-region');
-assert.equal(cr.name, '画面区域（1 个片段）');
+assert.equal(cr.name, 'Frame region (1 clip(s))');
 assert.deepEqual(cr.metadata.containedItems, ['item_1']);
 assert.equal(cr.metadata.compositionWidth, 1920);
 assert.equal(cr.metadata.timelineFrameStart, 60);
 
-// ── transcript selection: 词→源媒体 ms + 词→帧 (keptSegments 同源) ──────────
+// ── transcript selection: word→source-media ms + word→frame (same source as keptSegments) ──────────
 const spoken: TimelineItem = {
   id: 'item_t', track: 'A1', startFrame: 90, durationInFrames: 75, name: '口播', kind: 'audio', src: '/m/vo.mp3',
   transcript: [
@@ -118,14 +118,14 @@ const spoken: TimelineItem = {
 };
 const ts1 = transcriptSelectionRef(spoken, [1, 0], 30); // unsorted input normalizes
 assert.ok(ts1 && ts1.kind === 'transcript-selection');
-assert.equal(ts1.name, '“今天我们”（2 词）');
+assert.equal(ts1.name, '"今天我们" (2 word(s))');
 assert.equal(ts1.metadata.selectedText, '今天我们', 'CJK words join without spaces');
 assert.deepEqual(ts1.metadata.selectedWordIds, [0, 1]);
 assert.equal(ts1.metadata.sourceMediaStartMs, 0);
 assert.equal(ts1.metadata.sourceMediaEndMs, 1000);
 assert.equal(ts1.metadata.timelineFrameStart, 90, 'clip offset applies');
 assert.equal(ts1.metadata.timelineFrameEnd, 120, '1000ms @30fps = 30f after clip start');
-assert.equal(ts1.metadata.speakerName, '说话人 1');
+assert.equal(ts1.metadata.speakerName, 'Speaker 1');
 assert.equal(ts1.id, 'transcript:item_t:0-1', 'deterministic id dedupes repeat picks');
 
 // deleting the middle word compresses the edited timeline — the mapper must follow

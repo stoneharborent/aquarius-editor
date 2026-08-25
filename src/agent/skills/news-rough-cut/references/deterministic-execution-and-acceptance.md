@@ -1,56 +1,56 @@
-# News Rough Cut — 确定性执行模板与验收清单
+# News Rough Cut — Deterministic Execution Template and Acceptance Checklist
 
-> OpenChatCut-native 参考。借鉴了行业确定性剪辑工作流的通用做法（环境检查 → 素材解析 → 生成单条确定性编辑方案 → 一次性执行 → 强制验收）。
-> 符合本技能 SKILL.md 的规则：忠实原素材、不加任何外部声音、讲话按语义完整切割、新闻客观克制的风格。
+> OpenChatCut-native reference. Borrows the common approach used by industry deterministic-editing workflows (environment check → source parsing → generate one deterministic edit plan → execute once → mandatory acceptance check).
+> Complies with this skill's SKILL.md rules: stay faithful to the original footage, add no external sound, cut speech along complete semantic boundaries, and keep a news-objective, restrained style.
 
-## 一、执行顺序（固定序列，不要跳步）
+## I. Execution order (fixed sequence, do not skip steps)
 
-1. **环境与素材检查（前置，必做）**
-   - 用 `read_project` / `read_timeline` 确认当前工程与时间线存在、存在目标素材片段。
-   - 建立允许来源清单：只记录用户明确指定/选中的新闻素材及其原始现场声的 `sourceAssetId` 与 `src`；未明确指定时，只纳入活动时间线上已存在的新闻画面与现场声。媒体池里的 BGM、SFX、配音、旁白和其他未选素材一律不纳入。
-   - 用 `transcribe_track` 拿词级文字稿；若某轨不可转写，先解决素材可达性，再继续。
-   - 用 `view_timeline_frames` 核对关键画面与素材内容。
-   - 前置不通过 → 停下并报告缺什么，不要假装完成。
+1. **Environment and source check (mandatory, up front)**
+   - Use `read_project` / `read_timeline` to confirm the current project and timeline exist and contain the target source clips.
+   - Build an allow-list of sources: record only the `sourceAssetId` and `src` of the news footage and its original sync sound that the user explicitly specified or selected; when nothing is explicitly specified, include only the news footage and sync sound already present on the active timeline. BGM, SFX, voiceover, narration, and any other unselected assets in the media pool are never included.
+   - Use `transcribe_track` to get a word-level transcript; if a track cannot be transcribed, resolve source accessibility first before continuing.
+   - Use `view_timeline_frames` to check key frames against the source content.
+   - If the pre-check fails → stop and report what's missing; do not pretend the task is done.
 
-2. **素材解析与主题判定**
-   - 识别：新闻事件 / 核心话题 / 关键人物 / 重要结论 / 有效画面。
-   - 判定话题数量：一条成片只围绕一条核心新闻主线；多话题时选新闻价值最高、信息最完整、画面最充分者。
-   - 确定成片时长上限（由信息量与有效讲话长度决定，不设死板固定值）。
+2. **Source parsing and topic determination**
+   - Identify: the news event / core topic / key people / important conclusions / usable footage.
+   - Decide how many topics: one finished cut stays focused on a single core news thread; when multiple topics are present, pick the one with the highest news value, the most complete information, and the most adequate footage.
+   - Determine the maximum length of the finished cut (driven by the amount of information and the usable speech length, not a rigid fixed value).
 
-3. **生成编辑方案（先规划，后动手）**
-   - 按「保留 / 删除」规则产出**一个明确的编辑计划**：要保的片段（含句边界）、要删的口头语/重复/广告、要微调的剪切点。
-   - 原则：开头直给结论/最新进展/关键画面；讲话只在完整句结束/自然停顿/明显转折/镜头转场处切割。
-   - 这一步产出"确定性方案"，不是让用户在每一步都拍板——方案一次成型。
+3. **Generate the edit plan (plan first, then execute)**
+   - Produce **one explicit edit plan** following "keep / cut" rules: which segments to keep (with sentence boundaries), which verbal tics / repetitions / ads to cut, and which cut points to fine-tune.
+   - Principle: lead with the conclusion / latest development / key footage; only cut speech at the end of a complete sentence, a natural pause, an obvious turn, or a shot transition.
+   - This step produces a "deterministic plan" — it is not meant to have the user sign off at every step; the plan is finalized in one pass.
 
-4. **一次性执行**
-   - 用 `edit_item` 的批量更新/删除落成 trim、ripple delete 与 fade；需要切开片段时调用 `split_item`。
-   - 讲话切割必须落在完整句子边界（用词级文字稿保证）。
-   - **不新增**任何 BGM / 旁白 / 音效 / 转场音效；不得从媒体池添加允许来源清单之外的 `video` / `audio`，即使该资产在编辑前已存在。
+4. **Execute in one pass**
+   - Use `edit_item`'s batch update/delete to apply trims, ripple deletes, and fades; call `split_item` when a clip needs to be split.
+   - Speech cuts must land on complete sentence boundaries (guaranteed by the word-level transcript).
+   - **Add nothing new**: no BGM / narration / sound effects / transition sounds; do not add any `video` / `audio` from the media pool outside the source allow-list, even if that asset already existed before editing.
 
-5. **终检验收（强制性，见下）**
-   - 再次 `read_project`，逐项比对所有最终 `video` / `audio` 的 `sourceAssetId` / `src` 与允许来源清单；同一允许来源的 trim、split、move 合法，任何未选来源（包括新增视频中携带的声音）均不合法。
-   - 逐段回放核对：事实忠实、讲话语义完整、剪切点衔接自然、无爆音/突兀截断。
+5. **Final acceptance check (mandatory, see below)**
+   - Call `read_project` again and compare every final `video` / `audio`'s `sourceAssetId` / `src` against the source allow-list item by item; a trim, split, or move on the same allowed source is legal — any unselected source (including audio carried in by an added video) is not.
+   - Play back segment by segment to verify: factual fidelity, complete speech semantics, natural cut-point continuity, and no pops or abrupt cutoffs.
 
-## 二、强制验收清单（成片必经，逐项过）
+## II. Mandatory acceptance checklist (every finished cut must pass, item by item)
 
-| 验收项 | 判定 | 不通过时 |
+| Check item | Pass criterion | If it fails |
 |---|---|---|
-| 工程存在且可读取 | `read_project` 成功返回当前活动工程 | 停止，报告工程读取失败原因 |
-| 至少 1 个视频轨片段 | 时间线上有被保留的画面片段 | 说明无有效画面，未成片 |
-| 成片长度与信息量匹配 | 没有为凑时长硬加无关内容；也没有为压缩剪断讲话/关键事实 | 重新平衡时长与内容 |
-| 开头直给核心 | 首段是结论/最新进展/关键画面，无冗长铺垫 | 调整开头 |
-| 讲话语义完整 | 每段保留讲话都能独立表达完整意思，无"一句话中间切断" | 修正切割点 |
-| 无外部声音 | 所有最终 `video` / `audio` 均属于用户选定的新闻素材/原始现场声允许来源；媒体池中原有但未选的 BGM、SFX、配音、旁白也不得使用 | 移除未选来源片段并重新验收 |
-| 剪切点衔接 | 无突兀截断、重叠、明显音量跳变；可用 fadeInSeconds/fadeOutSeconds 微调 | 加 1-2 帧淡入淡出 |
-| 事实与逻辑 | 不改变原意、不夸大弱化、不错误关联、不把推测当事实、不用错配画面 | 回退到原素材重剪 |
+| Project exists and is readable | `read_project` successfully returns the current active project | Stop, report why the project could not be read |
+| At least 1 video track clip | Kept footage clips exist on the timeline | State that there is no usable footage; the cut is not finished |
+| Cut length matches the amount of information | No irrelevant content was padded in just to hit a length; no speech or key facts were cut just to shorten it | Rebalance length against content |
+| Opens directly with the core point | The opening segment is the conclusion / latest development / key footage, with no long windup | Adjust the opening |
+| Speech semantics are complete | Every kept speech segment can independently express a complete idea, with no "cut off mid-sentence" | Fix the cut points |
+| No external sound | Every final `video` / `audio` belongs to the user-selected news footage / original sync-sound allow-list; BGM, SFX, voiceover, or narration that existed in the media pool but was not selected must not be used | Remove the unselected-source segment and re-run acceptance |
+| Cut-point continuity | No abrupt cutoffs, overlaps, or obvious volume jumps; fine-tune with fadeInSeconds/fadeOutSeconds | Add a 1-2 frame fade in/out |
+| Facts and logic | Original meaning is not changed, not exaggerated or downplayed, no incorrect associations, no speculation presented as fact, no mismatched footage | Roll back to the original source and re-cut |
 
-## 三、与 SKILL.md 工具对应
+## III. Mapping to SKILL.md tools
 
-- `read_project` / `read_timeline`、`transcribe_track`、`view_timeline_frames`、`edit_item`（trim / ripple delete / fade）、`split_item`、`edit_track`。
-- 验收里的"无新增音频"必须以首次建立的选定素材允许来源与最终 `read_project` 做比对，不能把整个媒体池当作基线，也不能按 audio 轨片段数量判断。
+- `read_project` / `read_timeline`, `transcribe_track`, `view_timeline_frames`, `edit_item` (trim / ripple delete / fade), `split_item`, `edit_track`.
+- The "no added audio" check in acceptance must be verified by comparing the source allow-list established at the start against the final `read_project` result — the whole media pool cannot be used as the baseline, and it cannot be judged by counting audio-track clips.
 
-## 四、失败恢复
+## IV. Failure recovery
 
-- 任一验收项不通过 → 回退到「生成编辑方案」步骤重新规划（并非从头，而是定位到违反规则的环节）。
-- 若时间线被改坏，允许引用项目的撤销/历史回到执行前状态再重跑。
-- 全部验收通过后，才报告"成片完成"并给出成片时长、保留片段数、剪切点数量等可复核结果。
+- Any failed acceptance item → roll back to the "generate edit plan" step and re-plan (not from scratch — locate the step that violated the rule).
+- If the timeline is left broken, it is fine to use the project's undo/history to return to the pre-execution state and re-run.
+- Only after every acceptance item passes should you report the cut as "finished," along with reviewable results such as final duration, number of kept segments, and number of cut points.

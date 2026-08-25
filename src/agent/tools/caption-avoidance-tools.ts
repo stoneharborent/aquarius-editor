@@ -177,42 +177,42 @@ export async function applyCaptionAvoidance(
       if (!replacement) {
         if (hasConflict) {
           blocked += 1;
-          details.push('检测到字幕遮挡，但没有可用的安全位置，未调整');
+          details.push('Caption overlap detected, but no safe position is available — left unchanged');
         }
         continue;
       }
       if (!writeLayout(next, representative.target.placementSources, replacement)) {
         blocked += 1;
-        details.push('有效字幕位置由不可修改的布局策略控制，未调整');
+        details.push('The effective caption position is controlled by a non-editable layout policy — left unchanged');
         continue;
       }
       adjusted += 1;
       const label = representative.target.placementSources
-        .map((source) => source.kind === 'layout' ? '整体字幕' : source.kind === 'slot' ? `字幕槽「${source.slotId}」` : `字幕条「${source.sourceId}」`)
-        .join('、');
-      details.push(`${label}已避开人脸`);
+        .map((source) => source.kind === 'layout' ? 'the overall captions' : source.kind === 'slot' ? `caption slot "${source.slotId}"` : `caption lane "${source.sourceId}"`)
+        .join(', ');
+      details.push(`${label} moved to avoid the face`);
     }
     if (adjusted) ctx.commands.setCaptions(next, trackId ?? undefined);
     total += adjusted;
     const names = [...new Set(analyzed.map((entry) => entry.target.asset.name))];
-    if (names.length) summary.push({ source: names.join('、'), adjusted, details });
+    if (names.length) summary.push({ source: names.join(', '), adjusted, details });
   }
 
   if (!sourceCount) {
-    return { ok: false, error: '字幕显示期间没有找到可见的视频画面，未修改字幕布局' };
+    return { ok: false, error: 'No visible video layers were found during the caption display window — caption layout unchanged' };
   }
   if (!geometryCount) {
-    return { ok: false, error: '可见视频画面的几何分析不可用，未修改字幕布局' };
+    return { ok: false, error: 'Geometry analysis of the visible video layers is unavailable — caption layout unchanged' };
   }
   return {
     ok: true,
     adjusted: total,
     sources: summary,
     note: total
-      ? `已自动避让 ${total} 处字幕布局（按可见画面与字幕时段分析人像/人脸）。`
+      ? `Automatically avoided ${total} caption placement(s) (based on person/face analysis of the visible frames during each caption's time span).`
       : blocked
-        ? `检测到 ${blocked} 处字幕遮挡，但有效位置由不可修改的布局策略控制，未作修改。`
-        : '未检测到字幕遮挡人脸，布局无需调整。',
+        ? `Detected ${blocked} caption overlap(s), but the effective positions are controlled by a non-editable layout policy — no changes made.`
+        : 'No caption overlapping a face was detected — no layout changes needed.',
   };
 }
 

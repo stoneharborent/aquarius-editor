@@ -11,6 +11,7 @@ import { theme } from '../theme';
 import { Icon } from '../components/icons';
 import { useT } from '../i18n/locale';
 import { clipLabel, isLikelyNonSpeech, mediaOnTrack, pickDefaultTrack, trackTitle, type TranscriptTrackOption } from './trackOptions';
+import { ZH_FILLER_PATTERN } from '../i18n/dict/zh/agent-terms';
 
 export type { TranscriptTrackOption } from './trackOptions';
 
@@ -136,7 +137,8 @@ export function TranscriptPanel({
     if (!hasOperationalTranscript(focusItem)) return;
     const w = focusItem.transcript;
     const { count, savedMs } = analyzeSilences(w, compressSec * 1000);
-    const fillers = w.filter((x) => /^[\s]*([uU][hm]+|[eE]r+m?|嗯|呃|啊|唔|额)[\s.,]*$/.test(x.text)).length;
+    const fillerPattern = new RegExp(`^[\\s]*([uU][hm]+|[eE]r+m?|${ZH_FILLER_PATTERN})[\\s.,]*$`);
+    const fillers = w.filter((x) => fillerPattern.test(x.text)).length;
     onCleanScript(focusItem.id, { silenceFrames: Math.round(compressSec * fps), removeFillers });
     setPauseResult(
       t('Compressed {count} long pauses down to {sec}s (saving about {saved}s)', { count, sec: compressSec, saved: (savedMs / 1000).toFixed(1) })

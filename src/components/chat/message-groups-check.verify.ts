@@ -1,5 +1,5 @@
 // Runnable check: `npx tsx src/components/chat/message-groups.check.ts`.
-// groupMessages 把连续同名工具行折叠成组(≥GROUP_MIN),其余原样;验证折叠/阈值/顺序/索引。
+// groupMessages collapses consecutive same-named tool lines into a group (>=GROUP_MIN), leaving the rest as-is; verifies collapsing/threshold/order/index.
 import assert from 'node:assert/strict';
 import type { DisplayMessage } from '../../agent/agent-session';
 import { groupMessages, GROUP_MIN } from './message-groups';
@@ -7,7 +7,7 @@ import { groupMessages, GROUP_MIN } from './message-groups';
 const tool = (name: string, id = ''): DisplayMessage => ({ role: 'tool', text: '', tool: { name, args: { id }, result: { ok: true } } });
 const txt = (t: string): DisplayMessage => ({ role: 'assistant', text: t });
 
-// 20× edit_gap 夹在文本与另一工具之间 → 折成一个 toolgroup,前后各自成行
+// 20x edit_gap sandwiched between text and another tool → collapses into one toolgroup, with the text/other tool each on their own line
 const msgs: DisplayMessage[] = [
   txt('Start'),
   ...Array.from({ length: 20 }, (_, i) => tool('edit_gap', 'g' + i)),
@@ -15,26 +15,26 @@ const msgs: DisplayMessage[] = [
   txt('Done'),
 ];
 const items = groupMessages(msgs);
-assert.deepStrictEqual(items.map((it) => it.kind), ['single', 'toolgroup', 'single', 'single'], '20 连续 edit_gap 折成 1 组,文本/其它工具各自成行');
+assert.deepStrictEqual(items.map((it) => it.kind), ['single', 'toolgroup', 'single', 'single'], '20 consecutive edit_gap collapse into 1 group, text/other tool each on their own line');
 const grp = items[1];
 assert.ok(grp.kind === 'toolgroup');
 assert.strictEqual(grp.kind === 'toolgroup' && grp.name, 'edit_gap');
-assert.strictEqual(grp.kind === 'toolgroup' && grp.items.length, 20, '组里含全部 20 次');
-assert.strictEqual(grp.kind === 'toolgroup' && grp.items[0].index, 1, '组内保留原始 message 索引(用于 key/feedback)');
+assert.strictEqual(grp.kind === 'toolgroup' && grp.items.length, 20, 'group contains all 20 occurrences');
+assert.strictEqual(grp.kind === 'toolgroup' && grp.items[0].index, 1, 'group retains the original message index (for key/feedback)');
 assert.strictEqual(grp.kind === 'toolgroup' && grp.items[19].index, 20);
 
-// 阈值:GROUP_MIN-1 次不折叠(各自成行),GROUP_MIN 次折叠
+// Threshold: GROUP_MIN-1 occurrences do not collapse (each its own line), GROUP_MIN occurrences do collapse
 const below = groupMessages(Array.from({ length: GROUP_MIN - 1 }, () => tool('search_templates')));
-assert.ok(below.every((it) => it.kind === 'single'), `不足 ${GROUP_MIN} 次不折叠`);
+assert.ok(below.every((it) => it.kind === 'single'), `fewer than ${GROUP_MIN} occurrences does not collapse`);
 const at = groupMessages(Array.from({ length: GROUP_MIN }, () => tool('search_templates')));
-assert.deepStrictEqual(at.map((it) => it.kind), ['toolgroup'], `满 ${GROUP_MIN} 次折叠`);
+assert.deepStrictEqual(at.map((it) => it.kind), ['toolgroup'], `exactly ${GROUP_MIN} occurrences collapses`);
 
-// 不同名相邻工具不合并(信息量保留)
+// Adjacent tools with different names are not merged (information is preserved)
 const distinct = groupMessages([tool('clean_script'), tool('read_timeline'), tool('manage_timelines')]);
-assert.ok(distinct.every((it) => it.kind === 'single'), '不同名工具各自成行,不误折');
+assert.ok(distinct.every((it) => it.kind === 'single'), 'differently named tools each get their own line, no false collapsing');
 
-// 两段同名被别的工具隔开 → 两个独立组
+// Two same-named runs separated by another tool → two independent groups
 const split = groupMessages([...Array.from({ length: 4 }, () => tool('edit_gap')), tool('read_timeline'), ...Array.from({ length: 3 }, () => tool('edit_gap'))]);
-assert.deepStrictEqual(split.map((it) => it.kind), ['toolgroup', 'single', 'toolgroup'], '被隔开的同名段各自成组');
+assert.deepStrictEqual(split.map((it) => it.kind), ['toolgroup', 'single', 'toolgroup'], 'same-named runs separated by another tool each form their own group');
 
-console.log('message-groups.check: ok (折叠/阈值/索引/不误折/分段)');
+console.log('message-groups.check: ok (collapsing/threshold/index/no false collapse/splitting)');

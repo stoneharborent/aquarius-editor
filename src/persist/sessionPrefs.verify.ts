@@ -1,4 +1,4 @@
-// `npx tsx src/persist/sessionPrefs.check.ts`（已挂 verify:persist）
+// `npx tsx src/persist/sessionPrefs.check.ts` (already wired into verify:persist)
 import assert from 'node:assert';
 import {
   clearComposerDraft,
@@ -29,8 +29,8 @@ const pid = 'proj_session_test';
 mem.clear();
 
 assert.strictEqual(loadComposerDraft(pid), '');
-saveComposerDraft(pid, '  帮我剪口播  ');
-assert.strictEqual(loadComposerDraft(pid), '  帮我剪口播  ');
+saveComposerDraft(pid, '  help me cut the voiceover  ');
+assert.strictEqual(loadComposerDraft(pid), '  help me cut the voiceover  ');
 clearComposerDraft(pid);
 assert.strictEqual(loadComposerDraft(pid), '');
 

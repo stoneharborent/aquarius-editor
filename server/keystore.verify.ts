@@ -24,13 +24,14 @@ const isolatedSeed = Object.fromEntries(KEY_NAMES.map((name) => [name, '']));
   assert.deepEqual(legacy, [
     ['LLM_GEMINI_API_KEY', 'k'],
     ['LLM_GEMINI_BASE_URL', 'https://relay.example'],
-  ], '纯遗留元组迁给当前厂商');
-  // The mine that has been stepped on on site: The user has been assigned gemini exclusive key, and then moving to legacy base will quietly redirect the request to the old transit
+  ], 'a purely legacy tuple migrates to the current provider');
+  // The landmine that has bitten users in the field: the user has already set a Gemini-specific
+  // key, and moving over the legacy base would silently redirect requests to the old relay.
   assert.deepEqual(mk({
     LLM_PROVIDER: 'gemini', LLM_GEMINI_API_KEY: 'own-key',
     LLM_API_KEY: 'k', LLM_BASE_URL: 'https://relay.example', LLM_BASE_URL_FORMAT: 'ai-sdk-prefix',
-  }), [], '厂商已有专属配置 → 迁移整体跳过(base 落预设)');
-  assert.deepEqual(mk({ LLM_PROVIDER: 'minimax' }), [], '无遗留值 → 空计划');
+  }), [], 'provider already has its own config -> migration is skipped entirely (base falls back to the preset)');
+  assert.deepEqual(mk({ LLM_PROVIDER: 'minimax' }), [], 'no legacy value -> empty plan');
 }
 
 // ── mergeEnvText: update in place, preserve comment/blank/unrelated, append new ──

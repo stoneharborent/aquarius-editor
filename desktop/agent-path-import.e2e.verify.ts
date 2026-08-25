@@ -39,10 +39,10 @@ function silentWavBytes(seconds = 1): Uint8Array {
 const workRoot = await mkdtemp(join(tmpdir(), 'occ84-e2e-'));
 await mkdir(join(workRoot, '素材盘'), { recursive: true });
 const importRoot = await realpath(join(workRoot, '素材盘'));
-const sourceName = '访谈素材.wav';
+const sourceName = 'interview-footage.wav';
 const sourcePath = join(importRoot, sourceName);
 await writeFile(sourcePath, silentWavBytes());
-await writeFile(join(importRoot, '剪辑说明.md'), '# 文稿');
+await writeFile(join(importRoot, 'edit-notes.md'), '# Script');
 
 const uploadDir = await canonicalCurrentUploadDirectory();
 const cleanup = new Set<string>();
@@ -54,7 +54,7 @@ try {
     knownHashes: [],
   });
   assert.equal(unconfigured.errors[0]?.code, 'IMPORT_ROOTS_NOT_CONFIGURED');
-  assert.match(unconfigured.errors[0]?.error ?? '', /系统窗口.*文件夹/, 'unconfigured roots explain the next action');
+  assert.match(unconfigured.errors[0]?.error ?? '', /folder.*system dialog/, 'unconfigured roots explain the next action');
 
   seedKeystore({ AGENT_IMPORT_ROOTS: importRoot });
 
@@ -107,7 +107,7 @@ try {
     projectId: 'verify-project',
     knownHashes: [imported.contentHash],
   });
-  assert.deepEqual(folder.unsupportedFiles, ['剪辑说明.md'], 'unsupported document name is reported');
+  assert.deepEqual(folder.unsupportedFiles, ['edit-notes.md'], 'unsupported document name is reported');
 
   // ── Path outside the roots is rejected with a clear error ──
   const outside = join(workRoot, 'outside.wav');
@@ -119,7 +119,7 @@ try {
   });
   assert.equal(rejected.imported.length, 0, 'outside path imports nothing');
   assert.equal(rejected.errors[0]?.code, 'PATH_OUTSIDE_IMPORT_ROOTS');
-  assert.match(rejected.errors[0]?.error ?? '', /已添加的目录/, 'outside path explains the configured roots');
+  assert.match(rejected.errors[0]?.error ?? '', /Configured directories/, 'outside path explains the configured roots');
   assert.equal(pathAllowedByRoots([importRoot], outside), false, 'containment check agrees');
 
   console.log('agent-path-import.e2e.verify: whitelisted import, dedupe, and rejection passed');

@@ -13,21 +13,21 @@ const errors = await importMediaBatch({
   onImport: async (_file, _onProgress, lifecycle) => {
     lifecycle?.onPlaceholder?.(placeholder);
     assert.deepEqual(placements.at(-1), { ids: ['asset-1'], folderId: targetFolderId },
-      'placeholder 必须立即归入拖放目标文件夹');
+      'the placeholder must be placed into the drop target folder immediately');
     lifecycle?.onAssetUpdated?.(ready);
     assert.deepEqual(placements.at(-1), { ids: ['asset-1'], folderId: targetFolderId },
-      'ready 素材必须再次确认拖放目标文件夹');
+      'the ready asset must reconfirm the drop target folder');
     return ready;
   },
   onMoveAssets: (ids, folderId) => placements.push({ ids, folderId }),
   onProgress: () => undefined,
 });
 
-assert.deepEqual(errors, [], '成功导入不应产生批次错误');
+assert.deepEqual(errors, [], 'a successful import should not produce batch errors');
 assert.deepEqual(placements, [
   { ids: ['asset-1'], folderId: targetFolderId },
   { ids: ['asset-1'], folderId: targetFolderId },
-], 'placeholder 与 ready 两个阶段必须归入同一个拖放目标文件夹');
+], 'both the placeholder and ready stages must be placed into the same drop target folder');
 
 const nestedPlacements: Array<{ ids: string[]; folderId?: string }> = [];
 await importMediaBatch({
@@ -40,6 +40,6 @@ await importMediaBatch({
 assert.deepEqual(nestedPlacements, [
   { ids: ['day-1.mov'], folderId: 'folder-day-1' },
   { ids: ['day-2.mov'], folderId: 'folder-day-2' },
-], '每个素材必须保留导入目录中的文件夹层级');
+], 'each asset must preserve the folder hierarchy from the import directory');
 
 console.log('media-folder-drop.verify: placeholder and ready preserve the target folder');

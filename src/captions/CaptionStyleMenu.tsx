@@ -14,8 +14,9 @@ import { captionsForTrack } from './captionTrack';
 import { newManualCaptions } from './manualCaptions';
 import { captionTemplatePatch } from './captionTemplatePatch';
 import { MenuDrillHeader } from '../components/timeline/MenuDrillHeader';
+import { JAPANESE_NATIVE_NAME, KOREAN_NATIVE_NAME } from '../i18n/dict/zh/native-names';
 
-const CAPTION_LANGS = ['English', '日本語', '한국어', 'Español', 'Français', 'Deutsch', 'Português'];
+const CAPTION_LANGS = ['English', JAPANESE_NATIVE_NAME, KOREAN_NATIVE_NAME, 'Español', 'Français', 'Deutsch', 'Português'];
 
 interface CaptionStyleMenuProps {
   state: TimelineState;
@@ -170,7 +171,7 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
           className="cc-caption-style-save"
           disabled={!current}
           title={current ? t('Save the current template/style override as a user preset') : t('Enable captions first')}
-          onClick={() => setNameDraft(`我的样式 ${new Date().toLocaleDateString()}`)}
+          onClick={() => setNameDraft(t('My style {date}', { date: new Date().toLocaleDateString() }))}
         >
           {t('＋ Save current style...')}
         </button>
