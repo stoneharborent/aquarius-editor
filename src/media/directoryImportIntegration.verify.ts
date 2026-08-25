@@ -7,7 +7,7 @@ const [controller, library, panel, converter, fileImport, dictionary] = await Pr
   readFile(new URL('./MediaPoolPanel.tsx', import.meta.url), 'utf8'),
   readFile(new URL('./directoryImportAsset.ts', import.meta.url), 'utf8'),
   readFile(new URL('./useMediaPoolFileImport.ts', import.meta.url), 'utf8'),
-  readFile(new URL('../i18n/dict/en/media.ts', import.meta.url), 'utf8'),
+  readFile(new URL('../i18n/dict/zh/ui/media.ts', import.meta.url), 'utf8'),
 ]);
 
 assert.match(
@@ -47,5 +47,5 @@ for (const key of [
   'Watch folder import failed: {error}',
   'A watched video was published before compatibility processing completed.',
 ]) {
-  assert.ok(dictionary.includes(`'${key}'`), `English media dictionary must contain: ${key}`);
+  assert.ok(dictionary.includes(`'${key}'`), `Chinese media dictionary must contain: ${key}`);
 }
