@@ -15,7 +15,10 @@ dev/test bench.
 - **License is AGPL-3.0-or-later and stays that way.** The fork remains open source;
   credit OpenChatCut in the README. Never remove the LICENSE file.
 - **Git remote `upstream`** = the original OpenChatCut repo (for cherry-picking fixes).
-  There is no `origin` yet — creating a GitHub home for this repo is Royce's call.
+  **Git remote `origin`** = https://github.com/stoneharborent/aquarius-editor (public,
+  created by Royce 2026-08-25 — AGPL requires the source to be public). Push `main`
+  there at the end of any completed workstream. CI (`.github/workflows/ci.yml` +
+  `desktop.yml`) runs only on `v*` tags or manual dispatch.
 - **Node 24 required.** It is installed keg-only on the Mac; every shell that builds or
   tests must do: `export PATH="/opt/homebrew/opt/node@24/bin:$PATH"`.
 - **`node_modules` is a symlink to `node_modules.nosync/`** so iCloud doesn't sync
