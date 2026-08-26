@@ -47,7 +47,7 @@ const prompt = buildServerRunPrompt({
   messages: [{ role: 'user', content: 'Read this project.' }],
 });
 
-assert.match(prompt.instructions, /OpenChatCut/);
+assert.match(prompt.instructions, /Aquarius Cut/);
 assert.match(prompt.instructions, /Safety and authority/);
 assert.match(prompt.instructions, /project-message-check/);
 assert.match(prompt.instructions, /askOnly: true/);
