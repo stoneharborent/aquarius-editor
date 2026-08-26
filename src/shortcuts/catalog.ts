@@ -53,7 +53,7 @@ export const SHORTCUT_CATALOG: ShortcutAction[] = [
   { id: 'copy', label: 'Copy', group: 'edit', keys: 'Mod + C' },
   { id: 'cut', label: 'Cut', group: 'edit', keys: 'Mod + X' },
   { id: 'paste', label: 'Paste', group: 'edit', keys: 'Mod + V' },
-  { id: 'paste-effects', label: 'Paste Effects', group: 'edit', keys: 'Mod + Alt + V' },
+  { id: 'paste-effects', label: 'Paste Effects', group: 'edit', keys: 'Mod + Alt + V / Mod + Shift + V' },
   { id: 'duplicate', label: 'Duplicate', group: 'edit', keys: 'Mod + D' },
   { id: 'delete', label: 'Delete', group: 'edit', keys: 'Backspace / Delete / Shift + Backspace / Shift + Delete' },
   { id: 'split', label: 'Split', group: 'edit', keys: 'Mod + B' },
