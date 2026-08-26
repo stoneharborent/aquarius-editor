@@ -27,7 +27,7 @@ import { effectiveToolInvocationArgs } from './execution-policy';
 import { executeExternalGlobalReadTool } from './external-global-read';
 export interface ExternalProposalSnapshot { proposal: Proposal | null; stale: boolean }
 /** Confirmation request for a real-project tool (generation/export/import/…)
- * issued from an external session; the user decides in the Aquarius Cut UI. */
+ * issued from an external session; the user decides in the Aquarius Editor UI. */
 export interface ExternalGuardRequest { id: string; sessionId: string; tool: string; summary: string; details: readonly ApprovalDetail[]; argsDigest: string; operationId?: string }
 export interface ExternalBridgeBinding { projectId: string; editorInstanceId: string; baseRevision: string }
 const INDEX_UPDATE_WARNING = 'The edit was applied, but the project list timestamp could not be updated.';
@@ -209,7 +209,7 @@ export class ExternalBridgeRuntime {
       needs_confirmation: true,
       confirmationId: guard.guardId,
       tool,
-      note: 'This action will affect the real project. Confirm it in Aquarius Cut, then retry the same call.',
+      note: 'This action will affect the real project. Confirm it in Aquarius Editor, then retry the same call.',
     };
   }
   async confirmRealTool(guardId: string, allow: boolean): Promise<void> {

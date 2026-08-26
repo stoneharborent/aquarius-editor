@@ -8,7 +8,7 @@ export const LIBRARY_TOOL_SCHEMAS: AgentToolSchema[] = [
   {
     name: 'browse_library',
     description:
-      'Browse the Aquarius Cut Library (not the user media pool). Categories match Library tabs: motion-graphics, luts, zoom, fx, audio-fx, sound-effects, transitions. Modes: (1) category only → group overview; (2) category+group or query → list of id/name/description; (3) id → full detail + edit_item usage. After discovery, place with edit_item (effect/transition/zoom/audio).',
+      'Browse the Aquarius Editor Library (not the user media pool). Categories match Library tabs: motion-graphics, luts, zoom, fx, audio-fx, sound-effects, transitions. Modes: (1) category only → group overview; (2) category+group or query → list of id/name/description; (3) id → full detail + edit_item usage. After discovery, place with edit_item (effect/transition/zoom/audio).',
     input_schema: {
       type: 'object',
       properties: {

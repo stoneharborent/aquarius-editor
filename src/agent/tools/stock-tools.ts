@@ -38,7 +38,7 @@ function mapTypeToKind(type: string | undefined, url: string): PoolKind | null {
       return 'image';
     case 'effect':
     case 'transition':
-      return null; // not Aquarius Cut media-pool assets
+      return null; // not Aquarius Editor media-pool assets
     default:
       return sniffKind(url);
   }
@@ -120,7 +120,7 @@ async function registerMediaUrl(
     return {
       success: false,
       error: opts.type === 'effect' || opts.type === 'transition'
-        ? `type=${opts.type} is not an Aquarius Cut media-pool asset`
+        ? `type=${opts.type} is not an Aquarius Editor media-pool asset`
         : 'could not determine media type from the URL; pass type: video|image|audio|gif|svg|motion-graphic',
       url,
     };

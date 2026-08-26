@@ -1,6 +1,6 @@
 # Repository layout index
 
-Aquarius Cut keeps build-tool configuration under `config/` and load-bearing
+Aquarius Editor keeps build-tool configuration under `config/` and load-bearing
 project files at the repository root. This file is the single index for that
 split — update it whenever a file moves.
 

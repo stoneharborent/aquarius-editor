@@ -1,6 +1,6 @@
 > **Fork note.** Everything below is **OpenChatCut's** history, kept as-is for the record —
-> it is upstream's changelog, in upstream's languages, up to the point Aquarius Cut forked
-> from it at v0.2.11 (2026-08-25). Aquarius Cut's own changes start after that fork and are
+> it is upstream's changelog, in upstream's languages, up to the point Aquarius Editor forked
+> from it at v0.2.11 (2026-08-25). Aquarius Editor's own changes start after that fork and are
 > not listed here yet. See [`README.md`](README.md) for what this app is and how it relates
 > to OpenChatCut.
 

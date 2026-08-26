@@ -8,7 +8,7 @@ function mockResponse(body: string, init: ResponseInit): void {
 }
 
 try {
-  mockResponse('<!doctype html><html><body>Aquarius Cut</body></html>', {
+  mockResponse('<!doctype html><html><body>Aquarius Editor</body></html>', {
     status: 200,
     headers: { 'content-type': 'text/html' },
   });

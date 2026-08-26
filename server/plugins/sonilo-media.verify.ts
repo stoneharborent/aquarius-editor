@@ -29,7 +29,7 @@ await writeFile(join(uploads, 'cut.mp4'), Buffer.alloc(2 * 1024 * 1024, 7));
 let requestBody = '';
 const provider = createServer(async (req, res) => {
   assert.equal(req.headers.authorization, 'Bearer test-key');
-  assert.equal(req.headers['user-agent'], 'AquariusCut');
+  assert.equal(req.headers['user-agent'], 'AquariusEditor');
   const chunks: Buffer[] = [];
   for await (const chunk of req) chunks.push(Buffer.from(chunk));
   requestBody = Buffer.concat(chunks).toString('latin1');

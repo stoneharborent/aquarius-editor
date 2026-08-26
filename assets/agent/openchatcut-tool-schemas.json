@@ -1499,7 +1499,7 @@
           },
           "stream": {
             "type": "boolean",
-            "description": "MiniMax HTTP streaming transport. Aquarius Cut consumes it server-side and saves one durable audio asset."
+            "description": "MiniMax HTTP streaming transport. Aquarius Editor consumes it server-side and saves one durable audio asset."
           },
           "excludeAggregatedAudio": {
             "type": "boolean",
@@ -1775,7 +1775,7 @@
           },
           "stream": {
             "type": "boolean",
-            "description": "Mureka only. Enable provider streaming phase; Aquarius Cut still saves durable final files."
+            "description": "Mureka only. Enable provider streaming phase; Aquarius Editor still saves durable final files."
           },
           "styles": {
             "type": "array",
@@ -2233,7 +2233,7 @@
     },
     {
       "name": "browse_library",
-      "description": "Browse the Aquarius Cut Library (not the user media pool). Categories match Library tabs: motion-graphics, luts, zoom, fx, audio-fx, sound-effects, transitions. Modes: (1) category only → group overview; (2) category+group or query → list of id/name/description; (3) id → full detail + edit_item usage. After discovery, place with edit_item (effect/transition/zoom/audio).",
+      "description": "Browse the Aquarius Editor Library (not the user media pool). Categories match Library tabs: motion-graphics, luts, zoom, fx, audio-fx, sound-effects, transitions. Modes: (1) category only → group overview; (2) category+group or query → list of id/name/description; (3) id → full detail + edit_item usage. After discovery, place with edit_item (effect/transition/zoom/audio).",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -2461,7 +2461,7 @@
           },
           "projectId": {
             "type": "string",
-            "description": "Ignored because Aquarius Cut uses the active project."
+            "description": "Ignored because Aquarius Editor uses the active project."
           }
         },
         "required": [
@@ -2517,7 +2517,7 @@
           },
           "projectId": {
             "type": "string",
-            "description": "Ignored because Aquarius Cut uses the active project."
+            "description": "Ignored because Aquarius Editor uses the active project."
           }
         },
         "required": [
@@ -3884,7 +3884,7 @@
     },
     {
       "name": "list_projects",
-      "description": "List Aquarius Cut projects this browser owns (id, name, updatedAt, editorUrl), newest first. Discovery only — does not retarget the editor. Call target_project before editing another project. Pass includeDeleted=true to also list soft-deleted projects for restore_project.",
+      "description": "List Aquarius Editor projects this browser owns (id, name, updatedAt, editorUrl), newest first. Discovery only — does not retarget the editor. Call target_project before editing another project. Pass includeDeleted=true to also list soft-deleted projects for restore_project.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -5198,7 +5198,7 @@
     },
     {
       "name": "import_timeline",
-      "description": "Import FCPXML 1.x asset-clip timelines or CMX 3600 EDL text into a new editable Aquarius Cut timeline. Referenced files must already exist in the current media pool; matching uses asset id, original path, source path, source filename, and asset name. The import preserves track/lane placement, timeline start and duration, source in-point, and file-backed audio clips. Unresolved or ambiguous media aborts the import without changing the project.",
+      "description": "Import FCPXML 1.x asset-clip timelines or CMX 3600 EDL text into a new editable Aquarius Editor timeline. Referenced files must already exist in the current media pool; matching uses asset id, original path, source path, source filename, and asset name. The import preserves track/lane placement, timeline start and duration, source in-point, and file-backed audio clips. Unresolved or ambiguous media aborts the import without changing the project.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -5592,7 +5592,7 @@
     },
     {
       "name": "browse_library",
-      "description": "Browse the Aquarius Cut Library (not the user media pool). Categories match Library tabs: motion-graphics, luts, zoom, fx, audio-fx, sound-effects, transitions. Modes: (1) category only → group overview; (2) category+group or query → list of id/name/description; (3) id → full detail + edit_item usage. After discovery, place with edit_item (effect/transition/zoom/audio).",
+      "description": "Browse the Aquarius Editor Library (not the user media pool). Categories match Library tabs: motion-graphics, luts, zoom, fx, audio-fx, sound-effects, transitions. Modes: (1) category only → group overview; (2) category+group or query → list of id/name/description; (3) id → full detail + edit_item usage. After discovery, place with edit_item (effect/transition/zoom/audio).",
       "input_schema": {
         "type": "object",
         "properties": {

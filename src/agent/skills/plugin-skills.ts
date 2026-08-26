@@ -1,4 +1,4 @@
-// Bundled Aquarius Cut agent skills include adapted ChatCut workflows and
+// Bundled Aquarius Editor agent skills include adapted ChatCut workflows and
 // product-native creative workflows. Attribution and license details: ./NOTICE.md.
 // Each skill includes SKILL.md plus optional supporting reference/example files.
 // Architecture:
@@ -52,7 +52,7 @@ const DEFAULT_SKILL_INDEX_BUDGET_CHARS = 12_000;
 function skillIndexIntro(totalSkills: number): string {
   return [
     '',
-    `# Skill library (load_skill on demand · ${totalSkills} Aquarius Cut SKILL.md files)`,
+    `# Skill library (load_skill on demand · ${totalSkills} Aquarius Editor SKILL.md files)`,
     'Each entry below describes when a skill applies. Call load_skill(name=…) before acting. SKILL.md is returned first. Load omittedFiles whole with files=[…]; if a file remains omitted, page it with file=…, offset=nextOffset until nextOffset is null. Load only relevant skills.',
     'When a skill needs scripts, ffmpeg, node, or python, use run_code in the isolated sandbox: write files, run a command, then read outputs. The sandbox cannot access the timeline; use local editor tools to place resulting assets. For real media, pass a local /media/… or public https:// URL in files so the sandbox can fetch it for ffprobe/ffmpeg. Public URLs may also be passed directly to ffprobe.',
     'The custom sandbox image includes ffmpeg. If an environment lacks it, install it first with: `which ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)`.',

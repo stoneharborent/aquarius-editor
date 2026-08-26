@@ -7,7 +7,7 @@ import { makeDraft } from '../../editor/store';
 export const TIMELINE_IMPORT_TOOL_SCHEMAS: AgentToolSchema[] = [{
   name: 'import_timeline',
   description: [
-    'Import FCPXML 1.x asset-clip timelines or CMX 3600 EDL text into a new editable Aquarius Cut timeline.',
+    'Import FCPXML 1.x asset-clip timelines or CMX 3600 EDL text into a new editable Aquarius Editor timeline.',
     'Referenced files must already exist in the current media pool; matching uses asset id, original path, source path, source filename, and asset name.',
     'The import preserves track/lane placement, timeline start and duration, source in-point, and file-backed audio clips. Unresolved or ambiguous media aborts the import without changing the project.',
   ].join(' '),

@@ -3,13 +3,13 @@ import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 export const MCP_CONTROL_TOOLS: Tool[] = [
   {
     name: 'openchatcut_status',
-    description: 'Show connected Aquarius Cut editors, this transport session binding, and capability status.',
+    description: 'Show connected Aquarius Editor editors, this transport session binding, and capability status.',
     inputSchema: { type: 'object', properties: {} },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
     name: 'list_projects',
-    description: 'List Aquarius Cut projects, newest first.',
+    description: 'List Aquarius Editor projects, newest first.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -21,7 +21,7 @@ export const MCP_CONTROL_TOOLS: Tool[] = [
   },
   {
     name: 'create_project',
-    description: 'Create an empty Aquarius Cut project with one active timeline and one video track.',
+    description: 'Create an empty Aquarius Editor project with one active timeline and one video track.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -47,7 +47,7 @@ export const MCP_CONTROL_TOOLS: Tool[] = [
   },
   {
     name: 'get_editor_url',
-    description: 'Return the Aquarius Cut editor URL for this session project or an explicitly named project.',
+    description: 'Return the Aquarius Editor editor URL for this session project or an explicitly named project.',
     inputSchema: {
       type: 'object',
       properties: { projectId: { type: 'string' }, editorBaseUrl: { type: 'string' } },

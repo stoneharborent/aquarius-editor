@@ -1,4 +1,4 @@
-// Regenerates every Aquarius Cut application icon from the AquariusOS logo.
+// Regenerates every Aquarius Editor application icon from the AquariusOS logo.
 //
 // Source of truth: ../../../os-image/branding/logo.svg (the AquariusOS mark).
 // Colours come from ../../../os-image/branding/tokens.md — `void` #06070C is the
@@ -10,9 +10,9 @@
 //
 // What it writes (everything below is generated — never hand-edit these files):
 //   assets/branding/icons/<size>x<size>.png   Linux icon set (electron-builder linux.icon)
-//   assets/branding/aquarius-cut-icon.icns    macOS icon (electron-builder mac.icon)
-//   assets/branding/aquarius-cut-icon.ico     Windows icon (electron-builder win.icon)
-//   public/aquarius-cut-icon.png              web favicon + generic 1024px PNG
+//   assets/branding/aquarius-editor-icon.icns    macOS icon (electron-builder mac.icon)
+//   assets/branding/aquarius-editor-icon.ico     Windows icon (electron-builder win.icon)
+//   public/aquarius-editor-icon.png              web favicon + generic 1024px PNG
 //
 // macOS conversion uses `iconutil`, which ships with Xcode's command line tools.
 
@@ -106,21 +106,21 @@ for (const size of PNG_SIZES) {
 }
 
 // Web favicon / generic PNG.
-writeFileSync(path.join(repoRoot, 'public', 'aquarius-cut-icon.png'), source);
+writeFileSync(path.join(repoRoot, 'public', 'aquarius-editor-icon.png'), source);
 
 // Windows.
 const icoEntries = [];
 for (const size of ICO_SIZES) icoEntries.push({ size, data: await resize(size) });
-writeFileSync(path.join(here, 'aquarius-cut-icon.ico'), buildIco(icoEntries));
+writeFileSync(path.join(here, 'aquarius-editor-icon.ico'), buildIco(icoEntries));
 
 // macOS.
-const iconset = path.join(here, 'aquarius-cut.iconset');
+const iconset = path.join(here, 'aquarius-editor.iconset');
 rmSync(iconset, { recursive: true, force: true });
 mkdirSync(iconset, { recursive: true });
 for (const [name, size] of ICNS_ENTRIES) {
   writeFileSync(path.join(iconset, name), await resize(size));
 }
-execFileSync('iconutil', ['-c', 'icns', iconset, '-o', path.join(here, 'aquarius-cut-icon.icns')]);
+execFileSync('iconutil', ['-c', 'icns', iconset, '-o', path.join(here, 'aquarius-editor-icon.icns')]);
 rmSync(iconset, { recursive: true, force: true });
 
 console.log('icons rendered from', path.relative(repoRoot, logoSvg));

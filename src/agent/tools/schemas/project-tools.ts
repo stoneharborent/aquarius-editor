@@ -4,7 +4,7 @@ export const PROJECT_TOOL_SCHEMAS: AgentToolSchema[] = [
   {
     name: 'list_projects',
     description: [
-      'List Aquarius Cut projects this browser owns (id, name, updatedAt, editorUrl), newest first.',
+      'List Aquarius Editor projects this browser owns (id, name, updatedAt, editorUrl), newest first.',
       'Discovery only — does not retarget the editor. Call target_project before editing another project.',
       'Pass includeDeleted=true to also list soft-deleted projects for restore_project.',
     ].join(' '),

@@ -138,9 +138,9 @@ assert.ok(collectReferencedFonts(okState).includes('Inter'));
 // nleFormat resolve vs premiere
 const xmlPrem = timelineToFcpxml(cleanState, { nleFormat: 'fcp_xml' });
 const xmlRes = timelineToFcpxml(cleanState, { nleFormat: 'fcp_xml_resolve' });
-assert.ok(xmlPrem.includes('Aquarius Cut Export'));
+assert.ok(xmlPrem.includes('Aquarius Editor Export'));
 assert.ok(!xmlPrem.includes('colorSpace='));
-assert.ok(xmlRes.includes('Aquarius Cut Export (Resolve)'));
+assert.ok(xmlRes.includes('Aquarius Editor Export (Resolve)'));
 assert.ok(xmlRes.includes('colorSpace="1-1-1 (Rec. 709)"'));
 
 console.log('font-tools.check: ok');

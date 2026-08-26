@@ -11,7 +11,7 @@ const { UpstreamUpdateNoticeView } = noticeModule;
 const markup = renderToStaticMarkup(
   <div data-dashboard-chrome>
     <UpstreamUpdateNoticeView
-      message="A new version of Aquarius Cut is available: V0.2.0 (you're on V0.1.9). You can download and install it now."
+      message="A new version of Aquarius Editor is available: V0.2.0 (you're on V0.1.9). You can download and install it now."
       actionLabel="Download update"
       closeLabel="Close"
       onAction={() => undefined}
@@ -24,7 +24,7 @@ const markup = renderToStaticMarkup(
   </div>,
 );
 
-assert.match(markup, /A new version of Aquarius Cut is available: V0\.2\.0/, 'the update notice must clearly state the official product and version');
+assert.match(markup, /A new version of Aquarius Editor is available: V0\.2\.0/, 'the update notice must clearly state the official product and version');
 assert.match(markup, />Download update<\/button>/, 'the desktop update notice must offer a direct download action');
 assert.match(markup, /role="status"/, 'a non-blocking notice should use status semantics');
 assert.doesNotMatch(markup, /<a\b/, 'the update action must go through controlled desktop IPC, not an arbitrary link');

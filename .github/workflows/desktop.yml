@@ -127,8 +127,8 @@ jobs:
           [[ "${#dmgs[@]}" -eq 1 ]]
           [[ "${#zips[@]}" -eq 1 ]]
 
-          mount_dir="$(mktemp -d "$RUNNER_TEMP/aquarius-cut-dmg.XXXXXX")"
-          zip_dir="$(mktemp -d "$RUNNER_TEMP/aquarius-cut-zip.XXXXXX")"
+          mount_dir="$(mktemp -d "$RUNNER_TEMP/aquarius-editor-dmg.XXXXXX")"
+          zip_dir="$(mktemp -d "$RUNNER_TEMP/aquarius-editor-zip.XXXXXX")"
           mounted=false
           cleanup() {
             if [[ "$mounted" == true ]]; then
@@ -141,28 +141,28 @@ jobs:
 
           hdiutil attach -nobrowse -readonly -mountpoint "$mount_dir" "${dmgs[0]}"
           mounted=true
-          mounted_app="$mount_dir/Aquarius Cut.app"
-          test -x "$mounted_app/Contents/MacOS/Aquarius Cut"
+          mounted_app="$mount_dir/Aquarius Editor.app"
+          test -x "$mounted_app/Contents/MacOS/Aquarius Editor"
           # The DMG and ZIP contain the same app; execute it from the writable ZIP below.
           hdiutil detach "$mount_dir"
           mounted=false
 
           unzip -tq "${zips[0]}"
-          test "$(unzip -Z1 "${zips[0]}" 'Aquarius Cut.app/Contents/MacOS/Aquarius Cut')" = \
-            'Aquarius Cut.app/Contents/MacOS/Aquarius Cut'
+          test "$(unzip -Z1 "${zips[0]}" 'Aquarius Editor.app/Contents/MacOS/Aquarius Editor')" = \
+            'Aquarius Editor.app/Contents/MacOS/Aquarius Editor'
           test "$(unzip -Z1 "${zips[0]}" \
-            'Aquarius Cut.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework')" = \
-            'Aquarius Cut.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework'
+            'Aquarius Editor.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework')" = \
+            'Aquarius Editor.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework'
           unzip -q "${zips[0]}" -d "$zip_dir"
-          zipped_app="$zip_dir/Aquarius Cut.app"
-          test -x "$zipped_app/Contents/MacOS/Aquarius Cut"
-          "$zipped_app/Contents/MacOS/Aquarius Cut"
+          zipped_app="$zip_dir/Aquarius Editor.app"
+          test -x "$zipped_app/Contents/MacOS/Aquarius Editor"
+          "$zipped_app/Contents/MacOS/Aquarius Editor"
           case "$(uname -m)" in
             arm64) runtime_arch='mac-arm64' ;;
             x86_64) runtime_arch='mac-x64' ;;
             *) echo "Unsupported macOS architecture: $(uname -m)" >&2; exit 1 ;;
           esac
-          render_runtime="Aquarius Cut.app/Contents/Resources/chrome-headless-shell/$runtime_arch/chrome-headless-shell-$runtime_arch/chrome-headless-shell"
+          render_runtime="Aquarius Editor.app/Contents/Resources/chrome-headless-shell/$runtime_arch/chrome-headless-shell-$runtime_arch/chrome-headless-shell"
           test "$(unzip -Z1 "${zips[0]}" "$render_runtime")" = "$render_runtime"
           test -x "$zip_dir/$render_runtime"
 
@@ -180,7 +180,7 @@ jobs:
             throw "Expected one NSIS installer, found $($installers.Count)"
           }
 
-          $installDir = Join-Path $env:RUNNER_TEMP "aquarius-cut-smoke-$PID"
+          $installDir = Join-Path $env:RUNNER_TEMP "aquarius-editor-smoke-$PID"
           Remove-Item -LiteralPath $installDir -Recurse -Force -ErrorAction SilentlyContinue
           $installed = $false
           try {
@@ -190,14 +190,14 @@ jobs:
               throw "NSIS installer exited with $($install.ExitCode)"
             }
 
-            $installedExe = Join-Path $installDir 'Aquarius Cut.exe'
+            $installedExe = Join-Path $installDir 'Aquarius Editor.exe'
             if (-not (Test-Path -LiteralPath $installedExe -PathType Leaf)) {
               throw "NSIS installer did not create $installedExe"
             }
             $installed = $true
             $smoke = Start-Process -FilePath $installedExe -Wait -PassThru
             if ($smoke.ExitCode -ne 0) {
-              throw "Installed Aquarius Cut smoke exited with $($smoke.ExitCode)"
+              throw "Installed Aquarius Editor smoke exited with $($smoke.ExitCode)"
             }
           } finally {
             $cleanupError = $null
@@ -274,9 +274,9 @@ jobs:
           EXPECTED_VERSION="${GITHUB_REF_NAME#v}"
           test "$(find release-files -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.AppImage' \) | wc -l | tr -d ' ')" = 4
           test "$(find release-files -type f -name '*.zip' | wc -l | tr -d ' ')" = 2
-          test -f "release-files/AquariusCut-${EXPECTED_VERSION}-arm64.dmg"
-          test -f "release-files/AquariusCut-${EXPECTED_VERSION}-x64.dmg"
-          # Aquarius Cut has no auto-update feed yet, so electron-builder emits no update
+          test -f "release-files/AquariusEditor-${EXPECTED_VERSION}-arm64.dmg"
+          test -f "release-files/AquariusEditor-${EXPECTED_VERSION}-x64.dmg"
+          # Aquarius Editor has no auto-update feed yet, so electron-builder emits no update
           # metadata to check for here. See config/electron-builder.config.mjs.
 
       - name: Generate checksums

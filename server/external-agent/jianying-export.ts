@@ -162,7 +162,7 @@ async function writeSrtFile(captions: JianyingExportCaption[]): Promise<{ file: 
 }
 
 /**
- * Build a CapCut/JianYing draft from an Aquarius Cut timeline using capcut-cli.
+ * Build a CapCut/JianYing draft from an Aquarius Editor timeline using capcut-cli.
  * The first video clip seeds the draft (quickstart); remaining video clips are
  * appended at their timeline positions; audio clips and captions follow.
  */

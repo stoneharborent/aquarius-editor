@@ -35,7 +35,7 @@ export interface GenerationOperationTimestamps {
 }
 
 export interface TrackedJob {
-  /** Stable Aquarius Cut operation identity. Legacy rows normalize this from jobId. */
+  /** Stable Aquarius Editor operation identity. Legacy rows normalize this from jobId. */
   operationId: string;
   /** Backend polling handle. Kept separately from a provider task id. */
   jobId: string;

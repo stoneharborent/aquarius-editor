@@ -135,19 +135,21 @@ export function Icon({ name, size = 16, color = 'currentColor', strokeWidth = 1.
  * ../os-image/branding/logo.svg by assets/branding/render-icons.mjs. */
 export function BrandMark({ size = 16 }: { size?: number }) {
   return (
-    <img src="/aquarius-cut-icon.png" alt="" aria-hidden width={size} height={size} style={{ display: 'block' }} />
+    <img src="/aquarius-editor-icon.png" alt="" aria-hidden width={size} height={size} style={{ display: 'block' }} />
   );
 }
 
-/** Aquarius Cut word mark: "Aquarius" in the UI weight, "Cut" set heavier. Both take the
- * surrounding text colour, so the skin decides how it reads. */
-export function AquariusCutWordmark({ width = 126 }: { width?: number }) {
+/** Aquarius Editor word mark: "Aquarius" in the UI weight, "Editor" set heavier. Both take the
+ * surrounding text colour, so the skin decides how it reads. The viewBox is wide enough for the
+ * full lockup; `width` keeps its old meaning (the mark's rendered width) and the height follows
+ * the viewBox ratio, so a longer product name does not change the space the mark occupies. */
+export function AquariusEditorWordmark({ width = 126 }: { width?: number }) {
   return (
     <svg
-      aria-label="Aquarius Cut"
+      aria-label="Aquarius Editor"
       role="img"
       width={width}
-      height={width / 4}
+      height={width * (126 / 504)}
       viewBox="0 0 504 126"
       style={{ display: 'block', flexShrink: 0 }}
     >
@@ -160,7 +162,7 @@ export function AquariusCutWordmark({ width = 126 }: { width?: number }) {
           Aquarius
         </tspan>
         <tspan fontSize="62" fontWeight="850" letterSpacing="-0.035em">
-          {' Cut'}
+          {' Editor'}
         </tspan>
       </text>
     </svg>

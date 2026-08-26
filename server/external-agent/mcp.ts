@@ -63,7 +63,7 @@ export const MCP_POST_BODY_LIMIT_BYTES = 2 * 1024 * 1024;
 
 const PROJECT_SELECTOR = {
   type: 'string',
-  description: 'Aquarius Cut project id. It must match the project bound to this MCP transport session.',
+  description: 'Aquarius Editor project id. It must match the project bound to this MCP transport session.',
 };
 
 
@@ -258,7 +258,7 @@ function makeServer(baseUrl: string, session: McpSession): Server {
     {
       capabilities: { tools: { listChanged: true }, prompts: {} },
       instructions: [
-        `Aquarius Cut external skill baseline: ${OPENCHATCUT_SKILL_BASELINE}. Update with npx skills update openchatcut when the installed skill is older.`,
+        `Aquarius Editor external skill baseline: ${OPENCHATCUT_SKILL_BASELINE}. Update with npx skills update openchatcut when the installed skill is older.`,
         'Bind this MCP transport with target_project before editing. A connected browser is preferred; an existing stored project can use the offline fallback when no browser owns it.',
         'The target response and openchatcut_status report bindingMode. Offline bindings expose only server-direct data tools and require approvalMode="auto".',
         session.exposure.mode === 'progressive'

@@ -31,8 +31,8 @@ before these files moved out of `public/`.
 
 ## The app icons
 
-`branding/aquarius-cut-icon.icns`, `branding/aquarius-cut-icon.ico`, `branding/icons/*.png`
-and `../public/aquarius-cut-icon.png` are **generated files**. Never edit them by hand —
+`branding/aquarius-editor-icon.icns`, `branding/aquarius-editor-icon.ico`, `branding/icons/*.png`
+and `../public/aquarius-editor-icon.png` are **generated files**. Never edit them by hand —
 change `../../os-image/branding/logo.svg` instead and re-run:
 
 ```bash

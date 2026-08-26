@@ -25,7 +25,7 @@ export const SONILO_MUSIC_ENDPOINT = '/v1/video-to-music';
 export const SONILO_SFX_ENDPOINT = '/v1/video-to-sfx';
 // Partner-origin attribution header; the backend has no other way to tell
 // which integration a request came from.
-const SONILO_USER_AGENT = 'AquariusCut';
+const SONILO_USER_AGENT = 'AquariusEditor';
 
 const TERMINAL_FAILURES = new Set(['failed', 'timeouted', 'cancelled']);
 const wait = (milliseconds: number) => new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));

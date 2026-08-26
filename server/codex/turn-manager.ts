@@ -111,7 +111,7 @@ function browserFailureSummary(result: unknown): string {
   const shaped = object(result);
   const candidate = shaped?.error ?? shaped?.message ?? shaped?.note;
   if (typeof candidate === 'string') return candidate.replace(/\s+/g, ' ').slice(0, ERROR_SUMMARY_LIMIT);
-  return 'Aquarius Cut tool execution failed.';
+  return 'Aquarius Editor tool execution failed.';
 }
 
 function validImagePayload(value: unknown): value is Array<{ base64: string }> {
@@ -157,15 +157,15 @@ function baseInstructions(request: CodexTurnRequest): string {
   const mode = request.askOnly
     ? [
         'Answer the user without changing the project.',
-        'You may call the provided read-only Aquarius Cut tools when current skill or project evidence is needed.',
+        'You may call the provided read-only Aquarius Editor tools when current skill or project evidence is needed.',
       ].join(' ')
     : [
-        'Use only the provided Aquarius Cut editor tools when the task needs project reads or changes.',
-        'Their results come from the existing Aquarius Cut proposal workflow; never claim a change succeeded before its tool result confirms success.',
+        'Use only the provided Aquarius Editor editor tools when the task needs project reads or changes.',
+        'Their results come from the existing Aquarius Editor proposal workflow; never claim a change succeeded before its tool result confirms success.',
       ].join(' ');
   return [
     request.system.trim(),
-    'Aquarius Cut runtime rules:',
+    'Aquarius Editor runtime rules:',
     `The requested project id is ${JSON.stringify(request.projectId)}. Do not switch to another project.`,
     mode,
     'Shell, direct filesystem edits, web search, image-view, and multi-agent tools are disabled.',
@@ -354,7 +354,7 @@ export class CodexTurnManager {
     const callId = identifier(request.params.callId);
     const name = identifier(request.params.tool);
     if (!callId || !name || !session.toolNames.has(name) || session.pendingTools.has(callId)) {
-      const message = 'This Aquarius Cut tool call is unavailable. It was not part of this request (stale tool list, duplicate call, or malformed id). Tell the user to open the project and retry; if it persists, start a new run.'
+      const message = 'This Aquarius Editor tool call is unavailable. It was not part of this request (stale tool list, duplicate call, or malformed id). Tell the user to open the project and retry; if it persists, start a new run.'
       session.rejectedToolCalls += 1;
       session.emit({
         type: 'tool-end',
@@ -400,7 +400,7 @@ export class CodexTurnManager {
   private abortPendingTools(session: TurnSession): void {
     for (const pending of session.pendingTools.values()) {
       pending.request.respond({
-        contentItems: [{ type: 'inputText', text: 'Aquarius Cut cancelled this tool call.' }],
+        contentItems: [{ type: 'inputText', text: 'Aquarius Editor cancelled this tool call.' }],
         success: false,
       });
     }

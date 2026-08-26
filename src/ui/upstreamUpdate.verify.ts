@@ -14,9 +14,9 @@ import {
 assert.equal(formatDisplayVersion('0.1.7'), 'V0.1.7');
 assert.equal(formatDisplayVersion('v0.1.7'), 'V0.1.7');
 
-// The fork must never inherit upstream's feed: Aquarius Cut has no release feed of its own,
+// The fork must never inherit upstream's feed: Aquarius Editor has no release feed of its own,
 // so an update check makes no network request and never claims a new version exists.
-assert.equal(RELEASE_FEED, null, 'Aquarius Cut must not point at another project\'s releases');
+assert.equal(RELEASE_FEED, null, 'Aquarius Editor must not point at another project\'s releases');
 assert.equal(UPDATE_CHECKS_ENABLED, false);
 assert.equal(hasDesktopUpdateSupport(), false, 'no feed means no desktop update path');
 let feedFetches = 0;
@@ -33,8 +33,8 @@ await assert.rejects(
 );
 
 // The comparison logic below stays exercised against an explicit feed URL, so it is ready
-// the day Aquarius Cut gets a release feed of its own.
-const FEED_URL = 'https://api.github.com/repos/aquariusos/aquarius-cut/releases/latest';
+// the day Aquarius Editor gets a release feed of its own.
+const FEED_URL = 'https://api.github.com/repos/stoneharborent/aquarius-editor/releases/latest';
 
 const samples = [
   { current: '0.1.7', tag: 'v0.1.7', available: false },

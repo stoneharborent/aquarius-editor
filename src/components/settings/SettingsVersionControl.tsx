@@ -1,7 +1,7 @@
 import { theme, themeAlpha } from '../../theme';
 
 /**
- * Version line in the settings header. `actionLabel` is optional: Aquarius Cut has no
+ * Version line in the settings header. `actionLabel` is optional: Aquarius Editor has no
  * release feed yet, and a build that cannot check for updates shows the version alone
  * rather than a button that does nothing.
  */

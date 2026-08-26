@@ -1,6 +1,6 @@
-# Aquarius Cut — Final Cut Pro keyboard map
+# Aquarius Editor — Final Cut Pro keyboard map
 
-*Stage 3 of the Aquarius Cut conversion (`../../docs/aquarius-cut-plan.md`). Written 2026-08-25.*
+*Stage 3 of the Aquarius Editor conversion (`../../docs/aquarius-cut-plan.md`). Written 2026-08-25.*
 
 **This file is the law.** `CLAUDE.md` rule 4: shortcuts follow Final Cut Pro, and any binding
 that does not is a deviation that has to appear in the table below with a reason. If you change
@@ -18,7 +18,7 @@ a binding in `src/shortcuts/catalog.ts`, change the matching row here in the sam
   - **FCP-ish** — the FCP chord, on an action whose behaviour is close but not identical.
   - **Standard** — no FCP command exists, but the chord is the universal macOS/desktop one
     (⌘Z, ⌘C, ⌘S…). FCP uses these too.
-  - **Extension** — Aquarius Cut has a feature Final Cut Pro does not. Documented deviation.
+  - **Extension** — Aquarius Editor has a feature Final Cut Pro does not. Documented deviation.
 - Every user can rebind any row from the Shortcuts dialog; overrides live in `localStorage`
   (`cc.keymap.v1`) and never touch this default preset.
 
@@ -48,13 +48,13 @@ a binding in `src/shortcuts/catalog.ts`, change the matching row here in the sam
 | Paste (`paste`) | Mod + V | **Mod + V** | ⌘V | Standard | Pastes at the playhead. |
 | Paste Effects (`paste-effects`) | Mod + Alt + V / Mod + Shift + B | **Mod + Shift + V / Mod + Alt + V** | ⇧⌘V ("Paste Attributes") | Match | ⇧⌘V is FCP's Paste Attributes (strict parity, added 2026-08-25 per Royce's FCP-parity directive). ⌘⌥V kept as a secondary alias (Premiere's Paste Attributes — helpful cross-NLE muscle memory). The old ⌘⇧B alias is **dropped** — B is blade territory now. |
 | Duplicate (`duplicate`) | Mod + D | **Mod + D** | ⌘D (duplicates a project, not a clip) | Extension | FCP has no "duplicate clip on the timeline". ⌘D is the desktop-standard duplicate and is kept. |
-| Delete (`delete`) | Backspace / Delete | **Backspace / Delete / Shift + Backspace / Shift + Delete** | ⌫ = ripple delete, ⇧⌫ = delete leaving a gap | Deviation | Aquarius Cut is **inverted** from FCP: plain deletes and leaves the gap, Shift ripple-deletes. That behaviour is unchanged (it matches the clip context menu and the rest of the app); only the missing Shift chords were added — before this, Shift + ⌫ matched nothing and ripple-delete-by-keyboard silently did nothing. |
+| Delete (`delete`) | Backspace / Delete | **Backspace / Delete / Shift + Backspace / Shift + Delete** | ⌫ = ripple delete, ⇧⌫ = delete leaving a gap | Deviation | Aquarius Editor is **inverted** from FCP: plain deletes and leaves the gap, Shift ripple-deletes. That behaviour is unchanged (it matches the clip context menu and the rest of the app); only the missing Shift chords were added — before this, Shift + ⌫ matched nothing and ripple-delete-by-keyboard silently did nothing. |
 | Split (`split`) | C / Enter | **Mod + B** | ⌘B ("Blade") | FCP | The headline change. C and Enter are freed. |
 | Selection Mode (`interaction-mode-selection`) | V | **A** | A (Select tool) | FCP | V is freed. |
 | Trim Edit Mode (`interaction-mode-trim`) | N | **T** | T (Trim tool) | FCP | N is freed — and immediately reused for snapping. |
 | Slip Edit Mode (`interaction-mode-slip`) | U | **U** | — | Extension | FCP has no slip *tool*; slipping is done by dragging the middle of a clip with the Trim tool. U is left where it was. |
 | Blade Edit Mode (`interaction-mode-blade`) | B | **B** | B (Blade tool) | FCP | Already correct. |
-| Pen Edit Mode (`interaction-mode-pen`) | P | **P** | P is FCP's *Position* tool | Extension | Aquarius Cut has a keyframe pen and no position tool. P is kept because "P = pen" is the industry habit (Premiere, Resolve); the FCP Position tool has no equivalent to collide with. |
+| Pen Edit Mode (`interaction-mode-pen`) | P | **P** | P is FCP's *Position* tool | Extension | Aquarius Editor has a keyframe pen and no position tool. P is kept because "P = pen" is the industry habit (Premiere, Resolve); the FCP Position tool has no equivalent to collide with. |
 | Nudge left 1 / 10 frames (`nudge-left`) | E / Shift + E | **, / Shift + ,** | , / ⇧, | FCP | Shift step changed from 5 to 10 frames to match FCP. E is freed. |
 | Nudge right 1 / 10 frames (`nudge-right`) | R / Shift + R | **. / Shift + .** | . / ⇧. | FCP | R is freed. |
 | Trim start (`trim-start`) | Q | **Alt + [** | ⌥[ ("Trim Start") | FCP | Q is freed. |
@@ -85,7 +85,7 @@ a binding in `src/shortcuts/catalog.ts`, change the matching row here in the sam
 |---|---|---|---|---|---|
 | Add marker (`marker-add`) | M | **M** | M | FCP | |
 | Add marker and open dialog (`marker-shortcut-add-and-open`) | Mod + M | **Alt + M** | ⌥M ("Add Marker and Modify") | FCP | ⌘M is reserved by macOS for Minimize Window, so the old binding was unusable on the dev bench. |
-| Modify marker at playhead (`marker-modify-at-playhead`) | Shift + M | **Shift + M** | — | Extension | FCP folds this into ⌥M. Aquarius Cut keeps a separate "edit the marker already here" command on ⇧M. |
+| Modify marker at playhead (`marker-modify-at-playhead`) | Shift + M | **Shift + M** | — | Extension | FCP folds this into ⌥M. Aquarius Editor keeps a separate "edit the marker already here" command on ⇧M. |
 | Delete marker at playhead (`marker-delete-at-playhead`) | Alt + M | **Ctrl + M** | ⌃M ("Delete Marker") | FCP | Moved off ⌥M to resolve the collision the remap created — and Ctrl + M is FCP's real binding, so the move is a gain. |
 | Previous marker (`marker-prev`) | Shift + ↑ | **Ctrl + ;** | ⌃; | FCP | Shift + ↑ is freed. |
 | Next marker (`marker-next`) | Shift + ↓ | **Ctrl + '** | ⌃' | FCP | Shift + ↓ is freed. |
@@ -106,7 +106,7 @@ a binding in `src/shortcuts/catalog.ts`, change the matching row here in the sam
 
 | Action (id) | Old binding | New binding | Final Cut Pro | Status | Notes |
 |---|---|---|---|---|---|
-| Add to AI chat (`ask-ai`) | Tab | **Tab** | — | Extension | Aquarius Cut's conversational editing has no FCP counterpart. Ignored while typing so Tab still moves focus in inputs. |
+| Add to AI chat (`ask-ai`) | Tab | **Tab** | — | Extension | Aquarius Editor's conversational editing has no FCP counterpart. Ignored while typing so Tab still moves focus in inputs. |
 
 ## Conflicts found and how they were resolved
 

@@ -4,12 +4,12 @@ import type {
 } from '../../shared/desktop-update';
 
 /**
- * Where Aquarius Cut looks for its own releases.
+ * Where Aquarius Editor looks for its own releases.
  *
  * It is `null` on purpose. Upstream pointed this at 0xsline/OpenChatCut, and leaving that in
- * place would offer that project's releases to Aquarius Cut users as if they were ours — a
- * different app, a different version line. Aquarius Cut has no GitHub home yet, so the whole
- * update path is switched off: no network call is made, and the UI never claims an update
+ * place would offer that project's releases to Aquarius Editor users as if they were ours — a
+ * different app, a different version line. Aquarius Editor publishes no releases yet, so the
+ * whole update path is switched off: no network call is made, and the UI never claims an update
  * exists. Setting this object (and DESKTOP_UPDATE_FEED_CONFIGURED in
  * desktop/update-service.ts, and `publish` in config/electron-builder.config.mjs) turns the
  * existing machinery back on unchanged.

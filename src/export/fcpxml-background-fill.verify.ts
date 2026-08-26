@@ -25,7 +25,7 @@ const state = {
 
 assert.equal(fcpxmlBackgroundFillCount(state), 1, 'only render-active V1 fills are reported');
 const xml = timelineToFcpxml(state);
-assert.match(xml, /backgroundFill settings are preserved as Aquarius Cut metadata/);
+assert.match(xml, /backgroundFill settings are preserved as Aquarius Editor metadata/);
 assert.match(xml, /key="com\.openchatcut\.backgroundFillStrength" value="73"/,
   'the exact percentage survives in portable custom metadata');
 assert.equal((xml.match(/key="com\.openchatcut\.backgroundFill"/g) ?? []).length, 1,

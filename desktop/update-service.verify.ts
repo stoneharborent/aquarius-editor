@@ -50,7 +50,7 @@ class FakeUpdater extends EventEmitter {
   }
 }
 
-// Aquarius Cut is a fork with no release feed of its own. Until one exists, no build may
+// Aquarius Editor is a fork with no release feed of its own. Until one exists, no build may
 // ever reach an update server — otherwise it would be offered upstream OpenChatCut releases.
 assert.equal(
   DESKTOP_UPDATE_FEED_CONFIGURED,

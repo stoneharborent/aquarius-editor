@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="public/aquarius-cut-icon.png" width="96" alt="Aquarius Cut" />
+  <img src="public/aquarius-editor-icon.png" width="96" alt="Aquarius Editor" />
 </p>
 
-<h1 align="center">Aquarius Cut</h1>
+<h1 align="center">Aquarius Editor</h1>
 
 <p align="center"><strong>The professional editing app of AquariusOS.</strong></p>
 
@@ -12,7 +12,7 @@
 
 ## What this is, in plain words
 
-Aquarius Cut is a **video editing app**. It has the things you'd expect from an editor —
+Aquarius Editor is a **video editing app**. It has the things you'd expect from an editor —
 a media pool, a preview window, a multitrack timeline, effects, titles, audio — and one
 thing most editors don't: **you can talk to it.** An AI agent sits in the left-hand panel
 and can actually do the editing work: cut clips, add transitions, build motion graphics,
@@ -23,25 +23,25 @@ It runs **on your own machine**. Your footage does not get uploaded anywhere. Th
 transcription, the analysis and the rendering all happen locally, and the app only reaches
 the internet if you specifically ask it to use a cloud AI provider and give it a key.
 
-**Aquarius Cut is the editing app for AquariusOS** — Royce's custom Linux operating system.
+**Aquarius Editor is the editing app for AquariusOS** — Royce's custom Linux operating system.
 Linux is its home; the Mac is where it gets built and tested day to day. Same code, both
 places.
 
 ## Where it came from, and what that means
 
-Aquarius Cut is a **fork** of an open-source project called
+Aquarius Editor is a **fork** of an open-source project called
 [OpenChatCut](https://github.com/0xsline/OpenChatCut). A fork means we took a copy of
 someone else's finished, working code and started making it our own. We did not write the
 editing engine from scratch — they did, and they deserve the credit.
 
 What we change is everything around it: the app is now fully in English, it wears the
 AquariusOS look, its keyboard shortcuts match Final Cut Pro, and it is packaged and named
-as Aquarius Cut.
+as Aquarius Editor.
 
 **The licence matters and is not optional.** OpenChatCut is released under the
-**AGPL-3.0-or-later**, and so is Aquarius Cut. In practice that means three things:
+**AGPL-3.0-or-later**, and so is Aquarius Editor. In practice that means three things:
 
-1. Aquarius Cut stays **open source**. We can never close the source of this app.
+1. Aquarius Editor stays **open source**. We can never close the source of this app.
 2. If we hand anyone a built copy of the app — shipping it inside AquariusOS counts — the
    **source code has to be publicly available** too.
 3. The `LICENSE` file in this folder is the actual legal text. **Never delete or edit it.**
@@ -85,7 +85,7 @@ its own within a second or two. Press `Ctrl+C` in the terminal to stop it.
 npm run desktop:dev
 ```
 
-This opens Aquarius Cut as an actual Mac application window, with its own icon in the dock.
+This opens Aquarius Editor as an actual Mac application window, with its own icon in the dock.
 Use this when you're checking anything that only exists in the desktop app: the window
 title bar, the app icon, menus, or reading and writing files on disk. It takes a bit longer
 to start than the browser version. Close the window, or press `Ctrl+C`, to stop it.
@@ -134,20 +134,23 @@ exactly the same pattern the AquariusOS image itself uses: push a change, a Linu
 in the cloud builds it, and a finished AppImage comes out the other side. The workflow for
 that already exists at `.github/workflows/desktop.yml` and is inherited from upstream.
 
-**That is waiting on one decision from Royce:** this repo has no home on GitHub yet. Once
-it has one, CI builds turn on, and testing moves to real hardware (the Xbox Ally, the 5090
-build) running AquariusOS. Note that publishing built copies is exactly the moment the AGPL
-requires the source to be public — so the GitHub repo will need to be a public one.
+The repo's home is **https://github.com/stoneharborent/aquarius-editor** — public, as the
+AGPL requires the moment built copies get handed out. CI there runs only on `v*` tags or a
+manual dispatch, so nothing builds until a release is deliberately cut; testing then moves
+to real hardware (the Xbox Ally, the 5090 build) running AquariusOS.
+
+That repo's **Issues** are also the app's feedback channel — the in-app GitHub button on the
+project dashboard opens it.
 
 ### Automatic updates are switched off
 
 Upstream OpenChatCut checks GitHub for new OpenChatCut releases and offers to install them.
 That has been **disabled**, deliberately and in every layer: our fork must never hand a
-user an OpenChatCut release and call it an Aquarius Cut update. They're different apps on
+user an OpenChatCut release and call it an Aquarius Editor update. They're different apps on
 different version lines.
 
 Nothing in the app contacts an update server, and the "check for updates" button is hidden.
-When Aquarius Cut has its own release feed, four things get switched back on together, and
+When Aquarius Editor has its own release feed, four things get switched back on together, and
 each one names the other three in a comment:
 
 | File | What to restore |
@@ -189,7 +192,7 @@ node assets/branding/render-icons.mjs
 
 ## Credit
 
-Aquarius Cut is built on **[OpenChatCut](https://github.com/0xsline/OpenChatCut)** by
+Aquarius Editor is built on **[OpenChatCut](https://github.com/0xsline/OpenChatCut)** by
 0xsline and its contributors, used and redistributed under the **GNU Affero General Public
 License, version 3 or later**. The full licence text is in [`LICENSE`](LICENSE). The
 upstream release history is preserved in [`CHANGELOG.md`](CHANGELOG.md).

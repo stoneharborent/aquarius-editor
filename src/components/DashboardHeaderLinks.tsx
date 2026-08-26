@@ -1,55 +1,18 @@
-import { useEffect, useRef, useState, type CSSProperties, type Dispatch, type RefObject, type SetStateAction } from 'react';
+import { type CSSProperties } from 'react';
 import { useT } from '../i18n/locale';
 import { theme } from '../theme';
 import { Icon } from './icons';
 
-const PROJECT_REPOSITORY_URL = 'https://github.com/0xsline/OpenChatCut';
-const AUTHOR_EMAIL = 'hl2535771@gmail.com';
-const CONTACT_POPOVER_ID = 'cc-dashboard-contact';
+const PROJECT_REPOSITORY_URL = 'https://github.com/stoneharborent/aquarius-editor';
 
-function useDismissablePopover<T extends HTMLElement>(
-  open: boolean,
-  containerRef: RefObject<T | null>,
-  setOpen: Dispatch<SetStateAction<boolean>>,
-) {
-  useEffect(() => {
-    if (!open) return;
-    const closeOnOutsidePointer = (event: PointerEvent) => {
-      if (event.target instanceof Node && !containerRef.current?.contains(event.target)) setOpen(false);
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('pointerdown', closeOnOutsidePointer);
-    document.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('pointerdown', closeOnOutsidePointer);
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [containerRef, open, setOpen]);
-}
-
+// Upstream also offered a "Contact author" mail popover next to this link. Aquarius Editor's
+// feedback channel is GitHub Issues on the repository above, so the mail control is gone and
+// the header keeps a single link.
 export function DashboardHeaderLinks() {
   const t = useT();
-  const [contactOpen, setContactOpen] = useState(false);
-  const contactRef = useRef<HTMLSpanElement>(null);
-  useDismissablePopover(contactOpen, contactRef, setContactOpen);
 
   return (
-    <span ref={contactRef} style={linkGroup}>
-      <button
-        type="button"
-        onClick={() => setContactOpen((open) => !open)}
-        aria-label={t('Contact author')}
-        aria-expanded={contactOpen}
-        aria-controls={CONTACT_POPOVER_ID}
-        aria-haspopup="dialog"
-        data-tip={t('Contact author')}
-        className="cc-header-btn cc-tip cc-tip-r"
-        style={iconButton}
-      >
-        <Icon name="mail" size={16} />
-      </button>
+    <span style={linkGroup}>
       <a
         href={PROJECT_REPOSITORY_URL}
         target="_blank"
@@ -62,14 +25,6 @@ export function DashboardHeaderLinks() {
       >
         <Icon name="github" size={16} />
       </a>
-      {contactOpen && (
-        <div id={CONTACT_POPOVER_ID} role="dialog" aria-label={t('Contact author')} style={contactPopover}>
-          <span style={contactLabel}>{t('Contact author')}</span>
-          <a href={`mailto:${AUTHOR_EMAIL}`} data-cc-titlebar-control="true" style={contactEmail}>
-            {AUTHOR_EMAIL}
-          </a>
-        </div>
-      )}
     </span>
   );
 }
@@ -82,14 +37,3 @@ const iconButton: CSSProperties = {
   borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
 };
 const githubLink: CSSProperties = { ...iconButton, textDecoration: 'none' };
-const contactPopover: CSSProperties = {
-  position: 'absolute', top: 34, right: 0, zIndex: 20, width: 220, maxWidth: 'calc(100vw - 32px)',
-  display: 'flex', flexDirection: 'column', gap: 5, padding: '10px 12px',
-  border: `0.5px solid ${theme.border}`, borderRadius: 6, background: theme.panelAlt,
-  boxShadow: '0 6px 18px rgba(var(--cc-shadow-rgb), 0.24)',
-};
-const contactLabel: CSSProperties = { color: theme.textDim, fontSize: 11 };
-const contactEmail: CSSProperties = {
-  color: theme.textStrong, fontSize: 12.5, textDecoration: 'underline', textUnderlineOffset: 2,
-  whiteSpace: 'nowrap',
-};

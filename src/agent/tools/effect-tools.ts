@@ -8,7 +8,7 @@ const FX_IDS = Object.keys(ALL_FX);
 // manage_effects — the per-clip WebGL effect operations of the
 // `edit_item` transaction ({adds/updates/removes} with type:"effect", assetId,
 // targetItemId, propertyOverrides). Modeled as one action tool to match this
-// Aquarius Cut's granular manage_* convention. propertyOverrides is a sparse PATCH
+// Aquarius Editor's granular manage_* convention. propertyOverrides is a sparse PATCH
 // (only changed keys); values clamp to each effect's range at render. `add`
 // appends to effects[] and effectId targets one entry for update/remove.
 

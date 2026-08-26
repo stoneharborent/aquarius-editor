@@ -368,7 +368,7 @@ globalThis.fetch = (async (input) => {
       callId: 'rejected:request:1',
       name: 'unknown_tool',
       args: { value: 1 },
-      result: { error: 'This Aquarius Cut tool call is unavailable.' },
+      result: { error: 'This Aquarius Editor tool call is unavailable.' },
       success: false,
     },
     { type: 'done' },

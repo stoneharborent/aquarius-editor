@@ -190,7 +190,7 @@ function XmlTab({ state, nleFormat, includeMg, mgCount, setNleFormat, setInclude
         <InfoCard
           icon="film"
           title={t('FCPXML preserves background parameters but does not generate the layer')}
-          text={t('Aquarius Cut writes the background-fill toggle and percentage for {n} clip(s) into FCPXML metadata, but the destination editor will not reconstruct the blurred layer from it. Export a video master as well for an exact visual match.', {
+          text={t('Aquarius Editor writes the background-fill toggle and percentage for {n} clip(s) into FCPXML metadata, but the destination editor will not reconstruct the blurred layer from it. Export a video master as well for an exact visual match.', {
             n: backgroundFillCount,
           })}
         />

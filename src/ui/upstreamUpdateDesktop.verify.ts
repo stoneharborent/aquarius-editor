@@ -1,10 +1,10 @@
-// Aquarius Cut has no release feed (see RELEASE_FEED in ./upstreamUpdate.ts), so this file
+// Aquarius Editor has no release feed (see RELEASE_FEED in ./upstreamUpdate.ts), so this file
 // checks the *containment*: even with a desktop update bridge attached and a server that
 // would happily report a newer version, the app makes no request and offers no update.
 //
 // Upstream's version of this file exercised the auto-check race guard and the web fallback.
 // Those code paths still exist behind the feed switch; restore this test from git history
-// (commit "rebrand: Aquarius Cut identity, icons, and update feed") when a feed is configured.
+// (commit "rebrand: Aquarius Cut identity, icons, and a disabled release feed") when a feed is configured.
 import assert from 'node:assert/strict';
 import { setTimeout as delay } from 'node:timers/promises';
 import type { DesktopUpdateState } from '../../shared/desktop-update';

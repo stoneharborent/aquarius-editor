@@ -186,7 +186,7 @@ export class NativeRhythmService {
     const worker = utilityProcess.fork(
       fileURLToPath(new URL('./native-rhythm-worker.mjs', import.meta.url)),
       [],
-      { serviceName: 'Aquarius Cut Native Rhythm' },
+      { serviceName: 'Aquarius Editor Native Rhythm' },
     );
     lowerNativeWorkerPriority(worker);
     worker.on('message', (value: unknown) => this.handleWorkerMessage(value));

@@ -17,11 +17,11 @@ export interface DesktopUpdateSupportContext {
 }
 
 /**
- * Whether a release feed exists for Aquarius Cut to update from.
+ * Whether a release feed exists for Aquarius Editor to update from.
  *
  * It is `false` on purpose. Upstream shipped a GitHub feed pointing at 0xsline/OpenChatCut,
  * and electron-updater would happily download that project's releases into this fork. Aquarius
- * Cut has no GitHub home yet, so the updater is never enabled and never contacts a server.
+ * Editor publishes no releases yet, so the updater is never enabled and never contacts a server.
  * Flip this to `true` at the same time as `publish` in config/electron-builder.config.mjs and
  * RELEASE_FEED in src/ui/upstreamUpdate.ts — those three belong together.
  */
