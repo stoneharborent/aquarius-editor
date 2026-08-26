@@ -50,7 +50,70 @@ export interface SkinDef {
   tokens: SkinTokens;
 }
 
-// Graphite = default skin (consistent with the look and feel before the skin-changing system was implemented).
+// ─────────────────────────────────────────────────────────────────────────────
+// AquariusOS — the default skin. THE LAW for every value below is
+// `../../os-image/branding/tokens.md` (the OS design tokens). Nothing here is
+// picked by eye: a token is either copied straight out of that file, or derived
+// from it by a rule written next to the value.
+//
+// tokens.md → --cc-* mapping (dark, the real design):
+//   void #06070C ........ bg          surface-1 #10121C ... panel
+//   surface-2 #161A29 ... panelAlt    surface-3 #1D2236 ... hover
+//   starlight #8AB4FF ... accent + select (tokens.md: "buttons, links, selection, focus rings")
+//   starlight-press ..... accentDeep  on-accent #080B14 ... onAccent
+//   text-1/2 ............ text / textMuted
+//   warning #E6C069 ..... gold   (the `gold` slot IS this app's warning channel:
+//                                 .warn lines, pending states, locked tracks, the
+//                                 minimize traffic light. tokens.md's `ancient`
+//                                 #E6DDB8 is explicitly "rare on purpose — twice on
+//                                 one screen and you are using it wrong", so it is
+//                                 deliberately NOT wired to a slot that repeats.)
+//   success #55D6A5 ..... success     danger #FF7A85 ...... danger
+//
+// tokens.md values with no slot in this contract (recorded, not dropped):
+//   starlight-hover #A8C6FF — the app builds accent hover states with color-mix()
+//   and rgba(var(--cc-accent-rgb), α), so there is no accent-hover variable.
+//   ancient #E6DDB8 — see above. oled #000000 — the Midnight skin already owns
+//   true black. grad-play — a gradient, not a single-value token.
+//
+// Derived slots (each with its rule; nothing is eyeballed):
+//   inset ....... void ↔ surface-1 midpoint — one step deeper than the panel.
+//   border ...... tokens.md border-1 rgba(237,239,247,.08) flattened over
+//   borderLight . surface-1; border-2 rgba(237,239,247,.14) the same way. (The
+//                 skin contract stores opaque 6-digit hex, so the hairline alphas
+//                 are composited once here instead of at paint time.)
+//   textDim ..... text-3 #565C72 is tokens.md's *disabled/placeholder* tone and
+//                 only reaches 2.82:1 on surface-1; this app's textDim slot carries
+//                 readable secondary copy and is gated at 4.4:1, so it is text-3
+//                 lifted 60% toward text-2 — the smallest lift that clears the gate.
+//   textStrong .. text-1 at full brightness (#ffffff) for hover emphasis.
+//   inkRgb ...... text-1's RGB triple (translucent ink on a dark ground).
+//   shadowRgb ... 0,0,0 — every shadow token in tokens.md is rgba(0,0,0,…).
+//   tlTrack ..... surface-2 + 8% nebula; tlSidePanel = surface-1 + 8% nebula.
+//                 The timeline reads as the same room, tinted toward the wallpaper.
+//   track*/clip*  Timeline kind colors keep a semantic hue from tokens.md —
+//                 video = starlight, audio = success, motion graphics = nebula,
+//                 text/A1 = warning — composited over `void` so the white clip and
+//                 chip labels stay legible: **chips at 62%, clip fills at 50%**.
+//                 nebula is the one exception: it is already darker than every
+//                 other hue at 62%, so the caption chip uses it at full strength
+//                 and the MG clip fill sits at 78%.
+// ─────────────────────────────────────────────────────────────────────────────
+const AQUARIUS: SkinTokens = {
+  bg: '#06070c', inset: '#0b0d14', panel: '#10121c', panelAlt: '#161a29', hover: '#1d2236',
+  border: '#22242e', borderLight: '#2f313b',
+  text: '#edeff7', textMuted: '#8a90a6', textDim: '#757b91', textStrong: '#ffffff',
+  accent: '#8ab4ff', accentDeep: '#6e9bf2', accentRgb: '138,180,255', onAccent: '#080b14',
+  inkRgb: '237,239,247', shadowRgb: '0,0,0', colorScheme: 'dark',
+  gold: '#e6c069', select: '#8ab4ff', success: '#55d6a5', danger: '#ff7a85',
+  tlTrack: '#1c1e38', tlSidePanel: '#16172c',
+  trackVideo: '#5872a3', trackAudioA1: '#917a46', trackAudioA2: '#37876b', trackCaption: '#5b4be0',
+  clipVideo: '#485e86', clipAudio: '#2e6f59', clipMg: '#483cb1', clipText: '#76643b',
+};
+
+// Graphite = the look and feel before the skin system existed (and before the
+// AquariusOS identity landed). Still selectable, still the base every non-Aquarius
+// skin spreads from.
 const GRAPHITE: SkinTokens = {
   bg: '#101010', inset: '#141414', panel: '#181818', panelAlt: '#212121', hover: '#2c2c2c',
   border: '#363636', borderLight: '#4a4a4a',
@@ -64,6 +127,7 @@ const GRAPHITE: SkinTokens = {
 };
 
 // Color source (the user named the GitHub theme, the value is the official color palette, MIT):
+// AquariusOS / AquariusOS Light = os-image/branding/tokens.md (the OS design system).
 // Mocha/Latte = Catppuccin(github.com/catppuccin/palette,palette.json check),
 // Arctic = Nord(nordtheme.com), Tokyo Night = Tokyo Night. Graphite/Jet Black = homemade dark color.
 // Discipline (impeccable colorize): Only official neutral gradients are used for surface elevation; track/fragment/select/
@@ -71,6 +135,41 @@ const GRAPHITE: SkinTokens = {
 // textDim/panel ≥ 4.5, onAccent/accent ≥ 4.5 (script skin-by-skin assertion, individual official grayscale
 // Fine-tune L to meet the standard). Pastel accent skin (Mocha/Arctic/Tokyo Night/Latte) onAccent uses dark fonts.
 export const SKINS: readonly SkinDef[] = [
+  { id: 'aquarius', name: 'AquariusOS', tokens: AQUARIUS },
+  // AquariusOS Light — tokens.md's *derived* light palette ("light is not a
+  // separate design; it is the dark palette re-grounded"). Copied values:
+  // background #EEF0F7, surface-1 #F7F8FC, surface-2 #FFFFFF, starlight #3D63D6,
+  // starlight-press #2545AD, nebula #4A3BC9, on-accent #FFFFFF, text-1 #141726,
+  // text-2 #565C72, text-3 #8A90A6, border-1/2 rgba(20,23,38,.10/.16).
+  // Derived here (tokens.md's light table stops short of these slots):
+  //   inset/hover — light text-1 at 4% / 8% over the light background. In light
+  //     mode a recess and a row hover must go DARKER than the panel, and the
+  //     light surface stack only climbs toward white.
+  //   textDim — light text-3 is 2.99:1 on light surface-1; darkened 55% toward
+  //     light text-2 to clear the 4.4:1 gate (mirror of the dark skin's lift).
+  //   textStrong — light text-1 at full depth (#000000), mirror of dark's #ffffff.
+  //   gold/success/danger — tokens.md gives no light status trio. Each keeps its
+  //     dark hue and saturation and is darkened until it reads 4.5:1 on light
+  //     surface-1, the same "deepen the accent for a white ground" move tokens.md
+  //     makes itself for starlight and ancient.
+  //   tlTrack/tlSidePanel — light background / light inset + 8% light nebula
+  //     (same 8% nebula tint as the dark skin).
+  //   track*/clip* — inherited from the dark skin unchanged: timeline kind colors
+  //     are semantic, not decorative, and stay stable across skins (the same rule
+  //     Latte follows against Graphite).
+  {
+    id: 'aquariuslight', name: 'AquariusOS Light',
+    tokens: {
+      ...AQUARIUS,
+      bg: '#eef0f7', inset: '#e5e7ef', panel: '#f7f8fc', panelAlt: '#ffffff', hover: '#dddfe6',
+      border: '#e0e2e7', borderLight: '#d3d4da',
+      text: '#141726', textMuted: '#565c72', textDim: '#6d7389', textStrong: '#000000',
+      accent: '#3d63d6', accentDeep: '#2545ad', accentRgb: '61,99,214', onAccent: '#ffffff',
+      inkRgb: '20,23,38', colorScheme: 'light',
+      gold: '#906c18', select: '#3d63d6', success: '#1f815c', danger: '#cc0011',
+      tlTrack: '#e1e2f3', tlSidePanel: '#d9d9ec',
+    },
+  },
   { id: 'graphite', name: 'Graphite', tokens: GRAPHITE },
   {
     id: 'midnight', name: 'Midnight',
@@ -139,7 +238,7 @@ export const SKINS: readonly SkinDef[] = [
 ];
 
 const STORAGE_KEY = 'cc.skin';
-export const DEFAULT_SKIN = 'graphite';
+export const DEFAULT_SKIN = 'aquarius';
 
 const kebab = (name: string): string => name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 

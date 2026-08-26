@@ -1,6 +1,7 @@
 // Theme tokens. Since the skinning system (see skins.ts), all here are var(--cc-*)
-// Indirect reference - the true value is in the SKINS registry of skins.ts (default skin "Graphite",
-// Consistent with old hex value-wise). Inline styles are still written as theme.x, with zero modification and zero re-rendering when changing skins.
+// Indirect reference - the true value is in the SKINS registry of skins.ts (default skin
+// "AquariusOS", mapped from os-image/branding/tokens.md). Inline styles are still written as
+// theme.x, with zero modification and zero re-rendering when changing skins.
 // ⚠ These values can only be used in DOM style/CSS:canvas fillStyle, SVG attribute bits, and hex string concatenation
 // Can't parse var() (all positions have been audited to zero, new code sets a precedent).
 export const theme = {
