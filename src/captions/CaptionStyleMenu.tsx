@@ -128,7 +128,7 @@ export function CaptionStyleMenu({ state, commands, trackId, pos, error, onError
           return (
             <button type="button" key={style.id} className={current?.template === style.id ? 'active' : ''} onClick={() => applyStyle(style.id)}>
               <span className="cc-caption-style-swatch" style={{ background: style.highlightBackground ?? '#292929', color: style.highlightBackground ? style.highlightColor : style.color, fontFamily: style.fontFamily, WebkitTextStroke: style.strokeWidth ? `${Math.min(1, style.strokeWidth)}px ${style.strokeColor}` : undefined }}>Aa</span>
-              <span>{t(style.labelZh)}</span>
+              <span>{t(style.labelKey)}</span>
             </button>
           );
         })}

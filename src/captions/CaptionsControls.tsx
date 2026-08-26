@@ -125,7 +125,7 @@ export function CaptionsControls({
                     role="option"
                     aria-selected={active}
                     className={`cc-cap-style${active ? ' selected' : ''}`}
-                    title={`${t(s.labelZh)} — ${t(s.hint)} · ${t('Drag onto the preview to create a caption anywhere')}`}
+                    title={`${t(s.labelKey)} — ${t(s.hint)} · ${t('Drag onto the preview to create a caption anywhere')}`}
                     onClick={() => onUpdate(captionTemplatePatch(captions, s.id as CaptionTemplate))}
                     onPointerDown={(event) => {
                       if (!captionTrackId) return;
@@ -142,12 +142,12 @@ export function CaptionsControls({
                     >
                       {t('A')}
                     </span>
-                    <span className="cc-cap-style-name">{t(s.labelZh)}</span>
+                    <span className="cc-cap-style-name">{t(s.labelKey)}</span>
                   </button>
                 );
               })}
             </div>
-            {style && <p className="cc-cap-hint">{t(style.labelZh)}: {t(style.hint)} · {t('Drag onto the preview to create and edit a caption anywhere')}</p>}
+            {style && <p className="cc-cap-hint">{t(style.labelKey)}: {t(style.hint)} · {t('Drag onto the preview to create and edit a caption anywhere')}</p>}
           </div>
 
           {/* Rhythm*/}

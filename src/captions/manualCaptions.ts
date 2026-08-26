@@ -88,7 +88,7 @@ export function appendDroppedManualCaption(
   const entries = promoteCaptionEntries(captions, items);
   const manualCount = entries.filter(isManualCaptionEntry).length;
   const entry = newManualEntry(manualCount + 1);
-  const { id: _id, label: _label, labelZh: _labelZh, hint: _hint, ...style } = CAPTION_STYLE_BY_ID[template];
+  const { id: _id, label: _label, labelKey: _labelKey, hint: _hint, ...style } = CAPTION_STYLE_BY_ID[template];
   return {
     laneId: entry.id,
     patch: {

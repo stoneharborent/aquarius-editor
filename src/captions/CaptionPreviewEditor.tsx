@@ -333,7 +333,7 @@ export function CaptionPreviewEditor({ trackId, state, captions, playerRef, onUp
                     <button key={st.id} type="button"
                       className={`cc-capedit-styleitem${st.id === captions.template ? ' on' : ''}`}
                       onClick={() => { onUpdateCaptions(captionTemplatePatch(captions, st.id)); setPop(null); }}>
-                      {t(st.labelZh)}
+                      {t(st.labelKey)}
                     </button>
                   ))}
                 </div>

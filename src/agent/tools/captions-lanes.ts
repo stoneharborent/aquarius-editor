@@ -224,7 +224,7 @@ export function execSourceUpdate(json: Json, c: CaptionsData, ctx: AgentContext,
       if (presetId) {
         const tpl = CAPTION_STYLE_BY_ID[presetId as CaptionTemplate];
         if (!tpl) return { error: `unknown preset "${presetId}"` };
-        const { id: _i, label: _l, labelZh: _z, hint: _h, ...styleOnly } = tpl;
+        const { id: _i, label: _l, labelKey: _k, hint: _h, ...styleOnly } = tpl;
         e.style = { ...styleOnly };
       }
       if (o.style && typeof o.style === 'object') {
