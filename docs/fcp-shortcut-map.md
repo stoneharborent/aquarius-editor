@@ -1,6 +1,6 @@
 # Aquarius Editor — Final Cut Pro keyboard map
 
-*Stage 3 of the Aquarius Editor conversion (`../../docs/aquarius-cut-plan.md`). Written 2026-08-25.*
+*Stage 3 of the Aquarius Editor conversion (`../../docs/aquarius-editor-plan.md`). Written 2026-08-25.*
 
 **This file is the law.** `CLAUDE.md` rule 4: shortcuts follow Final Cut Pro, and any binding
 that does not is a deviation that has to appear in the table below with a reason. If you change

@@ -64,7 +64,7 @@ export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
 Then go into the project folder:
 
 ```bash
-cd "/Users/royceadkins/Library/Mobile Documents/com~apple~CloudDocs/Workflow/Branches/Apps/AquariusOS/aquarius-cut"
+cd "/Users/royceadkins/Library/Mobile Documents/com~apple~CloudDocs/Workflow/Branches/Apps/AquariusOS/aquarius-editor"
 ```
 
 Now pick one of these two.

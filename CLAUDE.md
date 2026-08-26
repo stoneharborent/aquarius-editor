@@ -9,13 +9,13 @@ theming it with the AquariusOS design system, remapping shortcuts to the Final C
 layout, and shipping it Linux-first on AquariusOS — while keeping the Mac as the daily
 dev/test bench.
 
-**Master plan: `../docs/aquarius-cut-plan.md`** — read it before any work here.
+**Master plan: `../docs/aquarius-editor-plan.md`** — read it before any work here.
 
 ## Standing Facts
 - **The product is named "Aquarius Editor".** "Aquarius Cut" was the working name and is
   retired (settled by Royce 2026-08-25). Three things deliberately keep the old spelling
-  and must not be "fixed": this **folder** (`.../AquariusOS/aquarius-cut`), the master plan
-  file (`../docs/aquarius-cut-plan.md`), and quoted historical commit titles. Internal
+  and must not be "fixed": the master plan
+  file (`../docs/aquarius-editor-plan.md`), and quoted historical commit titles. Internal
   storage keys and wire names stay on upstream's spelling too — `~/.openchatcut`, the `cc.*`
   localStorage keys, `openchatcut-plugin@1`, the `openchatcut` MCP server, IPC channel names,
   and `X-OpenChatCut` headers. Renaming those is a separate migration decision.

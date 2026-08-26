@@ -1,8 +1,32 @@
+# Aquarius Editor changelog
+
+## v0.3.0 — 2026-08-25
+
+The first Aquarius Editor release, forked from OpenChatCut v0.2.11.
+
+### Changed
+- English is now the app's source language throughout — UI, code, and docs. Chinese remains
+  available as a full translation (alongside Italian and Russian).
+- New default look: the AquariusOS design system (dark "AquariusOS" skin + derived light
+  variant), with Sora, Inter, and JetBrains Mono bundled.
+- The entire keyboard layout now follows Final Cut Pro — see
+  [`docs/fcp-shortcut-map.md`](docs/fcp-shortcut-map.md) for every binding.
+- Rebranded to Aquarius Editor (app id `os.aquarius.editor`); new icons; upstream's
+  auto-update feed disabled; feedback moves to this repo's GitHub Issues.
+
+### Fixed
+- MCP server could permanently lose a `tools/list_changed` notification sent before a
+  client's notification stream attached — external agents saw stale tool lists.
+- macOS Option-key and shifted-punctuation shortcuts never matched (dead ⌥-chords).
+- Three default bindings that could never fire (`/` mark-clip, `Mod + +` zoom, ⇧⌫ ripple delete).
+- Transcript speaker labels showed Chinese ("说话人 N") regardless of language.
+
+---
+
 > **Fork note.** Everything below is **OpenChatCut's** history, kept as-is for the record —
 > it is upstream's changelog, in upstream's languages, up to the point Aquarius Editor forked
-> from it at v0.2.11 (2026-08-25). Aquarius Editor's own changes start after that fork and are
-> not listed here yet. See [`README.md`](README.md) for what this app is and how it relates
-> to OpenChatCut.
+> from it at v0.2.11 (2026-08-25). Aquarius Editor's own changes are listed above. See
+> [`README.md`](README.md) for what this app is and how it relates to OpenChatCut.
 
 # Changelog / 更新日志
 
