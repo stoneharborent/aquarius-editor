@@ -11,7 +11,7 @@ import { applyDisplayTextEntries } from './captions-word-overrides';
 import { isCaptionMotionPreset } from '../../captions/captionMotion';
 
 // edit_captions uses one tool with a multi-action dispatcher. Most action data
-// arrives as a JSON string in `json`. Backed by OpenChatCut's captions overlay
+// arrives as a JSON string in `json`. Backed by Aquarius Cut's captions overlay
 // (enable/template/style/layout/display overrides/multi-source/translation).
 // The three brothers of multi-lane (layout_policy / positions / source_update) are in captions-lanes.ts,
 // Data model = CaptionsData.sourceEntries (one rendering lane per source).

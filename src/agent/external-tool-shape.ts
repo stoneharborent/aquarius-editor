@@ -24,7 +24,7 @@ const SESSION_ID_PROPERTY = {
 export const EXTERNAL_SESSION_TOOLS: readonly ExternalRegisteredTool[] = [
   {
     name: 'begin_edit_session',
-    description: 'Start an isolated OpenChatCut edit draft. Manual mode waits for proposal review; auto mode applies only the staged proposal at review_edit_session. Real-project tools always require separate confirmation.',
+    description: 'Start an isolated Aquarius Cut edit draft. Manual mode waits for proposal review; auto mode applies only the staged proposal at review_edit_session. Real-project tools always require separate confirmation.',
     input_schema: {
       type: 'object',
       properties: {
@@ -32,7 +32,7 @@ export const EXTERNAL_SESSION_TOOLS: readonly ExternalRegisteredTool[] = [
         approvalMode: {
           type: 'string',
           enum: ['manual', 'auto'],
-          description: 'manual (default) requires proposal approval in OpenChatCut; auto applies the reviewed draft only and never bypasses real-tool confirmation.',
+          description: 'manual (default) requires proposal approval in Aquarius Cut; auto applies the reviewed draft only and never bypasses real-tool confirmation.',
         },
       },
     },
@@ -63,7 +63,7 @@ export const EXTERNAL_SESSION_TOOLS: readonly ExternalRegisteredTool[] = [
   },
   {
     name: 'discard_edit_session',
-    description: 'Cancel a draft or pending review without changing the live OpenChatCut project.',
+    description: 'Cancel a draft or pending review without changing the live Aquarius Cut project.',
     input_schema: {
       type: 'object',
       properties: { editSessionId: SESSION_ID_PROPERTY },
@@ -97,7 +97,7 @@ export function externalDraftSchemas(tools: readonly AgentToolSchema[]): Externa
     const readOnly = isExternalReadTool(tool.name);
     const multiplexesPersistentActions = tool.name === 'manage_design_style';
     const scopeDescription = multiplexesPersistentActions
-      ? 'Read and ProjectDoc actions use the edit-session draft; owned-library writes act on live local data and require one-shot OpenChatCut confirmation. Pass editSessionId.'
+      ? 'Read and ProjectDoc actions use the edit-session draft; owned-library writes act on live local data and require one-shot Aquarius Cut confirmation. Pass editSessionId.'
       : `${readOnly ? 'Reads' : 'Edits'} the edit-session draft; pass editSessionId.`;
     return {
       ...withSession(
@@ -118,7 +118,7 @@ export function externalRealSchemas(tools: readonly AgentToolSchema[]): External
   return tools.filter((tool) => isExternalRealTool(tool.name)).map((tool) => ({
     ...withSession(
       tool,
-      `${tool.description ?? tool.name} Acts on the live project. Every invocation needs a one-shot OpenChatCut confirmation bound to this session/run, tool, and exact argument digest; changed arguments require a new confirmation. Pass editSessionId.`,
+      `${tool.description ?? tool.name} Acts on the live project. Every invocation needs a one-shot Aquarius Cut confirmation bound to this session/run, tool, and exact argument digest; changed arguments require a new confirmation. Pass editSessionId.`,
     ),
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   }));

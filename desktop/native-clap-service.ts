@@ -186,7 +186,7 @@ export class NativeClapService {
     const worker = utilityProcess.fork(
       fileURLToPath(new URL('./native-clap-worker.mjs', import.meta.url)),
       [],
-      { serviceName: 'OpenChatCut Native CLAP' },
+      { serviceName: 'Aquarius Cut Native CLAP' },
     );
     lowerNativeWorkerPriority(worker);
     worker.on('message', (value: unknown) => this.handleWorkerMessage(value));

@@ -100,7 +100,7 @@ assert.throws(
 // media folder, and the isolated dev profile root.
 const dataDirHome = mkdtempSync(join(tmpdir(), 'openchatcut-runtime-data-dir-'));
 try {
-  const chosen = join(dataDirHome, 'Saves', 'OpenChatCut');
+  const chosen = join(dataDirHome, 'Saves', 'Aquarius Cut');
   const envDataDir = resolveRuntimeProfile({ [DATA_DIR_ENV]: chosen }, { homeDir: dataDirHome, cwd });
   assert.equal(envDataDir.mode, 'default');
   assert.equal(envDataDir.rootDir, chosen);

@@ -177,7 +177,7 @@ async function codexStatus(): Promise<CodexAgentStatus> {
       version: installation.version,
       account: null,
       loginPending: activeClient?.loginPending ?? false,
-      error: 'Codex app-server is unavailable. Restart OpenChatCut and try again.',
+      error: 'Codex app-server is unavailable. Restart Aquarius Cut and try again.',
     };
   }
 }

@@ -1,13 +1,13 @@
 {
-  "name": "openchatcut",
+  "name": "aquarius-cut",
   "private": true,
   "version": "0.2.11",
-  "description": "Open-source ChatCut alternative: local-first, agent-native AI video editor with MCP.",
+  "description": "Aquarius Cut — the professional editing app of AquariusOS. Local-first, agent-native AI video editing. Based on OpenChatCut.",
   "license": "AGPL-3.0-or-later",
-  "author": "OpenChatCut Contributors",
+  "author": "Aquarius Cut Contributors (a fork of OpenChatCut)",
   "type": "module",
   "main": "desktop-dist/main.mjs",
-  "desktopName": "openchatcut.desktop",
+  "desktopName": "aquarius-cut.desktop",
   "engines": {
     "node": ">=24 <25"
   },

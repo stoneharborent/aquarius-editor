@@ -361,7 +361,7 @@ function itemToSpineElement(
  * Background <gap> When the main line (lane 0), each item is used as its lane child node, and offset is used
  * Timeline absolute frame conversion - because the background gap itself starts from 0 and covers the entire length, the lane child node
  * "Relative anchor point offset" is numerically equal to the absolute offset, and there is no need to calculate additional relative coordinates. This is a simplified multitrack
- * OpenChatCut timeline (independent absolute frame bits for each track) to FCPX magnetic timeline (connected clips with lane)
+ * Aquarius Cut timeline (independent absolute frame bits for each track) to FCPX magnetic timeline (connected clips with lane)
  * Direct mapping method; implemented according to FCPXML specification.
  */
 export type NleFormat = 'fcp_xml' | 'fcp_xml_resolve';
@@ -387,7 +387,7 @@ export function timelineToFcpxml(
   validateState(state);
   const fps = state.fps;
   const total = timelineDuration(state);
-  const title = escapeXml((opts.title ?? '').trim() || 'OpenChatCut Timeline');
+  const title = escapeXml((opts.title ?? '').trim() || 'Aquarius Cut Timeline');
   const nle: NleFormat = opts.nleFormat === 'fcp_xml_resolve' ? 'fcp_xml_resolve' : 'fcp_xml';
   const laneOf = buildLaneOf(state);
   const assets = collectAssets(state);
@@ -410,7 +410,7 @@ export function timelineToFcpxml(
     return laneDiff !== 0 ? laneDiff : a.startFrame - b.startFrame;
   });
   const backgroundFillWarning = fcpxmlBackgroundFillCount(state) > 0
-    ? xmlComment('WARNING: backgroundFill settings are preserved as OpenChatCut metadata, but this exporter does not synthesize a portable blurred layer; render a video master to preserve the exact appearance.')
+    ? xmlComment('WARNING: backgroundFill settings are preserved as Aquarius Cut metadata, but this exporter does not synthesize a portable blurred layer; render a video master to preserve the exact appearance.')
     : '';
   const itemXml = sortedItems
     .map((item) => itemToSpineElement(
@@ -419,7 +419,7 @@ export function timelineToFcpxml(
   const spineChildren = [backgroundFillWarning, ...itemXml].filter(Boolean).join('\n        ');
 
   const backgroundGap = `<gap name="Background" offset="${rationalTime(0, fps)}" duration="${rationalTime(total, fps)}">\n        ${spineChildren}\n      </gap>`;
-  const eventName = nle === 'fcp_xml_resolve' ? 'OpenChatCut Export (Resolve)' : 'OpenChatCut Export';
+  const eventName = nle === 'fcp_xml_resolve' ? 'Aquarius Cut Export (Resolve)' : 'Aquarius Cut Export';
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',

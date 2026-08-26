@@ -1,5 +1,10 @@
 import { theme, themeAlpha } from '../../theme';
 
+/**
+ * Version line in the settings header. `actionLabel` is optional: Aquarius Cut has no
+ * release feed yet, and a build that cannot check for updates shows the version alone
+ * rather than a button that does nothing.
+ */
 export function SettingsVersionControl({
   versionLabel,
   actionLabel,
@@ -7,14 +12,14 @@ export function SettingsVersionControl({
   onAction,
 }: {
   versionLabel: string;
-  actionLabel: string;
+  actionLabel?: string;
   disabled: boolean;
   onAction: () => void;
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, whiteSpace: 'nowrap' }}>
       <span style={{ color: theme.textDim, fontSize: 11.5 }}>{versionLabel}</span>
-      <button
+      {actionLabel === undefined ? null : <button
         type="button"
         onClick={onAction}
         disabled={disabled}
@@ -38,7 +43,7 @@ export function SettingsVersionControl({
         }}
       >
         {actionLabel}
-      </button>
+      </button>}
     </div>
   );
 }

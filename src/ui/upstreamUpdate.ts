@@ -3,8 +3,20 @@ import type {
   DesktopUpdateState,
 } from '../../shared/desktop-update';
 
-export const UPSTREAM_LATEST_RELEASE_URL = 'https://api.github.com/repos/0xsline/OpenChatCut/releases/latest';
-export const UPSTREAM_RELEASES_URL = 'https://github.com/0xsline/OpenChatCut/releases/latest';
+/**
+ * Where Aquarius Cut looks for its own releases.
+ *
+ * It is `null` on purpose. Upstream pointed this at 0xsline/OpenChatCut, and leaving that in
+ * place would offer that project's releases to Aquarius Cut users as if they were ours — a
+ * different app, a different version line. Aquarius Cut has no GitHub home yet, so the whole
+ * update path is switched off: no network call is made, and the UI never claims an update
+ * exists. Setting this object (and DESKTOP_UPDATE_FEED_CONFIGURED in
+ * desktop/update-service.ts, and `publish` in config/electron-builder.config.mjs) turns the
+ * existing machinery back on unchanged.
+ */
+export const RELEASE_FEED: { readonly latestReleaseApiUrl: string; readonly releasesPageUrl: string } | null = null;
+
+export const UPDATE_CHECKS_ENABLED = RELEASE_FEED !== null;
 
 export const CURRENT_APP_VERSION =
   typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0';
@@ -104,8 +116,10 @@ export async function queryLatestUpstreamRelease(
   currentVersion: string,
   fetcher: Fetcher = fetch,
   signal?: AbortSignal,
+  latestReleaseApiUrl: string | undefined = RELEASE_FEED?.latestReleaseApiUrl,
 ): Promise<UpstreamReleaseResult> {
-  const response = await fetcher(UPSTREAM_LATEST_RELEASE_URL, { signal });
+  if (!latestReleaseApiUrl) throw new Error('No release feed is configured');
+  const response = await fetcher(latestReleaseApiUrl, { signal });
   if (!response.ok) throw new Error(`Upstream release check failed (${response.status})`);
   const payload = await response.json() as { tag_name?: unknown };
   if (typeof payload.tag_name !== 'string' || !parseVersion(payload.tag_name)) {
@@ -168,6 +182,7 @@ function syncDesktopUpdate(update: DesktopUpdateState): void {
 }
 
 function ensureDesktopUpdateSubscription(): DesktopUpdateApi | null {
+  if (!UPDATE_CHECKS_ENABLED) return null;
   const desktop = desktopUpdateApi();
   if (!desktop || unsubscribeDesktopUpdates) return desktop;
   unsubscribeDesktopUpdates = desktop.subscribe(syncDesktopUpdate);
@@ -179,6 +194,7 @@ function ensureDesktopUpdateSubscription(): DesktopUpdateApi | null {
 }
 
 export function hasDesktopUpdateSupport(): boolean {
+  if (!UPDATE_CHECKS_ENABLED) return false;
   return desktopUpdateApi() !== null && desktopUpdateSupported !== false;
 }
 
@@ -239,6 +255,11 @@ async function requestWebUpdateCheck(source: CheckSource): Promise<void> {
 }
 
 export async function requestUpstreamUpdateCheck(source: CheckSource = 'manual'): Promise<void> {
+  // With no release feed there is nothing to check and nothing to contact.
+  if (!UPDATE_CHECKS_ENABLED) {
+    publish({ phase: 'idle', visible: false });
+    return;
+  }
   const desktop = hasDesktopUpdateSupport() ? ensureDesktopUpdateSubscription() : null;
   if (!desktop) return requestWebUpdateCheck(source);
 
@@ -259,6 +280,7 @@ export async function requestUpstreamUpdateCheck(source: CheckSource = 'manual')
 }
 
 export async function requestUpstreamUpdateDownload(): Promise<void> {
+  if (!UPDATE_CHECKS_ENABLED) return;
   const desktop = hasDesktopUpdateSupport() ? ensureDesktopUpdateSubscription() : null;
   if (!desktop) {
     openUpstreamReleasePage();
@@ -279,6 +301,7 @@ export async function requestUpstreamUpdateDownload(): Promise<void> {
 }
 
 export async function requestUpstreamUpdateInstall(): Promise<void> {
+  if (!UPDATE_CHECKS_ENABLED) return;
   const desktop = hasDesktopUpdateSupport() ? ensureDesktopUpdateSubscription() : null;
   if (!desktop) return;
   try {
@@ -296,11 +319,12 @@ export async function requestUpstreamUpdateInstall(): Promise<void> {
 }
 
 export function openUpstreamReleasePage(): void {
-  if (typeof window === 'undefined') return;
-  window.open(UPSTREAM_RELEASES_URL, '_blank', 'noopener,noreferrer');
+  if (typeof window === 'undefined' || !RELEASE_FEED) return;
+  window.open(RELEASE_FEED.releasesPageUrl, '_blank', 'noopener,noreferrer');
 }
 
 export function startAutomaticUpstreamUpdateCheck(): void {
+  if (!UPDATE_CHECKS_ENABLED) return;
   if (autoCheckStarted) return;
   autoCheckStarted = true;
   void requestUpstreamUpdateCheck('auto');

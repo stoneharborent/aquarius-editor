@@ -131,35 +131,36 @@ export function Icon({ name, size = 16, color = 'currentColor', strokeWidth = 1.
   );
 }
 
-/** Brand logo: dialogue bubble + play button (conversational video cutting). Bubble = accent color, play button = onAccent
- * (Skin Discipline Guaranteed ≥4.5 vs.). Use this when replacing sparkles before wordmark. */
+/** Brand logo: the AquariusOS mark on its dark plate. Rendered from
+ * ../os-image/branding/logo.svg by assets/branding/render-icons.mjs. */
 export function BrandMark({ size = 16 }: { size?: number }) {
   return (
-    <img src="/openchatcut-icon.png" alt="" aria-hidden width={size} height={size} style={{ display: 'block' }} />
+    <img src="/aquarius-cut-icon.png" alt="" aria-hidden width={size} height={size} style={{ display: 'block' }} />
   );
 }
 
-/** OpenChatCut word mark: OPEN reverse white badge + Chat Cut solid word mark. */
-export function OpenChatCutWordmark({ width = 126 }: { width?: number }) {
+/** Aquarius Cut word mark: "Aquarius" in the UI weight, "Cut" set heavier. Both take the
+ * surrounding text colour, so the skin decides how it reads. */
+export function AquariusCutWordmark({ width = 126 }: { width?: number }) {
   return (
     <svg
-      aria-label="OpenChatCut"
+      aria-label="Aquarius Cut"
       role="img"
       width={width}
       height={width / 4}
       viewBox="0 0 504 126"
       style={{ display: 'block', flexShrink: 0 }}
     >
-      <rect x="0" y="13" width="166" height="92" rx="14" fill="currentColor" />
       <text
-        fontFamily="Inter, Geist, system-ui, sans-serif"
+        fontFamily="Sora, Inter, Geist, system-ui, sans-serif"
         dominantBaseline="alphabetic"
+        fill="currentColor"
       >
-        <tspan x="83" y="82" textAnchor="middle" fill="var(--cc-panel)" fontSize="58" fontWeight="850" letterSpacing="-0.045em">
-          OPEN
+        <tspan x="0" y="88" fontSize="62" fontWeight="600" letterSpacing="-0.035em">
+          Aquarius
         </tspan>
-        <tspan x="188" y="79" fill="currentColor" fontSize="62" fontWeight="720" letterSpacing="-0.045em">
-          Chat Cut
+        <tspan fontSize="62" fontWeight="850" letterSpacing="-0.035em">
+          {' Cut'}
         </tspan>
       </text>
     </svg>

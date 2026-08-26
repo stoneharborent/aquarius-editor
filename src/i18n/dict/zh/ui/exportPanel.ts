@@ -74,7 +74,7 @@ export default {
   'Editable project': '可继续编辑的工程',
   'Creates FCPXML with tracks and media references for continued work in Premiere Pro or DaVinci Resolve.': '生成带轨道与素材引用的 FCPXML，交给 Premiere Pro 或达芬奇继续制作。',
   'FCPXML preserves background parameters but does not generate the layer': '当前 FCPXML 会保留背景参数，但不生成图层',
-  'OpenChatCut writes the background-fill toggle and percentage for {n} clip(s) into FCPXML metadata, but the destination editor will not reconstruct the blurred layer from it. Export a video master as well for an exact visual match.': 'OpenChatCut 会把 {n} 个片段的背景填充开关与百分比写入 FCPXML 元数据，但目标剪辑软件不会据此还原模糊图层；如需完全一致，请同时导出成片。',
+  'Aquarius Cut writes the background-fill toggle and percentage for {n} clip(s) into FCPXML metadata, but the destination editor will not reconstruct the blurred layer from it. Export a video master as well for an exact visual match.': 'Aquarius Cut 会把 {n} 个片段的背景填充开关与百分比写入 FCPXML 元数据，但目标剪辑软件不会据此还原模糊图层；如需完全一致，请同时导出成片。',
   'Bundle motion layers': '同时打包动态图层',
   'Also creates alpha ProRes 4444 MOV files.': '额外生成带透明通道的 ProRes 4444 MOV。',
   'Exports MP3 audio; video tracks are ignored.': '导出为 MP3 音频，视频轨道将被忽略。',

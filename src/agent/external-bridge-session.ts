@@ -112,7 +112,7 @@ export function externalSessionInfo(input: {
       : undefined,
     editorUrl: typeof window === 'undefined' ? undefined : window.location.href,
     approvalLocation: session.status === 'awaiting_review' && session.approvalMode === 'manual'
-      ? 'OpenChatCut project UI'
+      ? 'Aquarius Cut project UI'
       : undefined,
     updatedAt: new Date(session.updatedAt).toISOString(),
   };

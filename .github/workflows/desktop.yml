@@ -58,30 +58,22 @@ jobs:
             artifact: |
               release/*.dmg
               release/*.zip
-              release/latest-arm64-mac.yml
-              release/*.blockmap
           - name: macOS-x64
             os: macos-15-intel
             script: desktop:dist:mac-x64
             artifact: |
               release/*.dmg
               release/*.zip
-              release/latest-x64-mac.yml
-              release/*.blockmap
           - name: Windows-x64
             os: windows-latest
             script: desktop:dist:win
             artifact: |
               release/*.exe
-              release/latest-x64.yml
-              release/*.blockmap
           - name: Linux-x64
             os: ubuntu-latest
             script: desktop:dist:linux
             artifact: |
               release/*.AppImage
-              release/latest-x64-linux.yml
-              release/*.blockmap
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -135,8 +127,8 @@ jobs:
           [[ "${#dmgs[@]}" -eq 1 ]]
           [[ "${#zips[@]}" -eq 1 ]]
 
-          mount_dir="$(mktemp -d "$RUNNER_TEMP/openchatcut-dmg.XXXXXX")"
-          zip_dir="$(mktemp -d "$RUNNER_TEMP/openchatcut-zip.XXXXXX")"
+          mount_dir="$(mktemp -d "$RUNNER_TEMP/aquarius-cut-dmg.XXXXXX")"
+          zip_dir="$(mktemp -d "$RUNNER_TEMP/aquarius-cut-zip.XXXXXX")"
           mounted=false
           cleanup() {
             if [[ "$mounted" == true ]]; then
@@ -149,28 +141,28 @@ jobs:
 
           hdiutil attach -nobrowse -readonly -mountpoint "$mount_dir" "${dmgs[0]}"
           mounted=true
-          mounted_app="$mount_dir/OpenChatCut.app"
-          test -x "$mounted_app/Contents/MacOS/OpenChatCut"
+          mounted_app="$mount_dir/Aquarius Cut.app"
+          test -x "$mounted_app/Contents/MacOS/Aquarius Cut"
           # The DMG and ZIP contain the same app; execute it from the writable ZIP below.
           hdiutil detach "$mount_dir"
           mounted=false
 
           unzip -tq "${zips[0]}"
-          test "$(unzip -Z1 "${zips[0]}" 'OpenChatCut.app/Contents/MacOS/OpenChatCut')" = \
-            'OpenChatCut.app/Contents/MacOS/OpenChatCut'
+          test "$(unzip -Z1 "${zips[0]}" 'Aquarius Cut.app/Contents/MacOS/Aquarius Cut')" = \
+            'Aquarius Cut.app/Contents/MacOS/Aquarius Cut'
           test "$(unzip -Z1 "${zips[0]}" \
-            'OpenChatCut.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework')" = \
-            'OpenChatCut.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework'
+            'Aquarius Cut.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework')" = \
+            'Aquarius Cut.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Electron Framework'
           unzip -q "${zips[0]}" -d "$zip_dir"
-          zipped_app="$zip_dir/OpenChatCut.app"
-          test -x "$zipped_app/Contents/MacOS/OpenChatCut"
-          "$zipped_app/Contents/MacOS/OpenChatCut"
+          zipped_app="$zip_dir/Aquarius Cut.app"
+          test -x "$zipped_app/Contents/MacOS/Aquarius Cut"
+          "$zipped_app/Contents/MacOS/Aquarius Cut"
           case "$(uname -m)" in
             arm64) runtime_arch='mac-arm64' ;;
             x86_64) runtime_arch='mac-x64' ;;
             *) echo "Unsupported macOS architecture: $(uname -m)" >&2; exit 1 ;;
           esac
-          render_runtime="OpenChatCut.app/Contents/Resources/chrome-headless-shell/$runtime_arch/chrome-headless-shell-$runtime_arch/chrome-headless-shell"
+          render_runtime="Aquarius Cut.app/Contents/Resources/chrome-headless-shell/$runtime_arch/chrome-headless-shell-$runtime_arch/chrome-headless-shell"
           test "$(unzip -Z1 "${zips[0]}" "$render_runtime")" = "$render_runtime"
           test -x "$zip_dir/$render_runtime"
 
@@ -188,7 +180,7 @@ jobs:
             throw "Expected one NSIS installer, found $($installers.Count)"
           }
 
-          $installDir = Join-Path $env:RUNNER_TEMP "openchatcut-smoke-$PID"
+          $installDir = Join-Path $env:RUNNER_TEMP "aquarius-cut-smoke-$PID"
           Remove-Item -LiteralPath $installDir -Recurse -Force -ErrorAction SilentlyContinue
           $installed = $false
           try {
@@ -198,14 +190,14 @@ jobs:
               throw "NSIS installer exited with $($install.ExitCode)"
             }
 
-            $installedExe = Join-Path $installDir 'OpenChatCut.exe'
+            $installedExe = Join-Path $installDir 'Aquarius Cut.exe'
             if (-not (Test-Path -LiteralPath $installedExe -PathType Leaf)) {
               throw "NSIS installer did not create $installedExe"
             }
             $installed = $true
             $smoke = Start-Process -FilePath $installedExe -Wait -PassThru
             if ($smoke.ExitCode -ne 0) {
-              throw "Installed OpenChatCut smoke exited with $($smoke.ExitCode)"
+              throw "Installed Aquarius Cut smoke exited with $($smoke.ExitCode)"
             }
           } finally {
             $cleanupError = $null
@@ -282,14 +274,10 @@ jobs:
           EXPECTED_VERSION="${GITHUB_REF_NAME#v}"
           test "$(find release-files -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.AppImage' \) | wc -l | tr -d ' ')" = 4
           test "$(find release-files -type f -name '*.zip' | wc -l | tr -d ' ')" = 2
-          test "$(find release-files -type f -name '*.yml' | wc -l | tr -d ' ')" = 4
-          test -f release-files/latest-arm64-mac.yml
-          test -f release-files/latest-x64-mac.yml
-          test -f release-files/latest-x64.yml
-          test -f release-files/latest-x64-linux.yml
-          test -f "release-files/OpenChatCut-${EXPECTED_VERSION}-arm64.zip.blockmap"
-          test -f "release-files/OpenChatCut-${EXPECTED_VERSION}-x64.zip.blockmap"
-          test -f "release-files/OpenChatCut-${EXPECTED_VERSION}-x64.exe.blockmap"
+          test -f "release-files/AquariusCut-${EXPECTED_VERSION}-arm64.dmg"
+          test -f "release-files/AquariusCut-${EXPECTED_VERSION}-x64.dmg"
+          # Aquarius Cut has no auto-update feed yet, so electron-builder emits no update
+          # metadata to check for here. See config/electron-builder.config.mjs.
 
       - name: Generate checksums
         working-directory: release-files

@@ -80,7 +80,7 @@ export const localAsrPage = transcriptionPage('local', 'localasr', 'Local model 
       { value: 'medium', label: 'Whisper Medium (~1.1GB · highest accuracy)' },
     ],
   },
-], 'Transcription runs on this machine: free, offline, and private. Download models on demand below. OpenChatCut selects the best available backend and falls back to CPU when WebGPU is unavailable. Local transcription does not support speaker diarization.');
+], 'Transcription runs on this machine: free, offline, and private. Download models on demand below. Aquarius Cut selects the best available backend and falls back to CPU when WebGPU is unavailable. Local transcription does not support speaker diarization.');
 
 export const VOICE_SETTINGS_GROUP: SettingsGroup = {
   key: 'voice',

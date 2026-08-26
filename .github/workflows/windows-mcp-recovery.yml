@@ -54,6 +54,6 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: issue63-windows-diagnostics
-          path: ${{ runner.temp }}/openchatcut-issue63-*
+          path: ${{ runner.temp }}/aquarius-cut-issue63-*
           include-hidden-files: true
           if-no-files-found: warn

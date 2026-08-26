@@ -1,526 +1,195 @@
 <p align="center">
-  <img src="public/openchatcut-icon.png" width="96" alt="OpenChatCut" />
+  <img src="public/aquarius-cut-icon.png" width="96" alt="Aquarius Cut" />
 </p>
 
-<h1 align="center">OpenChatCut</h1>
+<h1 align="center">Aquarius Cut</h1>
 
-<p align="center">
-  <a href="README_ZH.md">简体中文</a> · <strong>English</strong>
-</p>
+<p align="center"><strong>The professional editing app of AquariusOS.</strong></p>
 
-<p align="center">
-  <strong>Open-source ChatCut alternative · agent-native · local-first AI video editor</strong>
-</p>
-
-<p align="center">
-  Let Codex, Claude Code, and the built-in agent read, edit, and export real video projects that remain fully editable.
-  Website: <a href="https://openchatcut.com">openchatcut.com</a>
-</p>
-
-<p align="center">
-  <a href="#what-is-openchatcut">Introduction</a> ·
-  <a href="#product-tour">Product Tour</a> ·
-  <a href="#quick-start">Quick Start</a> ·
-  <a href="#using-openchatcut-with-codex--claude-code">Agent / MCP</a> ·
-  <a href="#community">Community</a> ·
-  <a href="#sponsor">Sponsor</a> ·
-  <a href="#changelog">Changelog</a> ·
-  <a href="#star-growth">Star Growth</a> ·
-  <a href="#contributing">Contributing</a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/0xsline/OpenChatCut"><img alt="GitHub Repository" src="https://img.shields.io/badge/GitHub-Repository-181717?style=flat&logo=github" /></a>
-  <a href="https://discord.gg/bSGUAeWYkh"><img alt="Discord Community" src="https://img.shields.io/badge/Discord-Join_Community-5865F2?style=flat&logo=discord&logoColor=white" /></a>
-  <img alt="Status" src="https://img.shields.io/badge/status-active_development-FF8A3D?style=flat" />
-  <img alt="Local First" src="https://img.shields.io/badge/data-local_first-111827?style=flat" />
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-3178C6?style=flat&logo=typescript&logoColor=white" />
-  <img alt="React" src="https://img.shields.io/badge/React-19-149ECA?style=flat&logo=react&logoColor=white" />
-  <img alt="Remotion" src="https://img.shields.io/badge/Remotion-4-0B84F3?style=flat" />
-  <img alt="Electron" src="https://img.shields.io/badge/Electron-43-47848F?style=flat&logo=electron&logoColor=white" />
-  <img alt="MCP" src="https://img.shields.io/badge/MCP-Agent_native-7C3AED?style=flat" />
-</p>
-
-<p align="center">
-  <a href="https://linux.do" alt="LINUX DO"><img src="https://shorturl.at/ggSqS" /></a>
-</p>
-
-<p align="center">
-  <a href="https://www.producthunt.com/products/openchatcut?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-openchatcut" target="_blank" rel="noopener noreferrer"><img alt="OpenChatCut - Open-source AI agent video editor with a real timeline | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1201995&amp;theme=light&amp;t=1784645557617" /></a>
-</p>
-
-<p align="center">
-  <img src="assets/readme-pic/01-editor-overview.png" alt="OpenChatCut editor overview with the agent workspace, media pool, preview, and multitrack timeline" />
-</p>
-
-<p align="center">
-  <sub>From a single instruction to a real timeline: agents, media, previews, motion graphics, transitions, effects, and multitrack audio all work together in one project.</sub>
-</p>
+<p align="center"><sub>Based on <a href="https://github.com/0xsline/OpenChatCut">OpenChatCut</a> · AGPL-3.0-or-later</sub></p>
 
 ---
 
-## What is OpenChatCut?
+## What this is, in plain words
 
-OpenChatCut is an **open-source ChatCut alternative**: a video editor that brings **conversational agents** and **professional timeline editing** into the same workspace. It is independent open source (AGPL), not affiliated with the commercial ChatCut product.
+Aquarius Cut is a **video editing app**. It has the things you'd expect from an editor —
+a media pool, a preview window, a multitrack timeline, effects, titles, audio — and one
+thing most editors don't: **you can talk to it.** An AI agent sits in the left-hand panel
+and can actually do the editing work: cut clips, add transitions, build motion graphics,
+generate captions, export the finished file. Everything it does lands on a real timeline
+that you can then adjust by hand. Nothing is a black box.
 
-**OpenChatCut = local video projects + multitrack timeline + AI agents + MCP + production-ready exports.**
+It runs **on your own machine**. Your footage does not get uploaded anywhere. The
+transcription, the analysis and the rendering all happen locally, and the app only reaches
+the internet if you specifically ask it to use a cloud AI provider and give it a key.
 
-It does not merely generate a video that can no longer be changed. Every edit is written to real tracks, clips, transitions, captions, effects, and media inside the project. You can continue editing manually, undo or redo changes, save versions, or hand the project to another agent.
+**Aquarius Cut is the editing app for AquariusOS** — Royce's custom Linux operating system.
+Linux is its home; the Mac is where it gets built and tested day to day. Same code, both
+places.
 
-OpenChatCut is built for creators and developers who want AI to participate in the actual editing workflow without giving up professional control, rather than starting over from an empty chat box or an immutable generated result.
+## Where it came from, and what that means
 
-- Website: [https://openchatcut.com](https://openchatcut.com)
-- Open-source ChatCut alternative guide: [https://openchatcut.com/blog/open-source-chatcut-alternative](https://openchatcut.com/blog/open-source-chatcut-alternative)
-- ChatCut vs OpenChatCut: [https://openchatcut.com/blog/chatcut-vs-openchatcut](https://openchatcut.com/blog/chatcut-vs-openchatcut)
+Aquarius Cut is a **fork** of an open-source project called
+[OpenChatCut](https://github.com/0xsline/OpenChatCut). A fork means we took a copy of
+someone else's finished, working code and started making it our own. We did not write the
+editing engine from scratch — they did, and they deserve the credit.
 
-- 🤖 **Agent-native**: the built-in agent and external MCP agents share the same editing tools.
-- 🎞️ **Real timeline**: multiple video and audio tracks, transitions, effects, LUTs, zooms, and keyframes.
-- 📝 **Transcript-driven editing**: word-level transcription, text-based cuts, pause handling, speakers, and linked captions.
-- ✨ **Generation and media**: images, video, speech, music, sound effects, and online media search.
-- 🧩 **Motion Graphics and WebGL**: editable motion templates, custom shaders, visual effects, and transitions.
-- 👁️ **Visual geometry**: in-browser person segmentation and face-safe zones — captions avoid the speaker automatically, reframe follows the subject, and overlay graphics land in empty space.
-- 📦 **Production-ready exports**: MP4, audio, captions, FCPXML, and complete project data.
-- 🖥️ **Local-first**: projects and media stay on your machine by default, while API keys remain server-side.
+What we change is everything around it: the app is now fully in English, it wears the
+AquariusOS look, its keyboard shortcuts match Final Cut Pro, and it is packaged and named
+as Aquarius Cut.
 
-## Community
+**The licence matters and is not optional.** OpenChatCut is released under the
+**AGPL-3.0-or-later**, and so is Aquarius Cut. In practice that means three things:
 
-Join the OpenChatCut community to discuss workflows, share feedback, and follow development:
+1. Aquarius Cut stays **open source**. We can never close the source of this app.
+2. If we hand anyone a built copy of the app — shipping it inside AquariusOS counts — the
+   **source code has to be publicly available** too.
+3. The `LICENSE` file in this folder is the actual legal text. **Never delete or edit it.**
 
-- [Join Discord](https://discord.gg/bSGUAeWYkh)
-- Scan the QR code below with WeChat.
-
-<p align="center">
-  <br />
-  <img src="assets/readme-pic/wechat-community.png" width="220" alt="OpenChatCut WeChat community QR code" />
-</p>
-
----
-
-## Sponsor
-
-If OpenChatCut helps you, you can support its continued development on Ko-fi or Afdian.
-
-<p align="center">
-  <a href="https://ko-fi.com/Y5N2241IP5">
-    <img alt="Support me on Ko-fi" src="https://img.shields.io/badge/Support_me_on-Ko--fi-72a4f2?logo=kofi&amp;logoColor=white" />
-  </a>
-  <a href="https://www.ifdian.net/a/sline?utm_source=copylink&amp;utm_medium=link">
-    <img alt="Support OpenChatCut on Afdian" src="https://img.shields.io/badge/Support_on-Afdian-946CE6" />
-  </a>
-</p>
+Everything in this repo is free to build on and free to ship. It just has to stay open.
 
 ---
 
-## Product Tour
+## Running it on the Mac
 
-The following screenshots show real OpenChatCut projects and editor states, not static mockups.
+The Mac is the day-to-day workbench. Nothing here installs anything or changes your system.
 
-<table>
-  <tr>
-    <td width="50%" valign="top" align="center">
-      <img src="assets/readme-pic/02-project-dashboard.png" alt="OpenChatCut local project dashboard" /><br />
-      <sub><b>Local project management</b> — Create, import, duplicate, export, and continue editing multiple real projects.</sub>
-    </td>
-    <td width="50%" valign="top" align="center">
-      <img src="assets/readme-pic/03-agent-transitions.png" alt="An agent generating music and editing transitions on a multitrack timeline" /><br />
-      <sub><b>Complete agent-driven editing</b> — Generate music, invoke tools, and write transitions, captions, and multitrack media directly to the timeline.</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top" align="center">
-      <img src="assets/readme-pic/04-motion-graphics.png" alt="Agent tool execution history and the Motion Graphics library" /><br />
-      <sub><b>Motion Graphics and agents</b> — Browse motion templates or let an agent generate and assemble editable MG clips.</sub>
-    </td>
-    <td width="50%" valign="top" align="center">
-      <img src="assets/readme-pic/05-effects.png" alt="OpenChatCut WebGL visual effects library" /><br />
-      <sub><b>WebGL visual effects</b> — Apply pixelation, duotone, fisheye, kaleidoscope, softening, light leaks, and more directly to clips.</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top" align="center">
-      <img src="assets/readme-pic/06-zoom.png" alt="OpenChatCut camera movement and zoom effects library" /><br />
-      <sub><b>Camera movement and zoom</b> — Push, pull, slow zoom, fast zoom, and eased camera effects work directly with the timeline.</sub>
-    </td>
-    <td width="50%" valign="top" align="center">
-      <img src="assets/readme-pic/07-lut.png" alt="Comparing LUT color styles in OpenChatCut using a Tokyo Tower reference image" /><br />
-      <sub><b>LUTs and color styles</b> — Compare camera transforms and film looks in real time against a consistent reference frame.</sub>
-    </td>
-  </tr>
-</table>
-
----
-
-## Why OpenChatCut?
-
-Traditional editors excel at precise control. One-shot AI video generators excel at producing results quickly. OpenChatCut connects both approaches through one continuously editable project:
-
-| Capability | Traditional timeline editor | One-shot AI video generation | **OpenChatCut** |
-|---|:---:|:---:|:---:|
-| Track- and clip-level precision | ✅ | ❌ | **✅** |
-| Modify a project with natural language | ❌ | ✅ | **✅** |
-| Inspectable and undoable changes | ✅ | Usually unavailable | **✅** |
-| Linked transcript and visuals | Partial | ❌ | **✅** |
-| Direct control from Codex / Claude Code | ❌ | ❌ | **✅ MCP** |
-| Built-in and external agent collaboration | ❌ | ❌ | **✅ Shared tools** |
-| Local projects and BYOK | Product-dependent | Usually cloud-based | **✅** |
-
-The core editing loop:
-
-```text
-Describe the goal → Agent reads the project → Produces verifiable edits → Writes to the timeline
-                  → Preview / adjust / undo → Captions and mixing → Export
-```
-
----
-
-## Core Capabilities
-
-| Area | Implemented capabilities |
-|---|---|
-| Timeline | Multitrack editing, move, trim, split, ripple edits, snapping, keyframes, markers, undo, and redo |
-| Visuals | WebGL effects, LUTs, chroma key, zoom, transitions, and custom shaders |
-| Audio | Multiple audio tracks, sound effects, background music, voice-over recording, loudness, auto-ducking, and vocal isolation |
-| Transcript | Transcription jobs, word-level editing, pause compression, search, speakers, and clip views |
-| Captions | Automatic captions, named styles, translation, timeline overlays, and SRT export |
-| Motion Graphics | Built-in templates, a secure sandbox, custom templates, and video rendering |
-| AI generation | Image, video, speech, music, and sound-effect jobs with progress tracking |
-| Media | Uploads, folders, online image/video/audio search, and Firecrawl visual-media fallback |
-| Export | MP4, audio, captions, FCPXML, project import/export, export history, hardware-aware H.264 acceleration, and resource-aware export queueing |
-| Agent | Built-in conversational agent, skills, proposal-based edits, and external Streamable HTTP MCP |
-
----
-
-## Community Resources
-
-The [OpenChatCut resource library](https://openchatcut.com/resources) is a shared catalog for reusable MG animations, sound effects, transitions, visual effects, zooms, and LUTs.
-
-<p align="center">
-  <a href="https://openchatcut.com/resources">
-    <img src="assets/readme-pic/08-community-resources.en.png" alt="OpenChatCut community resource library" />
-  </a>
-</p>
-
-### Discover and install
-
-- Hover visual cards to watch the complete result, or play audio resources before downloading.
-- Copy a resource's install URL into OpenChatCut's Extension Center, or download its original package.
-- Browse the website catalog inside the editor and manage installed extensions locally.
-
-### Contribute a resource
-
-1. Open [Contribute a resource](https://openchatcut.com/resources/submit) and choose its category.
-2. Upload the resource and the category-specific preview inputs; the site renders the published preview.
-3. Add the creator and license information, then submit it for review and publication.
-
-Installable visual resources use the editor's `openchatcut-plugin@1` format and runtime validation. Official OpenChatCut resources use the MIT license; community contributors select a license during submission, and each published card identifies its creator and license.
-
----
-
-## Use Cases
-
-- **Talking-head and interview editing**: transcribe audio or video, remove mistakes, pauses, and repetition through text, then generate captions automatically.
-- **Fast multiformat assembly**: import video, images, and audio, then let an agent create the rough cut, transitions, soundtrack, and pacing.
-- **Short-form and social content**: reframe the canvas and generate titles, captions, voice-over, music, and visual packaging.
-- **Motion Graphics**: use built-in templates or ask an agent to create editable motion-graphics clips.
-- **Developer automation**: use MCP to let Codex, Claude Code, or another compatible client inspect and modify a real project.
-
-## Workflow
-
-1. Create a project and import local media.
-2. Edit manually on the timeline or describe the result you want.
-3. The agent reads project context and invokes editing tools.
-4. Review the proposal and preview the result, then apply, adjust, or undo it.
-5. Finish captions, audio, effects, and color.
-6. Export video, audio, captions, FCPXML, or the complete project.
-
----
-
-## Quick Start
-
-### Desktop installers
-
-Download the latest macOS, Windows, and Linux builds from [GitHub Releases](https://github.com/0xsline/OpenChatCut/releases/latest). The release currently includes DMG installers for Apple Silicon and Intel Macs, an x64 Windows installer, and an x64 Linux AppImage.
-
-These are early builds. The macOS packages are not yet signed or notarized, so the operating system may require manual approval on first launch.
-
-### Run from source
-
-Requires Node.js 24.x and npm. The supported Node.js range is enforced by `package.json`, and `.nvmrc` selects the matching major version for Node version managers.
+**Before every session, in every new Terminal window**, run this one line first. It points
+the terminal at Node 24, which this app needs and which isn't the Mac's default:
 
 ```bash
-git clone https://github.com/0xsline/OpenChatCut.git
-cd OpenChatCut
-npm install
-cp .env.example .env.local
+export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+```
+
+Then go into the project folder:
+
+```bash
+cd "/Users/royceadkins/Library/Mobile Documents/com~apple~CloudDocs/Workflow/Branches/Apps/AquariusOS/aquarius-cut"
+```
+
+Now pick one of these two.
+
+### The app in a browser tab — `npm run dev`
+
+```bash
 npm run dev
 ```
 
-Open:
+Wait for it to print a web address, then open **http://localhost:5199** in your browser.
+This is the fastest way to see a change: edit a file, save it, and the browser updates on
+its own within a second or two. Press `Ctrl+C` in the terminal to stop it.
 
-```text
-http://localhost:5199
-```
-
-Only add the model or media-service credentials you actually use to `.env.local`. Features without configured third-party credentials report the missing key explicitly; local timeline editing, built-in media, and other configured capabilities continue to work.
-
-Development launches are isolated per Git checkout/worktree by default. `npm run dev` and
-`npm run desktop:dev` keep that checkout's projects, imported media, generation jobs,
-credentials, settings, and local authorization state under its own profile in
-`~/.openchatcut/dev-profiles/`. Use `npm run dev:shared` only when you intentionally need
-the legacy shared development store.
-
-### Built-in Agent authentication
-
-- **API keys:** open **Settings → Agent model**, choose a provider, and save its API key and model. Keys remain server-side.
-- **ChatGPT subscription:** install the official Codex CLI 0.146.0 or newer, then open **Settings → Agent model → OpenAI · Codex**. Sign in through the browser or device-code flow, load the account's models, choose a model-specific reasoning effort (or keep its default), and select Codex from the chat model picker. OpenChatCut uses a dedicated Codex profile; the official CLI owns credential storage, token renewal, and logout, while OAuth tokens are never exposed to the browser.
-- **Claude subscription:** OpenChatCut does not collect Claude OAuth credentials. Use Claude Code through the local MCP connection below. The built-in Agent can use Anthropic through an API key.
-
-The built-in Agent always runs the model loop on the local server. Chat, drafts, and proposals survive page refreshes and local service restarts. Timeline changes still go through the active editor's validated, undoable commands.
-
-### Agent local-path access (advanced)
-
-`import_asset` and `import_folder` can read only explicitly allowed local roots. On first use, the desktop app opens the system folder picker; the selected folder is remembered and the import resumes automatically. Media files are imported; document files such as TXT, Markdown, DOCX, and PDF should be attached to chat instead.
-
-For advanced/manual configuration, set a comma-separated value such as `AGENT_IMPORT_ROOTS=/Volumes/Media,D:\Projects` in `.env.local`. Source checkouts read the repository file at startup. Packaged desktop builds read it from Electron's user-data directory: `~/Library/Application Support/OpenChatCut/` on macOS, `%APPDATA%\OpenChatCut\` on Windows, and `$XDG_CONFIG_HOME/OpenChatCut/` (normally `~/.config/OpenChatCut/`) on Linux. Restart after editing the file.
-
-
-Local H.264 exports automatically prefer VideoToolbox on macOS and NVENC on compatible Windows systems, then fall back to software encoding. Tune render concurrency and the heavy-export limit with `OPENCHATCUT_RENDER_CONCURRENCY` and `OPENCHATCUT_MAX_ACTIVE_EXPORTS`, disable hardware encoding with `OPENCHATCUT_DISABLE_HARDWARE_ENCODING`, or override FFmpeg-side encoder selection with `OPENCHATCUT_H264_ENCODER`; see [`.env.example`](.env.example).
-
-### Desktop development
+### The real desktop app — `npm run desktop:dev`
 
 ```bash
 npm run desktop:dev
 ```
 
-The desktop app uses an Electron shell with the same embedded services. The web development build and desktop build share project, agent, generation, and export logic.
+This opens Aquarius Cut as an actual Mac application window, with its own icon in the dock.
+Use this when you're checking anything that only exists in the desktop app: the window
+title bar, the app icon, menus, or reading and writing files on disk. It takes a bit longer
+to start than the browser version. Close the window, or press `Ctrl+C`, to stop it.
 
----
+> **Never run `npm install` in this folder.** The `node_modules` folder is a symlink
+> pointing somewhere outside iCloud, on purpose, so iCloud doesn't try to sync a hundred
+> thousand dependency files. Everything is already installed.
 
-## Project Status
-
-OpenChatCut is under active development. The editor, project format, and agent tools will continue to evolve. Prebuilt macOS, Windows, and Linux installers are published on [GitHub Releases](https://github.com/0xsline/OpenChatCut/releases); running from source remains the most transparent option for development and troubleshooting.
-
-The core timeline, local projects, built-in media, and manual editing do not depend on cloud services. Connected features such as AI models, online media, generation, and transcription are enabled only after you configure the corresponding services.
-
----
-
-## Using OpenChatCut with Codex / Claude Code
-
-Install the single OpenChatCut Agent Skill:
+### Checking that nothing broke
 
 ```bash
-npx skills add 0xsline/OpenChatCut
-```
-
-Then tell the agent `Set up OpenChatCut`. The installed router registers the
-local MCP connection and loads the editor's 26 specialized skills on demand,
-so the agent's skill list stays compact.
-
-Custom skills live in a user-visible directory with the same layout as
-`~/.codex/skills` / `~/.claude/skills`:
-
-```text
-~/.openchatcut/skills/<slug>/SKILL.md     (Windows: %USERPROFILE%\.openchatcut\skills\...)
-```
-
-Ask the agent to `manage_skill create` (or use the bundled *skill-creator*
-workflow) and it writes the SKILL.md there — editable and shareable by hand.
-Dropping a SKILL.md into that directory makes it available to the agent, and
-selecting a workflow from the chat's `/` command or the creative-mode picker
-activates it for the next message.
-
-OpenChatCut exposes a Streamable HTTP MCP endpoint:
-
-```text
-http://localhost:5199/api/external-mcp/mcp
-```
-
-The repository's root `.mcp.json` already contains the local connection. Before using timeline tools, run OpenChatCut and open the target project. Project listing, creation, and navigation tools do not require the editor to remain open.
-
-Codex app/CLI and Claude Code use the same session workflow:
-
-1. Call `begin_edit_session` and keep the returned `editSessionId`. Set `approvalMode` to `manual` (the default) or `auto`.
-2. Pass that id to every project read/edit tool. Changes are applied only to an isolated draft.
-3. Call `review_edit_session` when the draft is ready.
-4. In `manual` mode, review, preview, select, and approve or reject the proposal inside the open OpenChatCut project. In `auto` mode, `review_edit_session` applies the complete draft immediately. The client can poll `get_edit_session` for `applied`, `rejected`, or `discarded` status.
-
-Approval in Codex or Claude controls whether the client may call a tool. OpenChatCut project approval is required only for `manual` sessions; `auto` sessions explicitly bypass that review. Either mode commits the applied operations atomically as one undo step.
-If an `auto` session becomes stale, it returns an error instead of falling back to manual approval; discard it and start a new session.
-Only draft-safe project read/edit tools are exposed in these sessions. Generation, export, project deletion, and other immediate side-effect tools stay unavailable because a rejected proposal could not roll them back.
-
-### Codex
-
-Add the following to your Codex configuration:
-
-```toml
-[mcp_servers.openchatcut]
-url = "http://localhost:5199/api/external-mcp/mcp"
-```
-
-### Claude Code
-
-```bash
-claude mcp add --transport http openchatcut \
-  http://localhost:5199/api/external-mcp/mcp
-```
-
-You can then describe an editing task directly to the agent:
-
-```text
-Start an OpenChatCut edit session. Read the draft, add a scratch sound effect
-at 8 seconds on the second audio track, and add a glitch transition between
-the adjacent video clips. Submit the draft for review and wait for the user to
-approve it in OpenChatCut before reporting that the edit was applied.
-```
-
-External agents invoke the same internal editing tools and `EditorCore` commands as the editor itself. There are no separate project formats that can drift apart, and the live timeline is not changed while an external draft is being prepared.
-
-### Protecting MCP access
-
-When exposing the MCP endpoint yourself, configure:
-
-```bash
-OPENCHATCUT_MCP_TOKEN=your-token
-OPENCHATCUT_EDITOR_URL=https://your-editor.example.com
-```
-
-Clients must send `Authorization: Bearer <token>`. The current bridge is designed for a single user on one machine, not as a multi-tenant service.
-
----
-
-## Architecture
-
-<p align="center">
-  <img src="assets/readme-pic/openchatcut-runtime.en.svg" alt="OpenChatCut runtime architecture connecting agents, MCP, EditorCore, local storage, preview, rendering, and export" />
-</p>
-
-<p align="center">
-  <sub>One shared set of agent tools and EditorCore commands connects the built-in agent, external MCP clients, the real timeline, local data, and production exports.</sub>
-</p>
-
-| Layer | Technology |
-|---|---|
-| Frontend | React 19, TypeScript 6, Vite 8 |
-| Editing core | Immutable timeline state, command layer, and proposal-based application |
-| Agent | Vercel AI SDK 7 (Anthropic, OpenAI, Gemini, Kimi, Qwen, GLM, DeepSeek, MiniMax, Xiaomi MiMo, Mistral, xAI Grok by API key or SuperGrok/X Premium+ subscription sign-in, and compatible APIs), Agent Skills, MCP SDK |
-| Preview and visuals | Remotion Player, WebGL / GLSL |
-| Server | Dual-host Vite / Electron plugins and a server-side keystore |
-| Persistence | Shared local project store under `~/.openchatcut`, IndexedDB cache, configurable local media directory, optional Cloudflare R2 |
-| Desktop | Electron 43 |
-| Export | Remotion, FFmpeg, FCPXML, SRT |
-
-### Directory Overview
-
-| Directory | Responsibility |
-|---|---|
-| `src/editor/` | Timeline state and commands, independent of UI and LLMs |
-| `src/agent/` | Agent assembly, tools, skills, progress, and settings |
-| `src/library/` | Library UI for Motion Graphics, sound effects, transitions, effects, LUTs, and more |
-| `src/transcript/` | Transcription, word-level editing, and transcript UI |
-| `src/captions/` | Caption models, styles, controls, and preview layer |
-| `src/gl/` | WebGL effects, transitions, and shader runtime |
-| `src/generate/` | Clients for image, video, speech, music, and sound-effect generation |
-| `src/persist/` | Project, chat, version, and media persistence |
-| `server/plugins/` | Generation, transcription, media, export, and storage services |
-| `desktop/` | Electron main process and embedded services |
-| `remotion/` | Headless rendering and export pipeline |
-
----
-
-## Data and Privacy
-
-- Projects, chat history, and version data are stored in the shared local store under `~/.openchatcut`; IndexedDB provides a browser-side cache and legacy-data migration.
-- User media is stored in a local media directory that you can back up or migrate.
-- Whether AI requests leave your machine depends on the model, generation, or media services you configure.
-- Unconfigured cloud features do not affect the local timeline or editing of existing media.
-- When exposing MCP externally, configure a Bearer Token and restrict network access to the editor endpoint.
-
----
-
-## Security Model
-
-- API keys are only available to server-side configuration; vendor credentials must never be exposed to the browser through `VITE_`.
-- LLM output, plugin packages, template code, and user input are validated at trust boundaries.
-- Motion Graphics and shader code run in a restricted sandbox, with dedicated checks blocking malicious templates.
-- Agents modify projects only through `EditorCore` commands, making edits traceable and undoable.
-- MCP binds locally by default; public endpoints support Bearer Token authentication.
-- Local media directories and R2 credentials are managed by the server and never written into project JSON.
-
----
-
-## Development and Verification
-
-```bash
-# Type checking and production build
-npm run build
-
-# Core regression checks
 npm test
-
-# Static analysis
-npm run lint
-
 ```
 
-After changing the agent, timeline, preview, or export paths, run at least:
+This runs the project's full check suite — several hundred small tests. It is the contract:
+if it passes, the change is safe. You can also run one area at a time, which is much
+faster, for example:
 
 ```bash
-npx tsc -b --force
-npm test
-npm run build
+npm run verify:desktop-update     # the update system
+npm run verify:i18n               # the English/Chinese text
+npm run verify:shortcuts          # the keyboard layout
 ```
 
 ---
 
-## Technical Foundations
+## Building the Linux version
 
-OpenChatCut is built with the following core projects and specifications:
+Linux is where this app actually lives. The Linux build produces an **AppImage** — a single
+file that a Linux user can download, mark as runnable, and double-click. No installer, no
+package manager, no dependencies to chase.
 
-| Project / specification | Role in OpenChatCut |
+The command that builds it is:
+
+```bash
+npm run desktop:dist:linux
+```
+
+**But do not expect that to work from the Mac.** Building a Linux app on a Mac means
+packaging binaries for a machine you aren't on; parts of it (the video renderer, the AI
+runtime) ship as platform-specific native code and will not come out right. Cross-building
+from macOS is not a supported path and never has been.
+
+The real way this gets built is **on a Linux machine, automatically, by GitHub Actions** —
+exactly the same pattern the AquariusOS image itself uses: push a change, a Linux machine
+in the cloud builds it, and a finished AppImage comes out the other side. The workflow for
+that already exists at `.github/workflows/desktop.yml` and is inherited from upstream.
+
+**That is waiting on one decision from Royce:** this repo has no home on GitHub yet. Once
+it has one, CI builds turn on, and testing moves to real hardware (the Xbox Ally, the 5090
+build) running AquariusOS. Note that publishing built copies is exactly the moment the AGPL
+requires the source to be public — so the GitHub repo will need to be a public one.
+
+### Automatic updates are switched off
+
+Upstream OpenChatCut checks GitHub for new OpenChatCut releases and offers to install them.
+That has been **disabled**, deliberately and in every layer: our fork must never hand a
+user an OpenChatCut release and call it an Aquarius Cut update. They're different apps on
+different version lines.
+
+Nothing in the app contacts an update server, and the "check for updates" button is hidden.
+When Aquarius Cut has its own release feed, four things get switched back on together, and
+each one names the other three in a comment:
+
+| File | What to restore |
 |---|---|
-| [ChatCut-Inc/agent-plugin](https://github.com/ChatCut-Inc/agent-plugin) | Agent Skills foundation. OpenChatCut adapts the plugin's skill structure and workflows for its local editor, storage, MCP, and tool architecture. See the [Agent Skills attribution notice](src/agent/skills/NOTICE.md). |
-| [Remotion](https://www.remotion.dev/) | Core foundation for React-based video preview, composition, and server-side rendering. |
-| [Model Context Protocol](https://modelcontextprotocol.io/) | Protocol foundation that enables Codex, Claude Code, and other external agents to access projects and timeline tools. |
-| [Vercel AI SDK](https://ai-sdk.dev/) | Provider-neutral model streaming and tool calling for the built-in Agent. |
-| [tt-a1i/archify](https://github.com/tt-a1i/archify) | Tool used to define, validate, and generate the README's runtime architecture diagram. |
-
-This list covers the project's major technical foundations. It does not replace the licenses bundled with individual dependencies, fonts, or binaries. See `package-lock.json` for JavaScript dependency versions and [`assets/fonts/LICENSES.md`](assets/fonts/LICENSES.md) for font licenses.
+| `config/electron-builder.config.mjs` | the `publish` block |
+| `src/ui/upstreamUpdate.ts` | `RELEASE_FEED` |
+| `desktop/update-service.ts` | `DESKTOP_UPDATE_FEED_CONFIGURED` |
+| `.github/workflows/desktop.yml` | the update-metadata artifacts |
 
 ---
 
-## Changelog
+## Where things live
 
-See the bilingual [`CHANGELOG.md`](CHANGELOG.md) for notable changes, or browse all published packages on [GitHub Releases](https://github.com/0xsline/OpenChatCut/releases).
+| Folder | What's in it |
+|---|---|
+| `src/` | The app you see — the editor UI, the timeline, the agent chat panel. |
+| `server/` | The local background service: media processing, transcription, AI provider calls. |
+| `desktop/` | The Electron wrapper that turns the web app into a real desktop app. |
+| `config/` | Build settings, including `electron-builder.config.mjs` — how the app is packaged. |
+| `assets/branding/` | The app icons, and `render-icons.mjs`, the script that generates them. |
+| `remotion/` | The rendering engine used for preview and final export. |
+| `shared/` | Code used by more than one of the above. |
+| `docs/` | Notes about how specific parts work. |
+| `CLAUDE.md` | The rules any AI agent working in this repo must follow. Read it first. |
+
+### The icons
+
+Every icon — the Mac `.icns`, the Windows `.ico`, the Linux PNGs, the browser tab icon — is
+generated from one source: the AquariusOS logo at
+`../os-image/branding/logo.svg`. Never edit an icon file by hand; they get overwritten. To
+regenerate them all after the logo changes:
+
+```bash
+export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+node assets/branding/render-icons.mjs
+```
 
 ---
 
-## Star Growth
+## Credit
 
-<p align="center">
-  <a href="https://www.star-history.com/?type=date&repos=0xsline%2FOpenChatCut">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=0xsline/OpenChatCut&type=date&theme=dark&legend=top-left&sealed_token=KKfeYtGGCjyG1QN9_Ev6Tvyyrcp5LW6bzOT8ZKED1EE0qNRqM3KrThzzbXWdcP6K-sr3vKbmoFZYDviSMtf8SI5UqAPYQf9v8qXCpM04S2C4LQTAKPbexT66SI3Q8pcHJJoMT7VCZnGp93LqIXZchAyYfTMmKy_y_LFOJ-_ruEq8GP1kVESXshaFzJfC" />
-      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=0xsline/OpenChatCut&type=date&legend=top-left&sealed_token=KKfeYtGGCjyG1QN9_Ev6Tvyyrcp5LW6bzOT8ZKED1EE0qNRqM3KrThzzbXWdcP6K-sr3vKbmoFZYDviSMtf8SI5UqAPYQf9v8qXCpM04S2C4LQTAKPbexT66SI3Q8pcHJJoMT7VCZnGp93LqIXZchAyYfTMmKy_y_LFOJ-_ruEq8GP1kVESXshaFzJfC" />
-      <img alt="OpenChatCut Star History Chart" src="https://api.star-history.com/chart?repos=0xsline/OpenChatCut&type=date&legend=top-left&sealed_token=KKfeYtGGCjyG1QN9_Ev6Tvyyrcp5LW6bzOT8ZKED1EE0qNRqM3KrThzzbXWdcP6K-sr3vKbmoFZYDviSMtf8SI5UqAPYQf9v8qXCpM04S2C4LQTAKPbexT66SI3Q8pcHJJoMT7VCZnGp93LqIXZchAyYfTMmKy_y_LFOJ-_ruEq8GP1kVESXshaFzJfC" />
-    </picture>
-  </a>
-</p>
-
----
-
-## License
-
-OpenChatCut is licensed under the [GNU Affero General Public License v3.0 or later](LICENSE).
-Third-party components and assets remain subject to their respective licenses.
-
----
-
-
-## Contributing
-
-1. Create a branch from `main`.
-2. Add an executable check for non-trivial logic.
-3. Run `npm test`, `npm run lint`, and `npm run build` before committing.
-4. Open a Pull Request and include screenshots or acceptance evidence for UI or video-behavior changes.
-
-Use [GitHub Issues](https://github.com/0xsline/OpenChatCut/issues) for bug reports and feature requests.
+Aquarius Cut is built on **[OpenChatCut](https://github.com/0xsline/OpenChatCut)** by
+0xsline and its contributors, used and redistributed under the **GNU Affero General Public
+License, version 3 or later**. The full licence text is in [`LICENSE`](LICENSE). The
+upstream release history is preserved in [`CHANGELOG.md`](CHANGELOG.md).

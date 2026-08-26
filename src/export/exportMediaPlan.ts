@@ -135,7 +135,7 @@ export function collectExportMediaPlan(snapshot: unknown): ExportMediaPlan {
     }
     for (const [key, child] of Object.entries(value)) {
       // Desktop master-path provenance is emitted into NLE project metadata,
-      // but OpenChatCut renders from `src`; an unavailable master must not block export.
+      // but Aquarius Cut renders from `src`; an unavailable master must not block export.
       if (key === 'originalFilePath') continue;
       if (fieldPrefix === 'item' && key === 'effects') continue;
       const field = fieldPrefix ? `${fieldPrefix}.${key}` : key;

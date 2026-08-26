@@ -9,8 +9,13 @@ interface PublishConfig {
 }
 
 interface BuilderConfig {
-  publish?: PublishConfig[];
-  mac?: { target?: string[] };
+  appId?: string;
+  productName?: string;
+  artifactName?: string;
+  publish?: PublishConfig[] | null;
+  mac?: { target?: string[]; icon?: string };
+  win?: { icon?: string };
+  linux?: { icon?: string; executableName?: string; syncDesktopName?: boolean };
   files?: string[];
 }
 
@@ -23,12 +28,17 @@ async function configFor(target: string): Promise<BuilderConfig> {
 }
 
 const arm64 = await configFor('darwin-arm64');
-assert.deepEqual(arm64.publish, [{
-  provider: 'github',
-  owner: '0xsline',
-  repo: 'OpenChatCut',
-  channel: 'latest-arm64',
-}]);
+// Aquarius Cut is a fork with no release feed. Upstream published to 0xsline/OpenChatCut;
+// inheriting that would serve another project's releases as our updates.
+assert.equal(arm64.publish, null, 'packaging must not publish to another project\'s release feed');
+assert.equal(arm64.appId, 'os.aquarius.cut');
+assert.equal(arm64.productName, 'Aquarius Cut');
+assert.equal(
+  arm64.artifactName,
+  'AquariusCut-${version}-${arch}.${ext}',
+  'release file names must stay space-free even though the product name has a space',
+);
+assert.equal(arm64.mac?.icon, 'assets/branding/aquarius-cut-icon.icns');
 assert.deepEqual(arm64.mac?.target, ['dmg', 'zip'], 'macOS updates need a zip artifact in addition to the DMG');
 assert.ok(arm64.files?.includes('desktop-dist/native-asr-worker.mjs'));
 assert.ok(arm64.files?.includes('desktop-dist/native-semantic-worker.mjs'));
@@ -45,7 +55,7 @@ assert.ok(
 );
 
 const x64 = await configFor('darwin-x64');
-assert.equal(x64.publish?.[0]?.channel, 'latest-x64');
+assert.equal(x64.publish, null);
 assert.equal(
   x64.files?.includes('!node_modules/onnxruntime-node/bin/napi-v6/darwin/x64/**'),
   false,
@@ -53,6 +63,9 @@ assert.equal(
 );
 
 const linux = await configFor('linux-x64');
+assert.equal(linux.linux?.executableName, 'aquarius-cut', 'the Linux binary keeps the fork\'s own name');
+assert.equal(linux.linux?.icon, 'assets/branding/icons');
+assert.equal(linux.linux?.syncDesktopName, true, 'the window must match aquarius-cut.desktop');
 for (const worker of ['asr', 'semantic', 'clap', 'rhythm']) {
   assert.ok(
     linux.files?.includes(`desktop-dist/native-${worker}-worker.mjs`),
@@ -93,6 +106,7 @@ assert.equal(
 );
 
 const windows = await configFor('win32-x64');
+assert.equal(windows.win?.icon, 'assets/branding/aquarius-cut-icon.ico');
 assert.equal(
   windows.files?.includes('!node_modules/sqlite-vec-windows-x64/**'),
   false,
@@ -104,9 +118,17 @@ assert.ok(
 );
 
 const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')) as {
+  name: string;
+  desktopName: string;
   scripts: Record<string, string>;
   devDependencies: Record<string, string>;
 };
+assert.equal(packageJson.name, 'aquarius-cut');
+assert.equal(
+  packageJson.desktopName,
+  'aquarius-cut.desktop',
+  'the Linux desktop entry must match linux.executableName so the window binds to its launcher',
+);
 assert.equal(
   packageJson.devDependencies['electron-builder'],
   '26.15.7',
@@ -153,32 +175,24 @@ assert.match(
 );
 
 const workflow = await readFile(new URL('../.github/workflows/desktop.yml', import.meta.url), 'utf8');
-for (const metadata of ['latest-arm64-mac.yml', 'latest-x64-mac.yml', 'latest-x64.yml', 'latest-x64-linux.yml']) {
-  assert.ok(workflow.includes(`release/${metadata}`), `desktop jobs must upload ${metadata}`);
-}
-assert.doesNotMatch(workflow, /release\/\*\.yml/, 'debug YAML must not leak into release artifacts');
+// With no publish provider electron-builder emits no auto-update metadata, so the workflow
+// must not ask for latest-*.yml or *.blockmap files that will never exist. Re-add all of
+// them together with `publish` when Aquarius Cut has a release feed.
+assert.doesNotMatch(workflow, /latest-(arm64|x64)(-mac|-linux)?\.yml/, 'no update metadata without a release feed');
+assert.doesNotMatch(workflow, /\.blockmap/, 'no differential update metadata without a release feed');
 assert.match(workflow, /EXPECTED_VERSION="\$\{GITHUB_REF_NAME#v\}"/, 'release gate must derive its package version');
-assert.match(workflow, /release\/\*\.blockmap/, 'desktop jobs must upload differential download metadata');
-assert.match(workflow, /-name '\*\.zip'.* = 2/, 'release aggregation must retain both macOS update archives');
-for (const blockmap of [
-  'arm64.zip.blockmap',
-  'x64.zip.blockmap',
-  'x64.exe.blockmap',
-]) {
+assert.match(workflow, /-name '\*\.zip'.* = 2/, 'release aggregation must retain both macOS archives');
+for (const arch of ['arm64', 'x64']) {
   assert.ok(
-    workflow.includes(`release-files/OpenChatCut-\${EXPECTED_VERSION}-${blockmap}`),
-    `release gate must require ${blockmap}`,
+    workflow.includes(`release-files/AquariusCut-\${EXPECTED_VERSION}-${arch}.dmg`),
+    `release gate must require the ${arch} DMG under the fork's artifact name`,
   );
 }
-assert.match(workflow, /test -f release-files\/latest-arm64-mac\.yml/);
-assert.match(workflow, /test -f release-files\/latest-x64-mac\.yml/);
-assert.match(workflow, /test -f release-files\/latest-x64\.yml/);
-assert.match(workflow, /test -f release-files\/latest-x64-linux\.yml/);
-assert.match(workflow, /release-files\/\*/, 'GitHub Release must publish installers and update metadata together');
+assert.match(workflow, /release-files\/\*/, 'GitHub Release must publish every built installer together');
 
 assert.doesNotMatch(
   workflow,
-  /find release -type d -name OpenChatCut\.app|(?:mac|win|linux)-unpacked\b/,
+  /find release -type d -name '?Aquarius Cut\.app'?|(?:mac|win|linux)-unpacked\b/,
   'desktop smoke tests must never launch unpacked electron-builder output',
 );
 assert.equal(
@@ -199,23 +213,23 @@ assert.match(
 assert.match(workflow, /hdiutil attach[\s\S]*?"\$\{dmgs\[0\]\}"/, 'macOS smoke must mount the generated DMG');
 assert.match(
   workflow,
-  /"\$mounted_app\/Contents\/MacOS\/OpenChatCut"/,
+  /"\$mounted_app\/Contents\/MacOS\/Aquarius Cut"/,
   'macOS smoke must launch the app from the mounted DMG',
 );
 assert.match(workflow, /unzip -tq "\$\{zips\[0\]\}"/, 'macOS smoke must validate the generated update ZIP');
 assert.match(
   workflow,
-  /OpenChatCut\.app\/Contents\/MacOS\/OpenChatCut/,
+  /Aquarius Cut\.app\/Contents\/MacOS\/Aquarius Cut/,
   'macOS update ZIP must contain the application executable',
 );
 assert.match(
   workflow,
-  /OpenChatCut\.app\/Contents\/Frameworks\/Electron Framework\.framework\/Versions\/A\/Electron Framework/,
+  /Aquarius Cut\.app\/Contents\/Frameworks\/Electron Framework\.framework\/Versions\/A\/Electron Framework/,
   'macOS update ZIP must contain the Electron runtime',
 );
 assert.match(
   workflow,
-  /render_runtime="OpenChatCut\.app\/Contents\/Resources\/chrome-headless-shell\//,
+  /render_runtime="Aquarius Cut\.app\/Contents\/Resources\/chrome-headless-shell\//,
   'macOS update ZIP must contain the packaged render runtime',
 );
 assert.match(
@@ -296,4 +310,4 @@ assert.ok(
   'the verified draft must be published only in the final release step',
 );
 
-console.log('update-packaging.verify: per-architecture channels and release metadata contract OK');
+console.log('update-packaging.verify: fork identity, icons, disabled release feed, and packaging contract OK');

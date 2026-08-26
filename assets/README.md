@@ -1,25 +1,41 @@
-# Product assets (内置静态资源)
+# Product assets (built-in static files)
 
-产品自带、随版本发布的静态文件。**不是**用户上传或 AI 生成的工程素材。
+Files the product ships with, released as part of every version. These are **not** user
+uploads or AI-generated project media.
 
-| 目录 / 文件 | URL 前缀 | 用途 |
+| Folder / file | URL prefix | What it is |
 |---|---|---|
-| `fonts/` | `/fonts/` | 内置 CJK / 展示字体 woff2 |
-| `thumbnails/` | `/thumbnails/` | MG 模板库缩略图 |
-| `voice-samples/` | `/voice-samples/` | TTS 试听 |
-| `sound-effects/` | `/sound-effects/` | 音效库 |
-| `audio/` | `/audio/` | 内置音频轨样例 |
-| `media/` | `/media/` | 产品样例媒体（如 speech-sample；**不含** uploads） |
-| `luts/` | `/luts/` | .cube LUT |
-| `library-previews/` | `/library-previews/` | 资源库预览图 |
-| `plugins/` | `/plugins/` | 内置插件索引/示例 |
-| `templates/` | `/templates/` | MG / 口播模板 JSON（源码编译期 import） |
-| `vendor-icons/` | `/vendor-icons/` | 设置页使用的厂商 SVG（源码编译期 import） |
-| `favicon.svg` / `icons.svg` | `/` | 站点图标 |
+| `branding/` | — | App icons + `render-icons.mjs`, which generates them from the AquariusOS logo. Not served over HTTP. |
+| `fonts/` | `/fonts/` | Bundled CJK / display fonts, as woff2 |
+| `thumbnails/` | `/thumbnails/` | Motion-graphics template library thumbnails |
+| `voice-samples/` | `/voice-samples/` | Text-to-speech voice previews |
+| `sound-effects/` | `/sound-effects/` | The sound-effects library |
+| `audio/` | `/audio/` | Built-in sample audio tracks |
+| `media/` | `/media/` | Sample media shipped with the product (e.g. speech-sample). **Excludes** uploads. |
+| `luts/` | `/luts/` | `.cube` colour LUTs |
+| `library-previews/` | `/library-previews/` | Preview images for the resource library |
+| `plugins/` | `/plugins/` | Built-in plugin index and examples |
+| `templates/` | `/templates/` | Motion-graphics / voiceover template JSON (imported at compile time) |
+| `vendor-icons/` | `/vendor-icons/` | Vendor SVGs used on the settings page (imported at compile time) |
+| `favicon.svg` / `icons.svg` | `/` | Site icons |
 
-## 与 `public/` 的分工
+## How this differs from `public/`
 
-- **`assets/`**（本目录）→ 产品内置，进 git。
-- **`public/media/uploads/`** → 仅用户上传 / AI 生成 / 导出中间产物；默认 gitignore。
+- **`assets/`** (this folder) → ships with the product, and is committed to git.
+- **`public/media/uploads/`** → user uploads, AI-generated files, and export intermediates
+  only. Ignored by git by default.
 
-开发与构建由 `server/product-assets.ts`（Vite 插件）把本目录挂到站点根路径；Remotion 导出同样 overlay 本目录。URL 与迁出 `public/` 之前保持一致。
+`server/product-assets.ts` (a Vite plugin) mounts this folder at the site root during both
+development and build; Remotion exports overlay the same folder. The URLs are unchanged from
+before these files moved out of `public/`.
+
+## The app icons
+
+`branding/aquarius-cut-icon.icns`, `branding/aquarius-cut-icon.ico`, `branding/icons/*.png`
+and `../public/aquarius-cut-icon.png` are **generated files**. Never edit them by hand —
+change `../../os-image/branding/logo.svg` instead and re-run:
+
+```bash
+export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
+node assets/branding/render-icons.mjs
+```

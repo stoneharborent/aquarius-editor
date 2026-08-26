@@ -84,7 +84,7 @@ export default {
   'Discover, manage, and share creative extension packs': '发现、管理并分享创意扩展包',
   'Hide install': '收起安装',
   'Back to library': '返回资源库',
-  'Only install extension packs you trust. OpenChatCut validates the format and compiles MG and shaders before installing.': '仅安装你信任的扩展包；安装前会校验格式并真实编译其中的 MG 与 Shader。',
+  'Only install extension packs you trust. Aquarius Cut validates the format and compiles MG and shaders before installing.': '仅安装你信任的扩展包；安装前会校验格式并真实编译其中的 MG 与 Shader。',
   'Extension pack JSON URL…': '扩展包 JSON URL…',
   'Install from URL': '从 URL 安装',
   'Choose file': '选择文件',

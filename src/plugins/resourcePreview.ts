@@ -100,7 +100,7 @@ function buildMg(pack: InstalledPack): TimelineState {
     0,
     false,
   );
-  if (!applied) throw new Error('MG template was rejected by OpenChatCut');
+  if (!applied) throw new Error('MG template was rejected by Aquarius Cut');
   return draft.getState();
 }
 
@@ -157,7 +157,7 @@ function buildVisual(
     resourcePayload(pack, category),
     item,
   );
-  if (!applied) throw new Error(notice || `${category} was rejected by OpenChatCut`);
+  if (!applied) throw new Error(notice || `${category} was rejected by Aquarius Cut`);
   if (category === 'transition') {
     const transition = draft.getState().transitions?.find(
       (candidate) => candidate.incomingItemId === itemId,

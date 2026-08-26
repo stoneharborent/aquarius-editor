@@ -13,7 +13,7 @@ const llmPage = (preset: (typeof LLM_PROVIDER_PRESETS)[number]): SettingsVendorP
     vendor: preset.id as VendorId,
     title: preset.label,
     note: preset.id === 'anthropic'
-      ? 'The built-in Agent requires an Anthropic API key. Claude Code subscription users should connect through “External agents (MCP)”; OpenChatCut does not accept Claude OAuth.'
+      ? 'The built-in Agent requires an Anthropic API key. Claude Code subscription users should connect through “External agents (MCP)”; Aquarius Cut does not accept Claude OAuth.'
       : 'Each provider keeps its own endpoint, key, and model. Test the connection, then choose from the models returned by that API.',
     ...(preset.id === 'anthropic'
       ? { noteAction: { label: 'External agents (MCP)', action: 'open-mcp-guide' } }
@@ -53,7 +53,7 @@ const CODEX_PAGE: SettingsVendorPage = {
   vendor: 'openai',
   title: 'OpenAI · Codex',
   connection: 'codex',
-  note: 'Sign in with a ChatGPT subscription. The official Codex CLI manages credentials, renewal, and logout; OpenChatCut never reads or displays OAuth credentials.',
+  note: 'Sign in with a ChatGPT subscription. The official Codex CLI manages credentials, renewal, and logout; Aquarius Cut never reads or displays OAuth credentials.',
   fields: [
     {
       name: 'CODEX_MODEL', label: 'Codex model', kind: 'text',
@@ -71,7 +71,7 @@ const CODEX_PAGE: SettingsVendorPage = {
 const XAI_OAUTH_PAGE: SettingsVendorPage = {
   key: 'llm/xai-oauth', vendor: 'xai-oauth', title: 'xAI · Grok (Subscription sign-in)',
   connection: 'xai-oauth',
-  note: 'Sign in with your SuperGrok or X Premium+ subscription: the official Grok CLI owns login and credentials (run grok login in a terminal); OpenChatCut imports the session and refreshes it automatically, and never reads or displays OAuth credentials.',
+  note: 'Sign in with your SuperGrok or X Premium+ subscription: the official Grok CLI owns login and credentials (run grok login in a terminal); Aquarius Cut imports the session and refreshes it automatically, and never reads or displays OAuth credentials.',
   fields: [{
     name: 'LLM_XAI_OAUTH_MODEL', label: 'Model', kind: 'text', defaultLabel: 'grok-4.6',
     discoverableModel: true,

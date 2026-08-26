@@ -1,6 +1,6 @@
 # Repository layout index
 
-OpenChatCut keeps build-tool configuration under `config/` and load-bearing
+Aquarius Cut keeps build-tool configuration under `config/` and load-bearing
 project files at the repository root. This file is the single index for that
 split — update it whenever a file moves.
 
@@ -31,7 +31,7 @@ Notes:
 | `.nvmrc` | Node version-manager convention (root lookup) |
 | `.mcp.json` | MCP clients (Claude Code etc.) discover it at the repo root; README documents this path |
 | `index.html` | Vite entry convention (project root) |
-| `README.md` / `README_ZH.md` / `CHANGELOG.md` / `LICENSE` | GitHub landing page, release notes, and license conventions |
+| `README.md` / `CHANGELOG.md` / `LICENSE` | Landing page, upstream release notes, and the AGPL-3.0-or-later licence text |
 | `.gitignore` | Git root-level convention |
 | `assets/` | README/product static assets (the website and release tooling may reference these paths) |
 

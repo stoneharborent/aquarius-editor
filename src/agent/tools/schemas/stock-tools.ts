@@ -35,7 +35,7 @@ export const STOCK_TOOL_SCHEMAS: AgentToolSchema[] = [
         },
         projectId: {
           type: 'string',
-          description: 'Ignored because OpenChatCut uses the active project.',
+          description: 'Ignored because Aquarius Cut uses the active project.',
         },
       },
       required: ['url'],
@@ -81,7 +81,7 @@ export const STOCK_TOOL_SCHEMAS: AgentToolSchema[] = [
         },
         projectId: {
           type: 'string',
-          description: 'Ignored because OpenChatCut uses the active project.',
+          description: 'Ignored because Aquarius Cut uses the active project.',
         },
       },
       required: ['filePath'],

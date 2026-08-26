@@ -107,7 +107,7 @@ function createNativeAsrWorker(): UtilityProcess {
   return electron.utilityProcess.fork(
     fileURLToPath(new URL('./native-asr-worker.mjs', import.meta.url)),
     [],
-    { serviceName: 'OpenChatCut Native ASR' },
+    { serviceName: 'Aquarius Cut Native ASR' },
   );
 }
 

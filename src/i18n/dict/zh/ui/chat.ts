@@ -3,8 +3,8 @@
 // the source language of this fork. Add new entries here when new English UI copy lands.
 export default {
   'Follow the “{name}” workflow for the current project: {summary}. Inspect the media and timeline first, then execute and verify the result.': '请按“{name}”工作流处理当前工程：{summary}。先检查素材和时间线，再执行并检查成片。',
-  'Expand OpenChatCut Agent': '展开 OpenChatCut Agent',
-  'Collapse OpenChatCut Agent': '收起 OpenChatCut Agent',
+  'Expand Aquarius Cut Agent': '展开 Aquarius Cut Agent',
+  'Collapse Aquarius Cut Agent': '收起 Aquarius Cut Agent',
   'Clear chat': '清空对话',
   'The Agent is still running and the chat cannot be cleared. Wait for the run to finish or stop it first, then try again.': 'Agent 仍在运行中，无法清空对话。请先等待运行结束或停止当前运行，再试一次。',
   'Agent workspace': 'Agent 工作台',

@@ -206,15 +206,15 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
   const windowsXml = timelineToFcpxml({
     ...state,
     assets: [{ ...state.assets![0]!, originalFilePath: 'D:\\媒体\\旅行.最终版.001.MOV' }],
-  }, { mediaDir: 'D:\\OpenChatCut\\media' });
+  }, { mediaDir: 'D:\\AquariusCut\\media' });
   assert.ok(windowsXml.includes('src="file:///D:/%E5%AA%92%E4%BD%93/%E6%97%85%E8%A1%8C.%E6%9C%80%E7%BB%88%E7%89%88.001.MOV"'), 'Windows original-media path is validly encoded');
 
   const uncXml = timelineToFcpxml({
     ...state,
     assets: [{ ...state.assets![0]!, originalFilePath: '\\\\server\\共享 空间\\旅行.最终版.001.MOV' }],
-  }, { mediaDir: '\\\\server\\OpenChatCut\\media' });
+  }, { mediaDir: '\\\\server\\AquariusCut\\media' });
   assert.ok(uncXml.includes('kind="original-media" src="file://server/%E5%85%B1%E4%BA%AB%20%E7%A9%BA%E9%97%B4/%E6%97%85%E8%A1%8C.%E6%9C%80%E7%BB%88%E7%89%88.001.MOV"'), 'UNC original-media path is validly encoded');
-  assert.ok(uncXml.includes('kind="proxy-media" src="file://server/OpenChatCut/media/8e45fd6f-8da8-4d6a-8a4f-339d6a8fd747.mp4"'), 'UNC proxy-media path is validly encoded');
+  assert.ok(uncXml.includes('kind="proxy-media" src="file://server/AquariusCut/media/8e45fd6f-8da8-4d6a-8a4f-339d6a8fd747.mp4"'), 'UNC proxy-media path is validly encoded');
 }
 
 // ── Resolve variants retain existing differences ──
@@ -225,7 +225,7 @@ const attr = (el: string, name: string): string => el.match(new RegExp(`${name}=
   };
   const resolveXml = timelineToFcpxml(state, { nleFormat: 'fcp_xml_resolve' });
   assert.ok(resolveXml.includes('colorSpace="1-1-1 (Rec. 709)"'), 'the Resolve variant carries Rec.709');
-  assert.ok(resolveXml.includes('<event name="OpenChatCut Export (Resolve)">'), 'the Resolve event name');
+  assert.ok(resolveXml.includes('<event name="Aquarius Cut Export (Resolve)">'), 'the Resolve event name');
   assert.ok(!timelineToFcpxml(state).includes('colorSpace'), 'the default variant has no colorSpace');
 }
 

@@ -180,7 +180,7 @@ export function InstallPanel({
     }}>
       <div style={{ fontSize: 11.5, color: theme.text, fontWeight: 650 }}>{t('Install')}</div>
       <div style={{ fontSize: 10.5, color: theme.textDim }}>
-        {t('Only install extension packs you trust. OpenChatCut validates the format and compiles MG and shaders before installing.')}
+        {t('Only install extension packs you trust. Aquarius Cut validates the format and compiles MG and shaders before installing.')}
       </div>
       <div style={{ display: 'flex', gap: 6 }}>
         <UrlInstallRow busy={busy} onInstall={onInstall} />

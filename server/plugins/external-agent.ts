@@ -138,7 +138,7 @@ export function externalAgentPlugin(): Plugin {
       });
       server.middlewares.use('/api/external-mcp/mcp', (req, res) => {
         if (!externalMcpAuthorized(req)) {
-          sendBridgeJson(res, 401, { error: 'invalid OpenChatCut MCP token' });
+          sendBridgeJson(res, 401, { error: 'invalid Aquarius Cut MCP token' });
           return;
         }
         void handleMcpRequest(req, res, requestBaseUrl(req)).catch((error) => {

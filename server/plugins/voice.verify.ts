@@ -155,7 +155,7 @@ const aiOptions: VoiceOptions = {
 };
 const openAiRequest = validateVoiceRequest({
   provider: 'openai',
-  text: 'Hello from OpenChatCut',
+  text: 'Hello from Aquarius Cut',
   voiceId: 'alloy',
   instructions: 'Speak calmly',
   speed: 1.1,

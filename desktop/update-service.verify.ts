@@ -3,7 +3,9 @@ import { EventEmitter } from 'node:events';
 import { setTimeout as delay } from 'node:timers/promises';
 import type { AppUpdater, UpdateInfo } from 'electron-updater';
 import {
+  DESKTOP_UPDATE_FEED_CONFIGURED,
   DesktopUpdateService,
+  platformSupportsDirectDesktopUpdates,
   supportsDirectDesktopUpdates,
 } from './update-service';
 
@@ -48,25 +50,41 @@ class FakeUpdater extends EventEmitter {
   }
 }
 
-for (const platform of ['win32', 'linux'] satisfies NodeJS.Platform[]) {
+// Aquarius Cut is a fork with no release feed of its own. Until one exists, no build may
+// ever reach an update server — otherwise it would be offered upstream OpenChatCut releases.
+assert.equal(
+  DESKTOP_UPDATE_FEED_CONFIGURED,
+  false,
+  'the fork must not point at a release feed until it has a GitHub home of its own',
+);
+for (const platform of ['win32', 'linux', 'darwin'] satisfies NodeJS.Platform[]) {
   assert.equal(
     supportsDirectDesktopUpdates({ packaged: true, smoke: false, platform }),
+    false,
+    `${platform} builds must not check for updates while no release feed is configured`,
+  );
+}
+
+// The platform rules themselves stay intact, ready for the day a feed is configured.
+for (const platform of ['win32', 'linux'] satisfies NodeJS.Platform[]) {
+  assert.equal(
+    platformSupportsDirectDesktopUpdates({ packaged: true, smoke: false, platform }),
     true,
     `${platform} packaged builds must support direct updates`,
   );
 }
 assert.equal(
-  supportsDirectDesktopUpdates({ packaged: true, smoke: false, platform: 'darwin' }),
+  platformSupportsDirectDesktopUpdates({ packaged: true, smoke: false, platform: 'darwin' }),
   false,
   'ad-hoc signed macOS builds must use the release-page fallback',
 );
 assert.equal(
-  supportsDirectDesktopUpdates({ packaged: false, smoke: false, platform: 'win32' }),
+  platformSupportsDirectDesktopUpdates({ packaged: false, smoke: false, platform: 'win32' }),
   false,
   'development builds must not contact update servers',
 );
 assert.equal(
-  supportsDirectDesktopUpdates({ packaged: true, smoke: true, platform: 'linux' }),
+  platformSupportsDirectDesktopUpdates({ packaged: true, smoke: true, platform: 'linux' }),
   false,
   'smoke builds must not contact update servers',
 );

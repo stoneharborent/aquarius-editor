@@ -1,6 +1,6 @@
 // External-skill dependency detection: installed custom skills (from GitHub)
 // are written for their original environment (Codex, Claude Code, …) and may
-// name services OpenChatCut does not expose the same way. This module scans a
+// name services Aquarius Cut does not expose the same way. This module scans a
 // skill's text for service keywords and maps each hit onto a local capability
 // so the system prompt can tell the agent what to substitute and what is
 // missing — instead of blindly following a foreign workflow.
@@ -148,7 +148,7 @@ export function skillDependencyPrompt(
     if (dep.kind === 'runtime') {
       lines.push(
         `- ${dep.service}: this skill was written for that environment (found "${dep.keyword}"). `
-        + 'You are the OpenChatCut built-in agent: run the same deterministic steps with THIS environment\'s tools '
+        + 'You are the Aquarius Cut built-in agent: run the same deterministic steps with THIS environment\'s tools '
         + '(editor tools for timeline/media, run_skill_script for the skill\'s own scripts/… locally, run_code sandbox for generic code). '
         + 'Do not pretend an external agent exists; adapt paths like ~/.codex/skills/… to the skill\'s installed location.',
       );

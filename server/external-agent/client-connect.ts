@@ -1,4 +1,4 @@
-// One-click external client connection: writes the OpenChatCut MCP endpoint
+// One-click external client connection: writes the Aquarius Cut MCP endpoint
 // and token into well-known local client config files. Only the `openchatcut`
 // entry is touched; every other server in each file is preserved. JSON files
 // are merged atomically (write-to-temp + rename) and never clobbered when the
@@ -133,7 +133,7 @@ async function connectCodex(endpoint: string, token: string, baseDir: string, co
           await writeAtomic(zshrc, lines.join('\n'));
         } else {
           const suffix = text && !text.endsWith('\n') ? '\n' : '';
-          await writeAtomic(zshrc, `${text}${suffix}# OpenChatCut MCP token (added by OpenChatCut)\n${wanted}\n`);
+          await writeAtomic(zshrc, `${text}${suffix}# Aquarius Cut MCP token (added by Aquarius Cut)\n${wanted}\n`);
         }
       } catch (error) {
         return { ok: false, error: 'config-write-error', detail: error instanceof Error ? error.message : String(error) };

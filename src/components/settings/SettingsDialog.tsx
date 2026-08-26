@@ -23,6 +23,7 @@ import {
   getUpstreamUpdateState,
   hasDesktopUpdateSupport,
   subscribeUpstreamUpdate,
+  UPDATE_CHECKS_ENABLED,
 } from '../../ui/upstreamUpdate';
 import {
   resolveUpstreamUpdateAction,
@@ -290,7 +291,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <SettingsVersionControl
               versionLabel={t('Current version: {version}', { version: formatDisplayVersion(CURRENT_APP_VERSION) })}
-              actionLabel={updateAction.label}
+              actionLabel={UPDATE_CHECKS_ENABLED ? updateAction.label : undefined}
               disabled={updateAction.disabled}
               onAction={() => { runUpstreamUpdateCommand(updateAction.command); }}
             />

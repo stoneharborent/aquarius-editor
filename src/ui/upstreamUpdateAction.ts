@@ -56,24 +56,24 @@ export function upstreamUpdateMessage(state: UpstreamUpdateState, desktopUpdate:
       current: formatDisplayVersion(state.currentVersion),
     };
     return desktopUpdate
-      ? t('OpenChatCut {latest} is available; current version: {current}. Download and install it directly.', params)
-      : t('OpenChatCut {latest} is available; current version: {current}. Visit the project repository to review the update.', params);
+      ? t('Aquarius Cut {latest} is available; current version: {current}. Download and install it directly.', params)
+      : t('Aquarius Cut {latest} is available; current version: {current}. Visit the project repository to review the update.', params);
   }
   if (state.phase === 'current') {
     return t('You are using the latest version, {version}.', { version: formatDisplayVersion(state.currentVersion) });
   }
   if (state.phase === 'downloading') {
-    return t('Downloading OpenChatCut {latest}: {percent}%', {
+    return t('Downloading Aquarius Cut {latest}: {percent}%', {
       latest: formatDisplayVersion(state.latestVersion),
       percent: Math.round(state.percent),
     });
   }
   if (state.phase === 'downloaded') {
-    return t('OpenChatCut {latest} is downloaded. Restart to finish installing.', {
+    return t('Aquarius Cut {latest} is downloaded. Restart to finish installing.', {
       latest: formatDisplayVersion(state.latestVersion),
     });
   }
-  if (state.phase === 'installing') return t('Restarting to install OpenChatCut…');
+  if (state.phase === 'installing') return t('Restarting to install Aquarius Cut…');
   if (state.phase === 'error' && state.failedOperation === 'download') return t('The update download failed. Try again.');
   if (state.phase === 'error' && state.failedOperation === 'install') return t('The update installation failed. Try again.');
   return t('Unable to check for updates. Please try again later.');

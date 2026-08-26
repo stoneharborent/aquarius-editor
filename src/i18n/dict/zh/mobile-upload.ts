@@ -4,7 +4,7 @@
 // here with the rest of the zh dictionary.
 export const ZH_MOBILE_UPLOAD_COPY = {
   pageTitle: 'Upload from phone',
-  title: '发送素材到 OpenChatCut',
+  title: '发送素材到 Aquarius Cut',
   hint: '选择手机里的视频、图片或音频。电脑和手机需连接同一局域网。',
   choose: '选择素材',
   multiple: '支持多选，页面保持打开直到全部完成',
