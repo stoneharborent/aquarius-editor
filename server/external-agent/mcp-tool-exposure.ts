@@ -5,6 +5,15 @@ import { activatedToolNamesForResult } from '../../src/agent/skills/skill-tool-a
 
 interface McpToolListChangeTarget {
   toolListDigest: string;
+  /**
+   * True once the client has attached its standalone SSE stream (the GET
+   * request). Server-initiated messages have nowhere to go until then: the
+   * streamable-HTTP transport silently discards a notification when no
+   * standalone stream is mapped, and nothing replays it.
+   */
+  notificationStreamOpen?: boolean;
+  /** A tools/list_changed that could not be delivered yet, held for the stream. */
+  pendingToolListChanged?: boolean;
   server?: { sendToolListChanged: () => Promise<void> } | null;
 }
 
@@ -19,6 +28,26 @@ export async function sendMcpToolListChangedIfChanged(
   const digest = mcpToolListDigest(tools);
   if (digest === target.toolListDigest) return;
   target.toolListDigest = digest;
+  if (target.notificationStreamOpen === false) {
+    // Hold the change. MCP clients open their notification stream a moment
+    // after initialize returns, so a change announced in that window would be
+    // dropped by the transport and never resent.
+    target.pendingToolListChanged = true;
+    return;
+  }
+  await target.server?.sendToolListChanged().catch(() => undefined);
+}
+
+/**
+ * Replays a held tools/list_changed once the client's notification stream is
+ * attached. Safe to call on every stream attach: it is a no-op when nothing
+ * was held.
+ */
+export async function flushPendingMcpToolListChanged(
+  target: McpToolListChangeTarget,
+): Promise<void> {
+  if (target.pendingToolListChanged !== true) return;
+  target.pendingToolListChanged = false;
   await target.server?.sendToolListChanged().catch(() => undefined);
 }
 

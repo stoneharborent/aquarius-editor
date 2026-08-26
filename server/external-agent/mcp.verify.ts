@@ -168,11 +168,13 @@ try {
   const changed = new Promise<void>((resolve) => { notify = resolve; });
   boundA.client.setNotificationHandler(ToolListChangedNotificationSchema, () => notify());
   assert.ok((await boundA.client.listTools()).tools.some((tool) => tool.name === dynamicTool.name));
+  // The tool list changes here while the client is still opening its standalone
+  // SSE stream: client.connect() resolves before that GET lands. The server must
+  // hold the notification and replay it when the stream attaches.
   await registerEditor(projectA, editorA, revisionA, editorTools);
   await Promise.race([
     changed,
-    // 120s: under full-suite load the notification legitimately takes >30s (measured 30.5s at baseline).
-    new Promise((_, reject) => setTimeout(() => reject(new Error('tools/list_changed timeout')), 120_000)),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('tools/list_changed timeout')), 15_000)),
   ]);
   assert.ok((await boundA.client.listTools()).tools.some((tool) => tool.name === extraTool.name));
   const exposureHeaders = { 'x-openchatcut-tool-exposure': 'progressive' };
@@ -216,7 +218,7 @@ try {
     progressiveListChanged,
     new Promise((_, reject) => setTimeout(
       () => reject(new Error('progressive tools/list_changed timeout')),
-      120_000,
+      15_000,
     )),
   ]);
   assert.equal(

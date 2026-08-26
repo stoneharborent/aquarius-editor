@@ -39,6 +39,7 @@ import { registerMcpPrompts } from './mcp-prompts.ts';
 import {
   activateMcpToolExposure,
   activatedMcpToolNames,
+  flushPendingMcpToolListChanged,
   initialMcpToolExposure,
   mcpToolExposureStatus,
   mcpToolListDigest,
@@ -71,6 +72,8 @@ interface McpSession extends McpBindingSession {
   transport: StreamableHTTPServerTransport;
   toolListDigest: string;
   exposure: McpToolExposure;
+  notificationStreamOpen: boolean;
+  pendingToolListChanged: boolean;
   lastUsed: number;
 }
 
@@ -364,6 +367,30 @@ onRegisteredToolsChanged(() => {
   }
 });
 
+/**
+ * Waits for the SSE response headers of a standalone GET stream. The transport
+ * maps the stream before it answers, so headers on the wire mean the session
+ * can receive server-initiated notifications. Returns false when the request
+ * ended without becoming an event stream (406/409, or a client that hung up).
+ */
+async function sseStreamAccepted(res: ServerResponse): Promise<boolean> {
+  let closed = false;
+  res.once('close', () => { closed = true; });
+  while (!res.headersSent) {
+    if (closed || res.writableEnded || res.destroyed) return false;
+    await delayImmediate();
+  }
+  // A rejected GET answers 406/409/404 instead of the 200 event stream.
+  return res.statusCode === 200;
+}
+
+async function trackNotificationStream(session: McpSession, res: ServerResponse): Promise<void> {
+  if (!await sseStreamAccepted(res)) return;
+  session.notificationStreamOpen = true;
+  res.once('close', () => { session.notificationStreamOpen = false; });
+  await flushPendingMcpToolListChanged(session);
+}
+
 function sessionIdOf(req: IncomingMessage): string | null {
   const value = req.headers['mcp-session-id'];
   return typeof value === 'string' && value ? value : null;
@@ -423,6 +450,8 @@ async function startMcpSession(
     transport,
     exposure: initialMcpToolExposure(requestedMcpToolExposure(req)),
     toolListDigest: '',
+    notificationStreamOpen: false,
+    pendingToolListChanged: false,
     binding: null,
     offline: null,
     staleReason: null,
@@ -504,6 +533,14 @@ export async function handleMcpRequest(
       return;
     }
     session.lastUsed = now;
+    if (req.method === 'GET') {
+      // A GET opens the notification stream. Start it, then mark the session
+      // deliverable and replay anything that changed while it was missing.
+      const streaming = session.transport.handleRequest(req, res, parsedBody);
+      void trackNotificationStream(session, res);
+      await streaming;
+      return;
+    }
     await session.transport.handleRequest(req, res, parsedBody);
     return;
   }

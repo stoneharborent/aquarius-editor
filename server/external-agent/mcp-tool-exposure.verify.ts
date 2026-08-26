@@ -3,9 +3,11 @@ import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 import {
   activatedMcpToolNames,
   activateMcpToolExposure,
+  flushPendingMcpToolListChanged,
   initialMcpToolExposure,
   projectMcpToolExposure,
   requestedMcpToolExposure,
+  sendMcpToolListChangedIfChanged,
 } from './mcp-tool-exposure.ts';
 const controls = { openchatcut_status: true } as const;
 
@@ -72,5 +74,40 @@ const unchanged = activateMcpToolExposure(loaded, 'load_skill', {
   contents: { 'SKILL.md': 'No catalog names here.' },
 }, catalog, 30);
 assert.equal(unchanged, loaded, 'empty activation does not cause list_changed churn');
+
+function changeTarget(notificationStreamOpen: boolean) {
+  let sends = 0;
+  return {
+    target: {
+      toolListDigest: '',
+      notificationStreamOpen,
+      pendingToolListChanged: false,
+      server: {
+        sendToolListChanged: async () => { sends += 1; },
+      },
+    },
+    sends: () => sends,
+  };
+}
+
+const open = changeTarget(true);
+await sendMcpToolListChangedIfChanged(open.target, catalog);
+assert.equal(open.sends(), 1, 'a change is announced immediately on an attached stream');
+await sendMcpToolListChangedIfChanged(open.target, catalog);
+assert.equal(open.sends(), 1, 'an unchanged tool list is not re-announced');
+
+// A client opens its notification stream a moment after initialize returns.
+// Anything announced in that window is dropped by the transport, so it has to
+// be held and replayed instead of lost.
+const detached = changeTarget(false);
+await sendMcpToolListChangedIfChanged(detached.target, catalog);
+assert.equal(detached.sends(), 0, 'no notification is sent without a notification stream');
+assert.equal(detached.target.pendingToolListChanged, true, 'the change is held for the stream');
+detached.target.notificationStreamOpen = true;
+await flushPendingMcpToolListChanged(detached.target);
+assert.equal(detached.sends(), 1, 'the held change is replayed when the stream attaches');
+assert.equal(detached.target.pendingToolListChanged, false);
+await flushPendingMcpToolListChanged(detached.target);
+assert.equal(detached.sends(), 1, 'a flush with nothing held is a no-op');
 
 console.log('MCP progressive tool exposure verification passed');
