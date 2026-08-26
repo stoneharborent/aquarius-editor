@@ -65,7 +65,11 @@ AGENTS.md
 .impeccable/
 .browser4-cli/
 # Private working documents such as TODOs and design notes; publishable docs belong elsewhere
-docs/
+# (written as docs/* so the exception below can apply — git cannot re-include a file from
+# inside an excluded directory).
+docs/*
+# …except the shortcut map, which CLAUDE.md rule 4 makes the law for keyboard bindings.
+!docs/fcp-shortcut-map.md
 # Local model-optimization plan / notes (was mistakenly committed; keep out of the public repo)
 MODEL-OPT-PLAN.md
 /MODEL-OPT-PLAN*/

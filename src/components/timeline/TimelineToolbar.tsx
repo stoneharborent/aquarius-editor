@@ -147,8 +147,8 @@ export function TimelineToolbar({
       <div className="cc-timeline-tool-group">
         <TrackCreateControl commands={commands} />
         <ToolSep />
-        <TB icon="cursor" title={t('Selection mode (V): drag to move / trim edges')} active={editMode === 'selection'} onClick={() => invokeAction('interaction-mode-selection', undefined, 'toolbar')} />
-        <TB icon="trim" title={t('Trim mode (N): trim clip edges; later clips follow to close the gap (ripple)')} active={editMode === 'trim'} onClick={() => invokeAction('interaction-mode-trim', undefined, 'toolbar')} />
+        <TB icon="cursor" title={t('Selection mode (A): drag to move / trim edges')} active={editMode === 'selection'} onClick={() => invokeAction('interaction-mode-selection', undefined, 'toolbar')} />
+        <TB icon="trim" title={t('Trim mode (T): trim clip edges; later clips follow to close the gap (ripple)')} active={editMode === 'trim'} onClick={() => invokeAction('interaction-mode-trim', undefined, 'toolbar')} />
         <TB
           icon="swap"
           title={t('Slip mode (U): keep timeline position and duration, drag only the source range')}
@@ -169,8 +169,8 @@ export function TimelineToolbar({
         />
         <TB icon="blade" title={t('Blade mode (B): click a clip to split it there')} active={editMode === 'blade'} onClick={() => invokeAction('interaction-mode-blade', undefined, 'toolbar')} />
         <TB icon="pencil" title={t('Pen mode (P): click the selected clip to draw keyframes (visual clips = opacity, audio clips = volume; vertical = value; drag a point to change frame/value, right-click to delete)')} active={editMode === 'pen'} onClick={() => invokeAction('interaction-mode-pen', undefined, 'toolbar')} />
-        <TB icon="scissors" title={t('Split the selected clip at the playhead (C)')} onClick={() => invokeAction('split', undefined, 'toolbar')} />
-        <TB icon="magnet" title={snapping ? t('Snapping: on (S)') : t('Snapping: off (S)')} active={snapping} onClick={() => invokeAction('snapping', undefined, 'toolbar')} />
+        <TB icon="scissors" title={t('Split the selected clip at the playhead (⌘B)')} onClick={() => invokeAction('split', undefined, 'toolbar')} />
+        <TB icon="magnet" title={snapping ? t('Snapping: on (N)') : t('Snapping: off (N)')} active={snapping} onClick={() => invokeAction('snapping', undefined, 'toolbar')} />
         <ToolSep />
         <TimelineMoreControl
           placeMode={placeMode}

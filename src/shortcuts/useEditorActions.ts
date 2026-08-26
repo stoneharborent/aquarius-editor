@@ -25,6 +25,10 @@ interface EditorActionDeps {
 
 const timeline = (ref: RefObject<TimelineShortcutApi | null>) => ref.current;
 
+/** Final Cut Pro's coarse step: Shift + arrow moves the playhead and Shift + , / .
+ *  nudges the selection by ten frames, at any project frame rate. */
+const COARSE_STEP_FRAMES = 10;
+
 function previewCanvasHasKeyboardFocus(): boolean {
   if (typeof document === 'undefined') return false;
   const active = document.activeElement;
@@ -61,8 +65,9 @@ function playbackActions(deps: EditorActionDeps): ActionBindings {
       const api = tl();
       if (api) api.seekTo(api.getPlayhead() + 1);
     },
-    'seek-back-sec': () => { const api = tl(); if (api) api.seekTo(api.getPlayhead() - deps.fps); },
-    'seek-fwd-sec': () => { const api = tl(); if (api) api.seekTo(api.getPlayhead() + deps.fps); },
+    // Shift + arrow is a 10-frame step in Final Cut Pro — frames, not a second.
+    'seek-back-sec': () => { const api = tl(); if (api) api.seekTo(api.getPlayhead() - COARSE_STEP_FRAMES); },
+    'seek-fwd-sec': () => { const api = tl(); if (api) api.seekTo(api.getPlayhead() + COARSE_STEP_FRAMES); },
     'shuttle-back': () => tl()?.shuttle(-1),
     'shuttle-fwd': () => tl()?.shuttle(1),
     'shuttle-pause': () => tl()?.shuttle(0),
@@ -89,8 +94,8 @@ function editingActions(deps: EditorActionDeps): ActionBindings {
     'interaction-mode-rate-stretch': () => tl()?.setEditMode('rate-stretch'),
     'interaction-mode-blade': () => tl()?.setEditMode('blade'),
     'interaction-mode-pen': () => tl()?.setEditMode('pen'),
-    'nudge-left': ({ shift }) => tl()?.nudgeSelected(-(shift ? 5 : 1)),
-    'nudge-right': ({ shift }) => tl()?.nudgeSelected(shift ? 5 : 1),
+    'nudge-left': ({ shift }) => tl()?.nudgeSelected(-(shift ? COARSE_STEP_FRAMES : 1)),
+    'nudge-right': ({ shift }) => tl()?.nudgeSelected(shift ? COARSE_STEP_FRAMES : 1),
     'trim-start': () => tl()?.trimSelectedToPlayhead('start'),
     'trim-end': () => tl()?.trimSelectedToPlayhead('end'),
     'select-all': () => deps.selectAll(),

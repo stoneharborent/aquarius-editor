@@ -246,7 +246,7 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
       />
       <Sep />
       <Item label={t('Copy')} icon="copy" shortcut="⌘C" onClick={run(() => commands.duplicateItem(item.id))} />
-      <Item label={t('Split')} icon="scissors" shortcut="C" disabled={!inside} onClick={run(() => commands.splitItem(item.id, playhead))} />
+      <Item label={t('Split')} icon="scissors" shortcut="⌘B" disabled={!inside} onClick={run(() => commands.splitItem(item.id, playhead))} />
       <Sep />
       <Item label={applied.length ? t('Applied effects ({n})', { n: applied.length }) : t('Applied effects')} icon="filter" chevron disabled={applied.length === 0}
         onClick={applied.length ? () => setShowApplied((v) => !v) : undefined} />

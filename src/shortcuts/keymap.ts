@@ -3,7 +3,7 @@
 // against effectiveCatalog(); the settings dialog rebinds via setBinding/resetBinding. Kept
 // pure of React so both can share it (a tiny listener store drives re-renders).
 import { SHORTCUT_CATALOG, type ShortcutAction } from './catalog';
-import { parseBindingAlts, normalizeKey, type ParsedChord } from './match';
+import { parseBindingAlts, eventBindingKey, type ParsedChord } from './match';
 
 const LS_KEY = 'cc.keymap.v1';
 type UserKeymap = Record<string, string>; // actionId → override binding string
@@ -94,8 +94,8 @@ function isMacPlatform(): boolean {
  *  convention the catalog + matcher use (⌘ on Mac, Ctrl elsewhere). `isMac` is injectable so
  *  verifies stay deterministic regardless of the host platform (navigator is absent under
  *  CI/node); callers that omit it keep the runtime platform probe. */
-export function chordFromEvent(e: Pick<KeyboardEvent, 'key' | 'metaKey' | 'ctrlKey' | 'altKey' | 'shiftKey'>, isMac?: boolean): string | null {
-  const key = normalizeKey(e.key);
+export function chordFromEvent(e: Pick<KeyboardEvent, 'key' | 'metaKey' | 'ctrlKey' | 'altKey' | 'shiftKey'> & { code?: string }, isMac?: boolean): string | null {
+  const key = eventBindingKey(e);
   if (['shift', 'control', 'alt', 'meta', 'escape', 'unidentified'].includes(key)) return null;
   const mac = isMac ?? isMacPlatform();
   const parts: string[] = [];

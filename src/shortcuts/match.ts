@@ -10,19 +10,55 @@ export interface ParsedChord {
   withKey?: string;
 }
 
-const ARROW: Record<string, string> = {
-  arrowleft: '←',
-  arrowright: '→',
-  arrowup: '↑',
-  arrowdown: '↓',
-  left: '←',
-  right: '→',
-  up: '↑',
-  down: '↓',
+/** Shifted punctuation folded back to the key that is printed on the cap, so a binding
+ *  written as "Shift + ," matches the "<" the browser reports. The chord's own Shift flag
+ *  still has to agree, so folding can never make an unshifted binding fire with Shift. */
+const UNSHIFT: Record<string, string> = {
+  '<': ',', '>': '.', '?': '/', ':': ';', '"': "'", '{': '[', '}': ']',
+  '|': '\\', '~': '`', '_': '-',
 };
+
+/** Physical key → the character on the cap (US/QWERTY reference layout). Used only as a
+ *  fallback when `event.key` is not a plain binding key — macOS turns ⌥[ into “ and ⌥M
+ *  into µ, which would otherwise make every Option binding in the FCP layout unreachable. */
+const CODE_KEY: Record<string, string> = {
+  Space: 'space', Enter: 'enter', NumpadEnter: 'enter', Tab: 'tab',
+  Backspace: 'backspace', Delete: 'delete', Escape: 'escape',
+  ArrowLeft: 'arrowleft', ArrowRight: 'arrowright', ArrowUp: 'arrowup', ArrowDown: 'arrowdown',
+  Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'",
+  BracketLeft: '[', BracketRight: ']', Backslash: '\\', Backquote: '`',
+  Minus: '-', Equal: '=',
+  NumpadAdd: '=', NumpadSubtract: '-',
+};
+
+/** True for a key a binding string can name directly (letters, digits, punctuation, named keys). */
+function isPlainBindingKey(key: string): boolean {
+  return /^[a-z0-9`\-=[\]\\;',./]$/.test(key)
+    || ['space', 'enter', 'tab', 'backspace', 'delete', 'escape', 'arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(key);
+}
+
+/** The cap character for a KeyboardEvent.code, or null when the code is unmapped. */
+export function keyFromCode(code: string | undefined): string | null {
+  if (!code) return null;
+  if (CODE_KEY[code]) return CODE_KEY[code]!;
+  if (/^Key[A-Z]$/.test(code)) return code.slice(3).toLowerCase();
+  if (/^(Digit|Numpad)[0-9]$/.test(code)) return code.slice(-1);
+  return null;
+}
+
+/** The key a chord should be matched against: `event.key`, falling back to the physical
+ *  key when the character the OS produced is not something a binding can name. */
+export function eventBindingKey(
+  e: Pick<KeyboardEvent, 'key'> & { code?: string },
+): string {
+  const key = normalizeKey(e.key);
+  if (isPlainBindingKey(key)) return key;
+  return keyFromCode(e.code) ?? key;
+}
 
 export function normalizeKey(key: string): string {
   const k = key.length === 1 ? key.toLowerCase() : key.toLowerCase();
+  if (UNSHIFT[k]) return UNSHIFT[k]!;
   if (k === ' ') return 'space';
   if (k === 'escape') return 'escape';
   if (k === 'backspace') return 'backspace';
@@ -125,6 +161,9 @@ export function matchShortcut(
   }
   const key = normalizeKey(e.key);
   if (['shift', 'control', 'alt', 'meta'].includes(key)) return null;
+  // Match on the reported character *or* the physical key: on macOS ⌥[ arrives as “ and
+  // ⇧, as <, neither of which a binding string can name.
+  const codeKey = keyFromCode((e as KeyboardEvent & { code?: string }).code);
 
   const typing = isTypingTarget(e.target);
   const isMac = ctx.isMac ?? (typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform));
@@ -137,10 +176,7 @@ export function matchShortcut(
     if ((action.disabledWhenTyping !== false) && typing) continue;
     const alts = parseBindingAlts(action.keys);
     for (const chord of alts) {
-      if (chord.key !== key && ARROW[key] !== chord.key) {
-        // allow arrowleft vs ← already normalized to arrowleft
-        if (chord.key !== key) continue;
-      }
+      if (chord.key !== key && chord.key !== codeKey) continue;
       // Mod = meta on Mac, ctrl on Windows
       const wantMod = chord.mod;
       const hasMod = isMac ? e.metaKey : e.ctrlKey;

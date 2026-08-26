@@ -40,6 +40,11 @@ assert.equal(macChord({ key: ' ' }), 'Space', 'space');
 assert.equal(macChord({ key: 'ArrowLeft' }), '←', 'arrow');
 assert.equal(macChord({ key: 'Shift', shiftKey: true }), null, 'bare modifier → null');
 assert.equal(macChord({ key: 'Escape' }), null, 'escape → null');
+// Rebinding an FCP chord on macOS: the OS reports “ for ⌥[ and < for ⇧, — capture the cap.
+const macCoded = (o: Partial<KeyboardEvent> & { code?: string }) => chordFromEvent({ ...ev(o), code: o.code }, true);
+assert.equal(macCoded({ key: '“', altKey: true, code: 'BracketLeft' }), 'Alt + [', 'mac: ⌥[ captures as Alt + [');
+assert.equal(macCoded({ key: '<', shiftKey: true, code: 'Comma' }), 'Shift + ,', 'mac: ⇧, captures as Shift + ,');
+assert.equal(macCoded({ key: 'µ', altKey: true, code: 'KeyM' }), 'Alt + M', 'mac: ⌥M captures as Alt + M');
 
 // ── conflict detection: another action bound to undo's chord conflicts with undo ──
 const conflicts = findConflicts(SHORTCUT_CATALOG, 'play-pause', SHORTCUT_CATALOG.find((a) => a.id === 'undo')!.keys);

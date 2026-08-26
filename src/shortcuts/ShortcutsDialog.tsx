@@ -13,7 +13,12 @@ interface ShortcutsDialogProps {
 }
 
 const IS_MAC = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform);
-const showKeys = (keys: string): string => keys.replace(/Mod/g, IS_MAC ? '⌘' : 'Ctrl');
+
+/** Binding string → what the key caps say on this platform. macOS gets the Final Cut Pro
+ *  glyphs (⌘ ⌥ ⇧ ⌃); Linux and Windows keep the spelled-out modifier names. */
+const showKeys = (keys: string): string => (IS_MAC
+  ? keys.replace(/\bMod\b/g, '⌘').replace(/\bAlt\b/g, '⌥').replace(/\bShift\b/g, '⇧').replace(/\bCtrl\b/g, '⌃')
+  : keys.replace(/\bMod\b/g, 'Ctrl'));
 
 interface Pending { id: string; keys: string; conflicts: ShortcutAction[] }
 
