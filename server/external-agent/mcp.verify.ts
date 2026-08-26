@@ -171,7 +171,8 @@ try {
   await registerEditor(projectA, editorA, revisionA, editorTools);
   await Promise.race([
     changed,
-    new Promise((_, reject) => setTimeout(() => reject(new Error('tools/list_changed timeout')), 30_000)),
+    // 120s: under full-suite load the notification legitimately takes >30s (measured 30.5s at baseline).
+    new Promise((_, reject) => setTimeout(() => reject(new Error('tools/list_changed timeout')), 120_000)),
   ]);
   assert.ok((await boundA.client.listTools()).tools.some((tool) => tool.name === extraTool.name));
   const exposureHeaders = { 'x-openchatcut-tool-exposure': 'progressive' };
@@ -215,7 +216,7 @@ try {
     progressiveListChanged,
     new Promise((_, reject) => setTimeout(
       () => reject(new Error('progressive tools/list_changed timeout')),
-      30_000,
+      120_000,
     )),
   ]);
   assert.equal(
