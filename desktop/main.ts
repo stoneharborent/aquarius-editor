@@ -22,6 +22,7 @@ import {
 } from './local-media-bridge.ts';
 import { installProjectStoreIpc } from './project-store-ipc.ts';
 import { installEditorAuthIpc } from './editor-auth-ipc.ts';
+import { isOsManagedInstall } from './overlay-update.ts';
 import { installDesktopUpdateIpc } from './update-ipc.ts';
 import { supportsDirectDesktopUpdates } from './update-service.ts';
 import { installDesktopInferenceIpc } from './native-inference-ipc.ts';
@@ -324,6 +325,9 @@ async function boot(): Promise<void> {
       packaged: app.isPackaged,
       smoke: SMOKE,
       platform: process.platform,
+      // Set by the AppImage runtime; without it electron-updater cannot install on Linux.
+      appImage: Boolean(process.env.APPIMAGE),
+      osManagedOverlay: isOsManagedInstall(process.env),
     }),
   });
   installDirectoryWatchIpc(origin);

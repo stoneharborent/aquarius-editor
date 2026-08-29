@@ -1,71 +1,80 @@
-// Aquarius Editor has no release feed (see RELEASE_FEED in ./upstreamUpdate.ts), so this file
-// checks the *containment*: even with a desktop update bridge attached and a server that
-// would happily report a newer version, the app makes no request and offers no update.
-//
-// Upstream's version of this file exercised the auto-check race guard and the web fallback.
-// Those code paths still exist behind the feed switch; restore this test from git history
-// (commit "rebrand: Aquarius Cut identity, icons, and a disabled release feed") when a feed is configured.
+// The renderer half of the update path, with an Electron bridge attached: the desktop
+// updater owns the state, a late initial getState must not clobber a newer event, and a
+// build the desktop updater cannot serve (unsigned macOS) falls back to the releases page.
 import assert from 'node:assert/strict';
 import { setTimeout as delay } from 'node:timers/promises';
 import type { DesktopUpdateState } from '../../shared/desktop-update';
 
-const calls: string[] = [];
-const available: DesktopUpdateState = {
-  phase: 'available',
+let onState: ((state: DesktopUpdateState) => void) | null = null;
+const failedCheck: DesktopUpdateState = {
+  phase: 'error',
+  source: 'auto',
+  currentVersion: '0.1.8',
+  failedOperation: 'check',
+};
+const unsupportedCheck: DesktopUpdateState = {
+  phase: 'unsupported',
   source: 'manual',
   currentVersion: '0.1.9',
-  latestVersion: '0.2.0',
 };
+let checkState = failedCheck;
 const updates = {
-  getState: async () => { calls.push('getState'); return available; },
-  check: async () => { calls.push('check'); return available; },
-  download: async () => { calls.push('download'); return available; },
-  install: async () => { calls.push('install'); return available; },
-  subscribe: (_listener: (state: DesktopUpdateState) => void) => {
-    calls.push('subscribe');
-    return () => {};
+  getState: async () => {
+    await delay(0);
+    return { phase: 'idle', source: 'auto', currentVersion: '0.1.8' } as const;
+  },
+  check: async () => {
+    onState?.(checkState);
+    return checkState;
+  },
+  download: async () => failedCheck,
+  install: async () => failedCheck,
+  subscribe: (listener: (state: DesktopUpdateState) => void) => {
+    onState = listener;
+    return () => { onState = null; };
   },
 };
 
-let fetches = 0;
 Object.defineProperties(globalThis, {
   fetch: {
     configurable: true,
-    value: async () => {
-      fetches += 1;
-      return new Response(JSON.stringify({ tag_name: 'v9.9.9' }), { status: 200 });
-    },
+    value: async () => new Response(JSON.stringify({ tag_name: 'v0.2.0' }), { status: 200 }),
   },
   window: {
     configurable: true,
-    value: { openChatCutDesktop: { updates }, open: () => { calls.push('open'); } },
+    value: { openChatCutDesktop: { updates } },
   },
 });
 
 // Runtime import is intentional: the desktop bridge must exist before this stateful module is evaluated.
 const moduleUrl = new URL('./upstreamUpdate.ts', import.meta.url);
 const updateModule = await import(moduleUrl.href);
-
-assert.equal(updateModule.UPDATE_CHECKS_ENABLED, false);
-assert.equal(updateModule.hasDesktopUpdateSupport(), false, 'a bridge without a feed is not update support');
+assert.equal(updateModule.UPDATE_CHECKS_ENABLED, true, 'the release feed is configured, so checks run');
 
 updateModule.startAutomaticUpstreamUpdateCheck();
-await delay(5);
-assert.equal(updateModule.getUpstreamUpdateState().phase, 'idle', 'startup must not begin an update check');
+await Promise.resolve();
+assert.equal(updateModule.getUpstreamUpdateState().phase, 'error');
 
-updateModule.subscribeUpstreamUpdate(() => {});
+await delay(5);
+assert.equal(
+  updateModule.getUpstreamUpdateState().phase,
+  'error',
+  'a late initial getState response must not overwrite a newer update event',
+);
+
+checkState = unsupportedCheck;
 await updateModule.requestUpstreamUpdateCheck('manual');
-await updateModule.requestUpstreamUpdateDownload();
-await updateModule.requestUpstreamUpdateInstall();
-updateModule.openUpstreamReleasePage();
-await delay(5);
-
-assert.deepEqual(updateModule.getUpstreamUpdateState(), { phase: 'idle', visible: false });
-assert.deepEqual(calls, [], 'the Electron updater bridge must never be invoked without a feed');
-assert.equal(fetches, 0, 'no update request may leave the machine without a feed');
-
+assert.equal(updateModule.hasDesktopUpdateSupport(), false);
+const fallbackState = updateModule.getUpstreamUpdateState();
+assert.equal(fallbackState.phase, 'available');
+assert.equal(fallbackState.source, 'manual');
+assert.equal(fallbackState.visible, true);
+assert.equal(fallbackState.phase === 'available' ? fallbackState.latestVersion : undefined, 'v0.2.0');
 const actionModule = await import('./upstreamUpdateAction.ts');
-const action = actionModule.resolveUpstreamUpdateAction(updateModule.getUpstreamUpdateState(), false);
-assert.equal(action.command, 'check', 'the idle action stays a check; the settings header hides it while updates are off');
+assert.equal(
+  actionModule.resolveUpstreamUpdateAction(fallbackState, false).command,
+  'view-release',
+  'a build that cannot install in place sends the user to the releases page instead',
+);
 
-console.log('upstreamUpdateDesktop.verify: no release feed means no update traffic and no update offer');
+console.log('upstreamUpdateDesktop.verify: race guard and unsupported desktop fallback OK');

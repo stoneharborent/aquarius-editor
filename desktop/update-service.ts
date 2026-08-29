@@ -5,32 +5,71 @@ import type {
   DesktopUpdateState,
 } from '../shared/desktop-update.ts';
 
+/**
+ * The AquariusOS overlay path, injected so this file stays free of `fs` and Electron.
+ * Implemented by desktop/overlay-update.ts and wired up in desktop/update-ipc.ts.
+ */
+export interface OverlayUpdateDriver {
+  /** Download, verify, extract, and activate `version` in the writable overlay. */
+  readonly install: (
+    version: string,
+    hooks: { onProgress: (percent: number) => void; onExtractStart: () => void },
+  ) => Promise<unknown>;
+  /** Restart through the OS launcher so the newly activated copy is the one that runs. */
+  readonly restart: () => void;
+}
+
 export interface DesktopUpdateServiceOptions {
   readonly enabled: boolean;
   readonly currentVersion: string;
+  /**
+   * Set only on AquariusOS, where the app is baked into a read-only image and cannot
+   * replace itself in place. When present it takes over download and restart; the feed
+   * and version check stay exactly the same as on every other platform.
+   */
+  readonly overlay?: OverlayUpdateDriver | null;
 }
 
 export interface DesktopUpdateSupportContext {
   readonly packaged: boolean;
   readonly smoke: boolean;
   readonly platform: NodeJS.Platform;
+  /** Linux: the process was launched from a real AppImage (`process.env.APPIMAGE` is set). */
+  readonly appImage?: boolean;
+  /** Linux: AquariusOS baked this build in read-only and manages a writable overlay. */
+  readonly osManagedOverlay?: boolean;
 }
 
 /**
  * Whether a release feed exists for Aquarius Editor to update from.
  *
- * It is `false` on purpose. Upstream shipped a GitHub feed pointing at 0xsline/OpenChatCut,
- * and electron-updater would happily download that project's releases into this fork. Aquarius
- * Editor publishes no releases yet, so the updater is never enabled and never contacts a server.
- * Flip this to `true` at the same time as `publish` in config/electron-builder.config.mjs and
- * RELEASE_FEED in src/ui/upstreamUpdate.ts — those three belong together.
+ * Aquarius Editor publishes its own GitHub Releases, so the updater is live. It must never
+ * be pointed anywhere but this fork's repository — upstream's feed serves a different app
+ * on a different version line. Three siblings switch the same feature on and have to agree:
+ * `publish` in config/electron-builder.config.mjs, RELEASE_FEED in src/ui/upstreamUpdate.ts,
+ * and the update-metadata artifacts in .github/workflows/desktop.yml.
  */
-export const DESKTOP_UPDATE_FEED_CONFIGURED = false;
+export const DESKTOP_UPDATE_FEED_CONFIGURED = true;
 
-/** Platforms where a packaged build could install an update in place, feed aside. */
+/**
+ * Platforms where a packaged build could install an update itself, feed aside.
+ *
+ * - Windows: the NSIS installer replaces the install directory in place.
+ * - Linux from an AppImage: electron-updater's AppImageUpdater rewrites the .AppImage file,
+ *   but only when `process.env.APPIMAGE` points at it. Claiming support without that env
+ *   var makes the updater fail at install time, after the user has already downloaded.
+ * - Linux on AquariusOS: the image copy is read-only, so the overlay driver installs beside
+ *   it instead. Supported without APPIMAGE precisely because nothing is replaced in place.
+ * - macOS: builds are unsigned, so Squirrel.Mac would reject them. Those users are sent to
+ *   the releases page instead (see src/ui/upstreamUpdateAction.ts, 'view-release').
+ */
 export function platformSupportsDirectDesktopUpdates(context: DesktopUpdateSupportContext): boolean {
   if (!context.packaged || context.smoke) return false;
-  return context.platform === 'win32' || context.platform === 'linux';
+  if (context.platform === 'win32') return true;
+  if (context.platform === 'linux') {
+    return context.appImage === true || context.osManagedOverlay === true;
+  }
+  return false;
 }
 
 export function supportsDirectDesktopUpdates(context: DesktopUpdateSupportContext): boolean {
@@ -153,11 +192,50 @@ export class DesktopUpdateService {
     if (!this.options.enabled || !canDownload || !this.state.latestVersion) return this.state;
     this.activeOperation = 'download';
     this.publish({ ...this.state, phase: 'downloading', percent: 0, failedOperation: undefined });
+    if (this.options.overlay) return this.installOverlay(this.options.overlay, this.state.latestVersion);
     try {
       await this.updater.downloadUpdate();
       if (this.state.phase === 'downloading') this.fail('download');
     } catch {
       if (this.state.phase === 'downloading') this.fail('download');
+    }
+    return this.state;
+  }
+
+  /**
+   * The overlay equivalent of electron-updater's download: the HTTP transfer reports
+   * `downloading` percentages, the extract-and-swap reports `installing`, and a success
+   * lands on `downloaded` so the same "Restart and install" prompt appears as everywhere
+   * else. A failure is reported against 'download', which the UI offers to retry.
+   */
+  private async installOverlay(
+    overlay: OverlayUpdateDriver,
+    version: string,
+  ): Promise<DesktopUpdateState> {
+    try {
+      await overlay.install(version, {
+        onProgress: (percent) => {
+          if (this.state.phase !== 'downloading') return;
+          this.publish({
+            ...this.state,
+            phase: 'downloading',
+            percent: Math.min(100, Math.max(0, percent)),
+          });
+        },
+        onExtractStart: () => {
+          if (this.state.phase !== 'downloading') return;
+          this.publish({ ...this.state, phase: 'installing', percent: 100 });
+        },
+      });
+      this.publish({
+        phase: 'downloaded',
+        source: this.state.source,
+        currentVersion: this.options.currentVersion,
+        latestVersion: version,
+        percent: 100,
+      });
+    } catch {
+      this.fail('download');
     }
     return this.state;
   }
@@ -168,9 +246,11 @@ export class DesktopUpdateService {
     if (!this.options.enabled || !canInstall || !this.state.latestVersion) return this.state;
     this.activeOperation = 'install';
     this.publish({ ...this.state, phase: 'installing', failedOperation: undefined });
+    const overlay = this.options.overlay;
     globalThis.setTimeout(() => {
       try {
-        this.updater.quitAndInstall();
+        if (overlay) overlay.restart();
+        else this.updater.quitAndInstall();
       } catch {
         this.fail('install');
       }

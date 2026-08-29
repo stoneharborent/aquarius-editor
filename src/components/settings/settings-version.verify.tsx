@@ -21,8 +21,8 @@ assert.match(markup, /Current version: V0\.1\.9/, 'the settings header must disp
 assert.match(markup, />Download update<\/button>/, 'once a new desktop version is found, a direct download entry point must be offered');
 assert.doesNotMatch(markup, /automatic update/i, 'the download must keep user confirmation and must never become a silent automatic update');
 
-// Aquarius Editor has no release feed yet, so builds that cannot check for updates must show
-// the version on its own instead of a button that silently does nothing.
+// Builds that cannot check for updates must show the version on its own instead of a button
+// that silently does nothing.
 const withoutUpdates = renderToStaticMarkup(
   <SettingsVersionControl
     versionLabel="Current version: V0.1.9"

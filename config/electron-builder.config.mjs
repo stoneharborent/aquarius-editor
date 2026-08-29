@@ -74,19 +74,24 @@ export default {
   // The app.asar content itself is handled by the `compression` setting; native binaries
   // (onnxruntime-node, ffmpeg-static, @remotion/compositor) remain unpacked per their filters.
   compression: 'maximum',
-  // No release feed. Upstream published to 0xsline/OpenChatCut; leaving that in place would
-  // hand OpenChatCut's releases to Aquarius Editor users as if they were ours. Aquarius Editor
-  // publishes no releases of its own yet, so packaging simply does not publish and does not
-  // emit auto-update metadata (latest-*.yml / .blockmap). The renderer and the Electron updater
-  // are switched off to match — see src/ui/upstreamUpdate.ts and desktop/update-service.ts.
+  // The release feed is Aquarius Editor's own GitHub Releases — never upstream's.
+  // Publishing here is what makes electron-builder emit the auto-update metadata
+  // (latest-*.yml + .blockmap) that electron-updater reads at runtime.
   //
-  // To turn updates back on once the repo publishes releases, restore all four pieces together:
-  //   1. here:  publish: [{ provider: 'github', owner: '<owner>', repo: '<repo>',
-  //                         channel: target.includes('arm64') ? 'latest-arm64' : 'latest-x64' }]
-  //   2. src/ui/upstreamUpdate.ts       → RELEASE_FEED (currently null)
-  //   3. desktop/update-service.ts      → DESKTOP_UPDATE_FEED_CONFIGURED (currently false)
-  //   4. .github/workflows/desktop.yml  → re-add the latest-*.yml and *.blockmap artifacts
-  publish: null,
+  // One arch per channel: an arm64 and an x64 build of the same version would otherwise
+  // overwrite each other's latest.yml and offer the wrong binary.
+  //
+  // These four pieces belong together — change one, check the others:
+  //   1. here:  publish (below)
+  //   2. src/ui/upstreamUpdate.ts       → RELEASE_FEED
+  //   3. desktop/update-service.ts      → DESKTOP_UPDATE_FEED_CONFIGURED
+  //   4. .github/workflows/desktop.yml  → the latest-*.yml and *.blockmap artifacts
+  publish: [{
+    provider: 'github',
+    owner: 'stoneharborent',
+    repo: 'aquarius-editor',
+    channel: target.includes('arm64') ? 'latest-arm64' : 'latest-x64',
+  }],
   files: [
     'desktop-dist/main.mjs',
     'desktop-dist/preload.cjs',

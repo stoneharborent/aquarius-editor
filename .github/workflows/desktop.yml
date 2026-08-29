@@ -58,22 +58,30 @@ jobs:
             artifact: |
               release/*.dmg
               release/*.zip
+              release/latest-arm64-mac.yml
+              release/*.blockmap
           - name: macOS-x64
             os: macos-15-intel
             script: desktop:dist:mac-x64
             artifact: |
               release/*.dmg
               release/*.zip
+              release/latest-x64-mac.yml
+              release/*.blockmap
           - name: Windows-x64
             os: windows-latest
             script: desktop:dist:win
             artifact: |
               release/*.exe
+              release/latest-x64.yml
+              release/*.blockmap
           - name: Linux-x64
             os: ubuntu-latest
             script: desktop:dist:linux
             artifact: |
               release/*.AppImage
+              release/latest-x64-linux.yml
+              release/*.blockmap
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -276,8 +284,17 @@ jobs:
           test "$(find release-files -type f -name '*.zip' | wc -l | tr -d ' ')" = 2
           test -f "release-files/AquariusEditor-${EXPECTED_VERSION}-arm64.dmg"
           test -f "release-files/AquariusEditor-${EXPECTED_VERSION}-x64.dmg"
-          # Aquarius Editor has no auto-update feed yet, so electron-builder emits no update
-          # metadata to check for here. See config/electron-builder.config.mjs.
+          # electron-updater reads these: one latest-*.yml per publish channel plus the
+          # blockmaps that make differential downloads possible. Without them a shipped
+          # build can see a release but never install it. See config/electron-builder.config.mjs.
+          test "$(find release-files -type f -name '*.yml' | wc -l | tr -d ' ')" = 4
+          test -f release-files/latest-arm64-mac.yml
+          test -f release-files/latest-x64-mac.yml
+          test -f release-files/latest-x64.yml
+          test -f release-files/latest-x64-linux.yml
+          test -f "release-files/AquariusEditor-${EXPECTED_VERSION}-arm64.zip.blockmap"
+          test -f "release-files/AquariusEditor-${EXPECTED_VERSION}-x64.zip.blockmap"
+          test -f "release-files/AquariusEditor-${EXPECTED_VERSION}-x64.exe.blockmap"
 
       - name: Generate checksums
         working-directory: release-files

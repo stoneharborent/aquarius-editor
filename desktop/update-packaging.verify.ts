@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import {
+  CHECKSUM_ASSET_NAME,
+  RELEASE_DOWNLOAD_BASE,
+  overlayReleaseAssets,
+} from './overlay-update';
 
 interface PublishConfig {
   provider?: string;
@@ -28,9 +33,13 @@ async function configFor(target: string): Promise<BuilderConfig> {
 }
 
 const arm64 = await configFor('darwin-arm64');
-// Aquarius Editor is a fork with no release feed. Upstream published to 0xsline/OpenChatCut;
-// inheriting that would serve another project's releases as our updates.
-assert.equal(arm64.publish, null, 'packaging must not publish to another project\'s release feed');
+// The feed is Aquarius Editor's own repository and nothing else. Upstream published to
+// 0xsline/OpenChatCut; inheriting that would serve another project's releases as our updates.
+assert.deepEqual(
+  arm64.publish,
+  [{ provider: 'github', owner: 'stoneharborent', repo: 'aquarius-editor', channel: 'latest-arm64' }],
+  'packaging must publish to the fork\'s own release feed',
+);
 assert.equal(arm64.appId, 'os.aquarius.editor');
 assert.equal(arm64.productName, 'Aquarius Editor');
 assert.equal(
@@ -55,7 +64,10 @@ assert.ok(
 );
 
 const x64 = await configFor('darwin-x64');
-assert.equal(x64.publish, null);
+// One channel per architecture: a shared latest.yml would let an x64 build offer an arm64
+// download (and the other way round) for the same version.
+assert.equal(x64.publish?.[0]?.channel, 'latest-x64');
+assert.notEqual(arm64.publish?.[0]?.channel, x64.publish?.[0]?.channel);
 assert.equal(
   x64.files?.includes('!node_modules/onnxruntime-node/bin/napi-v6/darwin/x64/**'),
   false,
@@ -174,13 +186,50 @@ assert.match(
   'Linux packaging must pass the categorized electron-builder config path',
 );
 
+// The AquariusOS overlay downloads release assets by name rather than through
+// electron-updater, so its URLs must follow the same artifactName and the same repository
+// the packaging config publishes to. Drift here would 404 every OS-managed update.
+const overlayAssets = overlayReleaseAssets('0.4.1');
+assert.equal(overlayAssets.assetName, 'AquariusEditor-0.4.1-x86_64.AppImage');
+assert.equal(
+  overlayAssets.assetName,
+  arm64.artifactName
+    ?.replace('${version}', '0.4.1')
+    .replace('${arch}', 'x86_64')
+    .replace('${ext}', 'AppImage'),
+  'the overlay asset name must follow the packaged artifactName',
+);
+assert.equal(
+  RELEASE_DOWNLOAD_BASE,
+  `https://github.com/${arm64.publish?.[0]?.owner}/${arm64.publish?.[0]?.repo}/releases/download`,
+  'the overlay must download from the repository packaging publishes to',
+);
+assert.equal(overlayAssets.appImageUrl, `${RELEASE_DOWNLOAD_BASE}/v0.4.1/${overlayAssets.assetName}`);
+assert.equal(overlayAssets.checksumsUrl, `${RELEASE_DOWNLOAD_BASE}/v0.4.1/${CHECKSUM_ASSET_NAME}`);
+
 const workflow = await readFile(new URL('../.github/workflows/desktop.yml', import.meta.url), 'utf8');
-// With no publish provider electron-builder emits no auto-update metadata, so the workflow
-// must not ask for latest-*.yml or *.blockmap files that will never exist. Re-add all of
-// them together with `publish` when Aquarius Editor has a release feed.
-assert.doesNotMatch(workflow, /latest-(arm64|x64)(-mac|-linux)?\.yml/, 'no update metadata without a release feed');
-assert.doesNotMatch(workflow, /\.blockmap/, 'no differential update metadata without a release feed');
+// electron-updater reads latest-*.yml at runtime and the blockmaps make differential
+// downloads possible. Publishing installers without them ships a build that can see a new
+// release but never install it — these belong with `publish` above.
+assert.equal(
+  overlayAssets.checksumsUrl.endsWith(`/${CHECKSUM_ASSET_NAME}`) && workflow.includes(`sha256sum ./* > ${CHECKSUM_ASSET_NAME}`),
+  true,
+  'the overlay verifies against the checksum manifest the release workflow generates',
+);
+for (const channel of ['latest-arm64-mac.yml', 'latest-x64-mac.yml', 'latest-x64.yml', 'latest-x64-linux.yml']) {
+  assert.ok(
+    workflow.includes(`release/${channel}`) && workflow.includes(`release-files/${channel}`),
+    `${channel} must be both uploaded from the packaging job and required by the release gate`,
+  );
+}
+assert.match(workflow, /release\/\*\.blockmap/, 'differential update metadata must be published');
 assert.match(workflow, /EXPECTED_VERSION="\$\{GITHUB_REF_NAME#v\}"/, 'release gate must derive its package version');
+for (const blockmap of ['arm64.zip', 'x64.zip', 'x64.exe']) {
+  assert.ok(
+    workflow.includes(`release-files/AquariusEditor-\${EXPECTED_VERSION}-${blockmap}.blockmap`),
+    `the release gate must require the ${blockmap} blockmap`,
+  );
+}
 assert.match(workflow, /-name '\*\.zip'.* = 2/, 'release aggregation must retain both macOS archives');
 for (const arch of ['arm64', 'x64']) {
   assert.ok(
@@ -310,4 +359,4 @@ assert.ok(
   'the verified draft must be published only in the final release step',
 );
 
-console.log('update-packaging.verify: fork identity, icons, disabled release feed, and packaging contract OK');
+console.log('update-packaging.verify: fork identity, icons, release feed, overlay assets, and packaging contract OK');

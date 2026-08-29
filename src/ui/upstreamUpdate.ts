@@ -6,15 +6,17 @@ import type {
 /**
  * Where Aquarius Editor looks for its own releases.
  *
- * It is `null` on purpose. Upstream pointed this at 0xsline/OpenChatCut, and leaving that in
- * place would offer that project's releases to Aquarius Editor users as if they were ours — a
- * different app, a different version line. Aquarius Editor publishes no releases yet, so the
- * whole update path is switched off: no network call is made, and the UI never claims an update
- * exists. Setting this object (and DESKTOP_UPDATE_FEED_CONFIGURED in
- * desktop/update-service.ts, and `publish` in config/electron-builder.config.mjs) turns the
- * existing machinery back on unchanged.
+ * This is the fork's own repository and must stay that way: upstream pointed it at
+ * 0xsline/OpenChatCut, and offering that project's releases here would hand users a
+ * different app on a different version line. Three siblings switch the same feature on
+ * and must agree with this one — `publish` in config/electron-builder.config.mjs,
+ * DESKTOP_UPDATE_FEED_CONFIGURED in desktop/update-service.ts, and the update-metadata
+ * artifacts in .github/workflows/desktop.yml.
  */
-export const RELEASE_FEED: { readonly latestReleaseApiUrl: string; readonly releasesPageUrl: string } | null = null;
+export const RELEASE_FEED: { readonly latestReleaseApiUrl: string; readonly releasesPageUrl: string } | null = {
+  latestReleaseApiUrl: 'https://api.github.com/repos/stoneharborent/aquarius-editor/releases/latest',
+  releasesPageUrl: 'https://github.com/stoneharborent/aquarius-editor/releases/latest',
+};
 
 export const UPDATE_CHECKS_ENABLED = RELEASE_FEED !== null;
 
@@ -255,7 +257,7 @@ async function requestWebUpdateCheck(source: CheckSource): Promise<void> {
 }
 
 export async function requestUpstreamUpdateCheck(source: CheckSource = 'manual'): Promise<void> {
-  // With no release feed there is nothing to check and nothing to contact.
+  // Should RELEASE_FEED ever be cleared again, there is nothing to check and no one to contact.
   if (!UPDATE_CHECKS_ENABLED) {
     publish({ phase: 'idle', visible: false });
     return;

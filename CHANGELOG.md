@@ -1,5 +1,35 @@
 # Aquarius Editor changelog
 
+## v0.4.0 — 2026-08-29
+
+### Added
+- **Aquarius Editor updates itself.** The app now reads its own GitHub releases
+  (`stoneharborent/aquarius-editor`) and offers new versions in the existing update notice —
+  check, download with a progress percentage, then restart to install. Nothing downloads or
+  installs without a click. Upstream's machinery was there all along; it is now pointed at
+  this fork's own release line, with packaging, the renderer, the Electron updater, and the
+  release workflow switched on together.
+- **OS-managed overlay updates for AquariusOS.** The image copy at
+  `/usr/lib/aquarius/aquarius-editor/` is read-only and cannot replace itself, so an update
+  is installed *beside* it under `~/.local/share/aquarius/aquarius-editor/versions/<version>`
+  and activated by atomically repointing a `current` symlink that the OS launcher reads.
+  The downloaded AppImage is verified against the release's `SHA256SUMS.txt` before anything
+  is unpacked, extraction uses `--appimage-extract` so no FUSE is required, superseded
+  versions are deleted (each is ~2.1 GB), and any failure cleans up its own partial work and
+  leaves `current` untouched. The OS-baked copy always remains the fallback. Activated by
+  the launcher through `AQUARIUS_OS_MANAGED_INSTALL=1` / `AQUARIUS_UPDATE_OVERLAY_DIR`.
+- Magnetic Final Cut Pro trimming is now the default in every edit mode, not only in Trim
+  mode: trimming a clip edge shifts the rest of the timeline with it, so a trim can never
+  open dead space. Left-edge trims anchor the clip's start and move only its source in-point,
+  FCP-style. Live preview shows the magnetic shift while dragging, and linked groups ripple
+  together. Hold Option/Alt at the start of a drag for the old non-magnetic behaviour.
+
+### Fixed
+- Linux builds no longer promise an in-place update they cannot deliver. electron-updater
+  can only rewrite an AppImage when the process was launched from one, so an extracted Linux
+  build now reports no direct-update support instead of failing at install time, after the
+  user has already waited through a download.
+
 ## v0.3.0 — 2026-08-25
 
 The first Aquarius Editor release, forked from OpenChatCut v0.2.11.

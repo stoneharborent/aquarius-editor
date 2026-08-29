@@ -14,27 +14,40 @@ import {
 assert.equal(formatDisplayVersion('0.1.7'), 'V0.1.7');
 assert.equal(formatDisplayVersion('v0.1.7'), 'V0.1.7');
 
-// The fork must never inherit upstream's feed: Aquarius Editor has no release feed of its own,
-// so an update check makes no network request and never claims a new version exists.
-assert.equal(RELEASE_FEED, null, 'Aquarius Editor must not point at another project\'s releases');
-assert.equal(UPDATE_CHECKS_ENABLED, false);
-assert.equal(hasDesktopUpdateSupport(), false, 'no feed means no desktop update path');
-let feedFetches = 0;
+// The fork must never inherit upstream's feed. It reads its own repository's releases and
+// nothing else: OpenChatCut is a different app on a different version line, and offering its
+// releases here would install the wrong program.
+const FEED_URL = 'https://api.github.com/repos/stoneharborent/aquarius-editor/releases/latest';
+assert.equal(UPDATE_CHECKS_ENABLED, true, 'Aquarius Editor publishes releases, so update checks are live');
+assert.equal(RELEASE_FEED?.latestReleaseApiUrl, FEED_URL);
+assert.equal(RELEASE_FEED?.releasesPageUrl, 'https://github.com/stoneharborent/aquarius-editor/releases/latest');
+for (const url of [RELEASE_FEED?.latestReleaseApiUrl, RELEASE_FEED?.releasesPageUrl]) {
+  assert.doesNotMatch(String(url), /openchatcut/i, 'the fork must not point at another project\'s releases');
+  assert.match(String(url), /^https:\/\//, 'release metadata must not travel in the clear');
+}
+
+// A browser tab has no Electron bridge, so it can only ever link out to the releases page.
+assert.equal(hasDesktopUpdateSupport(), false, 'the web build has no in-place update path');
 const guardedFetch = globalThis.fetch;
-globalThis.fetch = (async () => { feedFetches += 1; return new Response('{}'); }) as typeof fetch;
+let checkedUrl = '';
+globalThis.fetch = (async (input: string | URL | Request) => {
+  checkedUrl = String(input);
+  // Outside Vite there is no __APP_VERSION__ define, so the build reports itself as 0.0.0.
+  return new Response(JSON.stringify({ tag_name: 'v0.0.0' }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+  });
+}) as typeof fetch;
 await requestUpstreamUpdateCheck('manual');
 globalThis.fetch = guardedFetch;
-assert.equal(feedFetches, 0, 'an update check must not contact any server while no feed is configured');
-assert.deepEqual(getUpstreamUpdateState(), { phase: 'idle', visible: false });
-await assert.rejects(
-  queryLatestUpstreamRelease('0.1.7', async () => new Response('{}')),
-  /No release feed is configured/,
-  'the release query must refuse to run without an explicit feed URL',
-);
+assert.equal(checkedUrl, FEED_URL, 'the check must go to the fork\'s own release feed');
+assert.equal(getUpstreamUpdateState().phase, 'current', 'the published tag matching this build is not an update');
 
-// The comparison logic below stays exercised against an explicit feed URL, so it is ready
-// the day Aquarius Editor gets a release feed of its own.
-const FEED_URL = 'https://api.github.com/repos/stoneharborent/aquarius-editor/releases/latest';
+await assert.rejects(
+  queryLatestUpstreamRelease('0.1.7', async () => new Response('{}'), undefined, ''),
+  /No release feed is configured/,
+  'the release query must refuse to guess a feed URL',
+);
 
 const samples = [
   { current: '0.1.7', tag: 'v0.1.7', available: false },
