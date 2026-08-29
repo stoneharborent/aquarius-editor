@@ -19,6 +19,7 @@ import { TransitionContextMenu } from './TransitionContextMenu';
 import { closeCaptionTrackGaps, trackClearPlan } from './trackContextOperations';
 import { isTimelineDragOverChat } from './timelineChatDrop';
 import { HEADER_W, RULER_H } from './timelineUtil';
+import { trimRipplePreviewShifts } from './trimRipple';
 import {
   CAPTION_SELECTION_OWNER_SELECTOR,
   CAPTION_SELECTION_TIMELINE_CLIP_SELECTOR,
@@ -54,6 +55,12 @@ export function Timeline(props: TimelineProps) {
     clearHoverPreview, updateHoverPreview, startSeekGesture, updateSeekGesture, finishSeekGesture,
     markers, zoneIn, zoneOut, editing, editMarker, setEditMarker, pinnedItemIds,
   } = useTimelineController(props);
+
+  // Live magnetic-trim preview: while a trim drag is in flight every clip the
+  // reducer's ripple will shift is drawn at its shifted position, so no gap ever
+  // appears mid-drag and the release lands exactly where the preview showed.
+  // Bails out (null) whenever the drag is not a trim — one cheap pass over items.
+  const trimRipplePreview = trimRipplePreviewShifts(state, drag, editMode);
 
   return (
     <section
@@ -218,6 +225,7 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
                   px={px} rowHeight={rowHeightOf(trackId)} visibleWindow={visibleWindow}
                   pinnedItemIds={pinnedItemIds}
                   selectionMovePreview={captionSelectionMovePreview}
+                  trimRipplePreview={trimRipplePreview}
                   libDropTarget={libDropTarget} setLibDropTarget={setLibDropTarget}
                   applyLibraryToClip={applyLibraryToClip} applyLibraryToTrack={applyLibraryToTrack}
                   rippleOnDrop={placeMode === 'insert'}

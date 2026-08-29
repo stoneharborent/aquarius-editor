@@ -26,6 +26,7 @@ import {
 import { emitSelectionRef, resolveTimelinePick, type TimelinePickDrag } from '../../agent/selection-refs';
 import { hasOperationalTranscript } from '../../transcript/types';
 import { SNAP_PX, type Drag, type DragMode, type EditMode } from './timelineUtil';
+import { isMagneticTrim } from './trimRipple';
 
 export interface PenDrag {
   itemId: string; prop: KeyframeProp; fromFrame: number; frame: number; value: number; easing?: KeyframeEasing;
@@ -125,63 +126,62 @@ function commitTrimGesture(
     if (next !== state) commands.applyState(next);
     return;
   }
+  // Magnetic timeline (Final Cut Pro) is the default in every edit mode: the trim
+  // rides on the clip's right edge and the reducer's ripple retime drags the rest
+  // of the track with it, so a trim can never open dead space. Option/Alt held at
+  // pointer-down opts out for one gesture.
+  const magnetic = isMagneticTrim(drag, editMode);
   if (mode === 'trim-left') {
     const target = state.items.find((item) => item.id === id);
     if (!target) return;
     const sourceTimed = target.kind === 'video' || target.kind === 'audio' || target.kind === 'sequence';
     const wordDriven = target.kind === 'audio' && hasOperationalTranscript(target);
-    // Pictures, MG, text, solids and word-driven audio have no source
-    // duration limit: their left edge can extend back to timeline zero.
-    // Only real file media (video/plain audio/sequence) are bounded by
-    // srcInFrame.
-    let earliestDelta = -baseStart;
+    // Pictures, MG, text, solids and word-driven audio have no source duration
+    // limit: their in-point can back up without bound. Only real file media
+    // (video/plain audio/sequence) are bounded by srcInFrame.
+    let earliestDelta = -Infinity;
     if (sourceTimed) {
       const sourceBacktrack = wordDriven
         ? baseSrcIn
         : sourceFramesToTimelineFrames(target, baseSrcIn);
-      earliestDelta = Math.max(earliestDelta, -Math.floor(sourceBacktrack));
+      earliestDelta = -Math.floor(sourceBacktrack);
     }
-    // Left-extend must stop at the nearest preceding same-track clip's right edge.
-    // Without this clamp the retime would overlap the predecessor and the reducer's
-    // overlap guard would roll the whole gesture back — dragging past it would show
-    // a preview extension but "bounce" on release.
-    earliestDelta = Math.max(earliestDelta, predecessorRightEdge(state, id, baseTrack, baseStart) - baseStart);
+    if (!magnetic) {
+      // The non-magnetic escape hatch moves the left edge, so it is also bounded by
+      // timeline zero and by the nearest preceding same-track clip's right edge.
+      // Without the latter the retime would overlap the predecessor and the
+      // reducer's overlap guard would roll the whole gesture back — dragging past
+      // it would show a preview extension but "bounce" on release.
+      earliestDelta = Math.max(
+        earliestDelta,
+        -baseStart,
+        predecessorRightEdge(state, id, baseTrack, baseStart) - baseStart,
+      );
+    }
     const delta = Math.max(Math.min(deltaF, baseDur - 1), earliestDelta);
     if (delta === 0) return;
-    const timing = {
-      startFrame: baseStart + delta,
-      durationInFrames: baseDur - delta,
-      ...(sourceTimed ? {
-        srcInFrame: wordDriven
-          ? sourceWindowForTimelineRange(
-              { srcInFrame: baseSrcIn, playbackRate: 1 },
-              delta,
-              baseDur - delta,
-            ).startFrame
-          : sourceWindowForTimelineRange(
-              { ...target, srcInFrame: baseSrcIn },
-              delta,
-              baseDur - delta,
-            ).startFrame,
-      } : {}),
-    };
-    commands.setItemTiming(id, timing);
+    const durationInFrames = baseDur - delta;
+    const srcPatch = sourceTimed
+      ? {
+        srcInFrame: sourceWindowForTimelineRange(
+          wordDriven ? { srcInFrame: baseSrcIn, playbackRate: 1 } : { ...target, srcInFrame: baseSrcIn },
+          delta,
+          durationInFrames,
+        ).startFrame,
+      }
+      : {};
+    // Magnetic: the start frame is anchored and only the in-point advances, so the
+    // end moves by -delta and the reducer ripples the followers by exactly that.
+    commands.setItemTiming(id, magnetic
+      ? { durationInFrames, ...srcPatch, ripple: true }
+      : { startFrame: baseStart + delta, durationInFrames, ...srcPatch });
     return;
   }
   const durationInFrames = Math.max(1, baseDur + deltaF);
-  const actual = durationInFrames - baseDur;
-  if (actual === 0) return;
-  if (editMode !== 'trim') {
-    commands.setItemTiming(id, { durationInFrames });
-    return;
-  }
-  const clipEnd = baseStart + baseDur;
-  const items = state.items.map((item) =>
-    item.id === id ? { ...item, durationInFrames }
-      : item.track === baseTrack && item.startFrame >= clipEnd
-        ? { ...item, startFrame: item.startFrame + actual }
-        : item);
-  commands.applyState({ ...state, items });
+  if (durationInFrames === baseDur) return;
+  commands.setItemTiming(id, magnetic
+    ? { durationInFrames, ripple: true }
+    : { durationInFrames });
 }
 
 export function commitTimelineDragGesture(
@@ -280,21 +280,31 @@ export function useTimelinePointer(deps: PointerDeps) {
     gestureSnapPoints.current = sortTimelineSnapPoints(
       collectTimelineSnapPoints(state, { excludeItemIds: excluded }),
     );
-    setDrag({ id, mode, baseStart, baseDur, baseTrack, baseSrcIn, startX: e.clientX, deltaF: 0, targetTrack: baseTrack, snapAt: null });
+    // Option/Alt is read once, here: a gesture that starts magnetic stays magnetic.
+    setDrag({ id, mode, baseStart, baseDur, baseTrack, baseSrcIn, startX: e.clientX, deltaF: 0, targetTrack: baseTrack, snapAt: null, alt: e.altKey });
   };
   // All snap targets come from the editor snap registry. Group moves exclude
   // every selected clip so members never snap to each other.
-  const applySnap = (mode: DragMode, baseStart: number, baseDur: number, rawDelta: number): { deltaF: number; snapAt: number | null } => {
+  const applySnap = (activeDrag: Drag, rawDelta: number): { deltaF: number; snapAt: number | null } => {
+    const { mode, baseStart, baseDur } = activeDrag;
     if (mode === 'slip') return { deltaF: rawDelta, snapAt: null };
     if (!snapping) return { deltaF: rawDelta, snapAt: null };
+    // A magnetic left trim anchors the clip's start, so the edge that actually
+    // moves is its right edge. Probe that edge instead of the stationary head by
+    // mirroring the delta through the trim-right geometry.
+    const magneticLeft = mode === 'trim-left' && isMagneticTrim(activeDrag, editMode);
     const points = gestureSnapPoints.current;
     const result = snapDraggedEdges({
-      mode, baseStart, baseDuration: baseDur, rawDelta, points,
+      mode: magneticLeft ? 'trim-right' : mode,
+      baseStart,
+      baseDuration: baseDur,
+      rawDelta: magneticLeft ? -rawDelta : rawDelta,
+      points,
       thresholdFrames: SNAP_PX / px, hold: snapHold.current,
       dynamicPlayheadFrame: playheadRef.current,
     });
     snapHold.current = result.hold;
-    return result;
+    return { deltaF: magneticLeft ? -result.deltaF : result.deltaF, snapAt: result.snapAt };
   };
   /**
    * The maximum number of frames the right handle can be dragged to the right: the remaining length of the source asset minus the current duration. Unable to determine (picture/MG/
@@ -308,24 +318,27 @@ export function useTimelinePointer(deps: PointerDeps) {
     return limit === null ? Infinity : limit - baseDur;
   };
   /**
-   * The minimum (most-negative) delta the left handle may reach: it cannot extend
-   * past the nearest preceding same-track clip's right edge (or timeline zero).
-   * Mirrors commitTrimGesture so the preview does not show an overlap the commit
-   * would clamp away.
+   * The minimum (most-negative) delta the left handle may reach: the in-point can
+   * only back up as far as the source has frames. A non-magnetic (Option-held)
+   * trim also moves the left edge, so it additionally stops at timeline zero and
+   * at the nearest preceding same-track clip's right edge. Mirrors
+   * commitTrimGesture so the preview never shows a position the commit clamps away.
    */
-  const trimLeftFloor = (id: string, baseStart: number): number => {
+  const trimLeftFloor = (id: string, baseStart: number, magnetic: boolean): number => {
     const it = state.items.find((x) => x.id === id);
-    if (!it) return -baseStart;
-    let floor = -baseStart;
+    if (!it) return magnetic ? -Infinity : -baseStart;
+    let floor = -Infinity;
     if (it.kind === 'video' || it.kind === 'audio' || it.kind === 'sequence') {
       const wordDriven = it.kind === 'audio' && hasOperationalTranscript(it);
       const sourceBacktrack = wordDriven
         ? (it.srcInFrame ?? 0)
         : sourceFramesToTimelineFrames(it, it.srcInFrame ?? 0);
-      floor = Math.max(floor, -Math.floor(sourceBacktrack));
+      floor = -Math.floor(sourceBacktrack);
     }
+    if (magnetic) return floor;
     return Math.max(
       floor,
+      -baseStart,
       predecessorRightEdge(state, id, it.track, baseStart) - baseStart,
     );
   };
@@ -364,12 +377,12 @@ export function useTimelinePointer(deps: PointerDeps) {
       setDrag({ ...currentDrag, deltaF: rawDelta, targetTrack: currentDrag.baseTrack, snapAt: null }, publish);
       return;
     }
-    const snapped = applySnap(currentDrag.mode, currentDrag.baseStart, currentDrag.baseDur, rawDelta);
+    const snapped = applySnap(currentDrag, rawDelta);
     const cap = currentDrag.mode === 'trim-right'
       ? trimRightCap(currentDrag.id, currentDrag.baseDur)
       : Infinity;
     const floor = currentDrag.mode === 'trim-left'
-      ? trimLeftFloor(currentDrag.id, currentDrag.baseStart)
+      ? trimLeftFloor(currentDrag.id, currentDrag.baseStart, isMagneticTrim(currentDrag, editMode))
       : -Infinity;
     const selectionDelta = currentDrag.mode === 'move'
       ? clampTimelineSelectionDelta(

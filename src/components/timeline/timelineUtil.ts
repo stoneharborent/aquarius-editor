@@ -246,6 +246,12 @@ export type EditMode = 'selection' | 'blade' | 'trim' | 'slip' | 'pen' | 'rate-s
 export interface Drag {
   id: string; mode: DragMode; baseStart: number; baseDur: number; baseTrack: TrackId;
   baseSrcIn: number; startX: number; deltaF: number; targetTrack: TrackId; snapAt: number | null;
+  /**
+   * Option/Alt held at pointer-down. Trimming is magnetic (Final Cut Pro ripple)
+   * by default; holding Option opts one gesture out of it and leaves the gap.
+   * Captured once at pointer-down so the gesture cannot change meaning mid-drag.
+   */
+  alt: boolean;
 }
 // how close (px) an edge must come to a snap target before it locks on
 export const SNAP_PX = 7;

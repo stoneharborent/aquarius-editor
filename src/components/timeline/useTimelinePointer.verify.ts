@@ -32,6 +32,7 @@ const drag: Drag = {
   deltaF: 15,
   targetTrack: 'video-main',
   snapAt: null,
+  alt: false,
 };
 
 const calls: Array<{ method: string; args: unknown[] }> = [];
@@ -46,6 +47,8 @@ assert.equal(calls.length, 1, 'pointer release delegates one EditorCore commit')
 assert.equal(calls[0]?.method, 'moveItem');
 assert.deepEqual(calls[0]?.args, ['clip-a', { startFrame: 115, track: 'video-main' }]);
 
+// ── Magnetic (Final Cut Pro) left trim: the start frame is ANCHORED, the in-point
+// advances and the reducer ripples the followers by the end delta. No gap, ever.
 calls.length = 0;
 commitTimelineDragGesture(state, commands, {
   ...drag,
@@ -54,8 +57,8 @@ commitTimelineDragGesture(state, commands, {
 }, 'trim');
 assert.deepEqual(
   calls[0]?.args,
-  ['clip-a', { startFrame: 110, durationInFrames: 40, srcInFrame: 22 }],
-  '1x left trim keeps the established source in-point behavior',
+  ['clip-a', { durationInFrames: 40, srcInFrame: 22, ripple: true }],
+  '1x left trim anchors the start, advances the source in-point and ripples',
 );
 
 calls.length = 0;
@@ -71,8 +74,8 @@ commitTimelineDragGesture(fastState, commands, {
 assert.equal(calls[0]?.method, 'setItemTiming');
 assert.deepEqual(
   calls[0]?.args,
-  ['clip-a', { startFrame: 110, durationInFrames: 40, srcInFrame: 32 }],
-  '2x left trim consumes twice as many source frames while keeping the timeline right edge fixed',
+  ['clip-a', { durationInFrames: 40, srcInFrame: 32, ripple: true }],
+  '2x left trim consumes twice as many source frames',
 );
 
 calls.length = 0;
@@ -87,10 +90,11 @@ commitTimelineDragGesture(slowState, commands, {
 }, 'trim');
 assert.deepEqual(
   calls[0]?.args,
-  ['clip-a', { startFrame: 110, durationInFrames: 40, srcInFrame: 17 }],
+  ['clip-a', { durationInFrames: 40, srcInFrame: 17, ripple: true }],
   '0.5x left trim consumes half as many source frames',
 );
 
+// A magnetic left extend backs the in-point up; it stops at source frame zero.
 calls.length = 0;
 const edgeState: TimelineState = {
   ...fastState,
@@ -105,10 +109,11 @@ commitTimelineDragGesture(edgeState, commands, {
 }, 'trim');
 assert.deepEqual(
   calls[0]?.args,
-  ['clip-a', { startFrame: 0, durationInFrames: 51, srcInFrame: 98 }],
-  'timeline-head clamp adjusts the effective delta so the right edge remains fixed',
+  ['clip-a', { durationInFrames: 100, srcInFrame: 0, ripple: true }],
+  'source-zero clamp caps the backtrack at 50 timeline frames (100 source frames @2x)',
 );
 
+// The timeline head no longer clamps a magnetic left trim: the start never moves.
 for (const kind of ['image', 'gif', 'svg', 'motion-graphic', 'text', 'solid'] as const) {
   calls.length = 0;
   const extensibleState: TimelineState = {
@@ -124,14 +129,13 @@ for (const kind of ['image', 'gif', 'svg', 'motion-graphic', 'text', 'solid'] as
   assert.equal(calls[0]?.method, 'setItemTiming', `${kind} left extension commits one retime`);
   assert.deepEqual(
     calls[0]?.args,
-    ['clip-a', { startFrame: 90, durationInFrames: 60 }],
-    `${kind} has no source in-point, so empty timeline space is valid trim handle`,
+    ['clip-a', { durationInFrames: 60, ripple: true }],
+    `${kind} has no source in-point, so its in-point can back up without bound`,
   );
 }
 
-// A source-free clip must not extend past the nearest preceding same-track clip's
-// right edge: the preview and commit clamp there instead of bouncing on release
-// (an overlapping retime would be rolled back by the reducer's overlap guard).
+// A magnetic left trim cannot collide with its predecessor — the left edge is
+// anchored, so the predecessor clamp only applies to the Option escape hatch.
 for (const kind of ['image', 'gif', 'svg', 'motion-graphic', 'text', 'solid'] as const) {
   calls.length = 0;
   const collidingState: TimelineState = {
@@ -141,7 +145,7 @@ for (const kind of ['image', 'gif', 'svg', 'motion-graphic', 'text', 'solid'] as
       { id: 'prev', track: 'video-main', startFrame: 70, durationInFrames: 40, name: 'Prev', kind: kind as never },
     ],
   };
-  commitTimelineDragGesture(collidingState, commands, {
+  const colliding: Drag = {
     ...drag,
     id: 'clip-a',
     mode: 'trim-left',
@@ -149,14 +153,81 @@ for (const kind of ['image', 'gif', 'svg', 'motion-graphic', 'text', 'solid'] as
     baseDur: 50,
     baseSrcIn: 0,
     deltaF: -120, // attempts to extend far past the predecessor
-  }, 'selection');
+  };
+  commitTimelineDragGesture(collidingState, commands, colliding, 'selection');
+  assert.deepEqual(
+    calls[0]?.args,
+    ['clip-a', { durationInFrames: 170, ripple: true }],
+    `${kind} magnetic left extension grows to the right instead of overlapping backwards`,
+  );
+
+  calls.length = 0;
+  commitTimelineDragGesture(collidingState, commands, { ...colliding, alt: true }, 'selection');
   assert.equal(calls[0]?.method, 'setItemTiming', `${kind} collision commits a clamped retime`);
   assert.deepEqual(
     calls[0]?.args,
     ['clip-a', { startFrame: 110, durationInFrames: 60 }],
-    `${kind} left extension clamps to the predecessor right edge (70+40) instead of overlapping`,
+    `${kind} Option left extension clamps to the predecessor right edge (70+40)`,
   );
 }
+
+// ── Right edge: magnetic in every mode, so the reducer closes/opens the gap.
+for (const mode of ['selection', 'trim'] as const) {
+  calls.length = 0;
+  commitTimelineDragGesture(state, commands, { ...drag, mode: 'trim-right', deltaF: -20 }, mode);
+  assert.equal(calls.length, 1, `${mode} right trim commits exactly one retime`);
+  assert.deepEqual(
+    calls[0]?.args,
+    ['clip-a', { durationInFrames: 30, ripple: true }],
+    `${mode} right shorten ripples the followers left`,
+  );
+
+  calls.length = 0;
+  commitTimelineDragGesture(state, commands, { ...drag, mode: 'trim-right', deltaF: 20 }, mode);
+  assert.deepEqual(
+    calls[0]?.args,
+    ['clip-a', { durationInFrames: 70, ripple: true }],
+    `${mode} right extend pushes the followers right`,
+  );
+}
+
+// ── Option/Alt escape hatch: the pre-magnetic behaviour, gaps included.
+calls.length = 0;
+commitTimelineDragGesture(state, commands, {
+  ...drag, mode: 'trim-left', deltaF: 10, alt: true,
+}, 'selection');
+assert.deepEqual(
+  calls[0]?.args,
+  ['clip-a', { startFrame: 110, durationInFrames: 40, srcInFrame: 22 }],
+  'Option left trim moves the start frame and never ripples',
+);
+
+calls.length = 0;
+commitTimelineDragGesture(state, commands, {
+  ...drag, mode: 'trim-right', deltaF: -20, alt: true,
+}, 'trim');
+assert.deepEqual(
+  calls[0]?.args,
+  ['clip-a', { durationInFrames: 30 }],
+  'Option right trim leaves the gap behind it',
+);
+
+// ── Minimum duration: a trim can never take a clip below one frame.
+calls.length = 0;
+commitTimelineDragGesture(state, commands, { ...drag, mode: 'trim-left', deltaF: 999 }, 'selection');
+assert.deepEqual(
+  calls[0]?.args,
+  ['clip-a', { durationInFrames: 1, srcInFrame: 61, ripple: true }],
+  'left trim clamps at one remaining frame',
+);
+
+calls.length = 0;
+commitTimelineDragGesture(state, commands, { ...drag, mode: 'trim-right', deltaF: -999 }, 'selection');
+assert.deepEqual(
+  calls[0]?.args,
+  ['clip-a', { durationInFrames: 1, ripple: true }],
+  'right trim clamps at one remaining frame',
+);
 
 calls.length = 0;
 commitTimelineDragGesture(state, commands, {
@@ -167,3 +238,5 @@ commitTimelineDragGesture(state, commands, {
 assert.equal(calls.length, 1, 'slip release commits exactly one editor operation');
 assert.equal(calls[0]?.method, 'slipItem');
 assert.deepEqual(calls[0]?.args, ['clip-a', 7]);
+
+console.log('useTimelinePointer.verify: ok');

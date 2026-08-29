@@ -29,6 +29,7 @@ import { isPreviewable } from '../../media/clipPreview';
 import { canDropMediaAsset, hasCompatibleMediaDrag, parseMediaAssetDrag } from '../../media/drag';
 import type { useTimelinePointer } from './useTimelinePointer';
 import { topClipOverlapSpans } from './trackOverlap';
+import { isMagneticTrim } from './trimRipple';
 import {
   selectionMovePreviewDeltaForItem,
   type TimelineSelectionMovePreview,
@@ -116,6 +117,8 @@ interface TrackLaneProps {
   visibleWindow: TimelineFrameWindow;
   pinnedItemIds: ReadonlySet<string>;
   selectionMovePreview: TimelineSelectionMovePreview | null;
+  /** Item-id → start-frame shift the in-flight magnetic trim will ripple onto this clip. */
+  trimRipplePreview: ReadonlyMap<string, number> | null;
   libDropTarget: string | null;
   setLibDropTarget: Dispatch<SetStateAction<string | null>>;
   applyLibraryToClip: (payload: LibraryDragPayload, item: TimelineItem) => boolean;
@@ -132,7 +135,7 @@ interface TrackLaneProps {
 
 export function TrackLane({
   trackId, state, commands, pointer, editMode, pickMode, locked, hidden, muted, px, rowHeight,
-  visibleWindow, pinnedItemIds, selectionMovePreview, indexes, libDropTarget, setLibDropTarget,
+  visibleWindow, pinnedItemIds, selectionMovePreview, trimRipplePreview, indexes, libDropTarget, setLibDropTarget,
   applyLibraryToClip, applyLibraryToTrack, rippleOnDrop, overwriteOnDrop,
   frameFromClientX, onContextMenu, onTransitionContextMenu, onTrackContextMenu, scrollRef, onDropExternalFiles,
 }: TrackLaneProps) {
@@ -254,10 +257,16 @@ export function TrackLane({
         const stretchEdge = drag?.mode === 'trim-left' ? 'left' : drag?.mode === 'trim-right' ? 'right' : null;
         const stretch = editMode === 'rate-stretch' && drag?.id === it.id && stretchEdge
           ? rateStretchGeometry(it, stretchEdge, drag.deltaF) : null;
+        // A magnetic left trim anchors the clip's start (only the in-point scrubs),
+        // so only the non-magnetic escape hatch slides the left edge with the drag.
+        const anchoredLeftTrim = !!drag && drag.mode === 'trim-left' && isMagneticTrim(drag, editMode);
         const moveDelta = captionInitiatedMove
           ? captionInitiatedDelta
-          : dragging && drag && (drag.mode === 'move' || drag.mode === 'trim-left') ? drag.deltaF : 0;
-        const start = stretch?.startFrame ?? (it.startFrame + moveDelta);
+          : dragging && drag && (drag.mode === 'move' || (drag.mode === 'trim-left' && !anchoredLeftTrim))
+            ? drag.deltaF : 0;
+        // Followers ride the trim's end delta live, so the timeline never shows a gap.
+        const rippleDelta = trimRipplePreview?.get(it.id) ?? 0;
+        const start = (stretch?.startFrame ?? (it.startFrame + moveDelta)) + rippleDelta;
         const durTrim = drag?.id === it.id && drag.mode === 'trim-left' ? -drag.deltaF
           : drag?.id === it.id && drag.mode === 'trim-right' ? drag.deltaF : 0;
         const dur = stretch?.durationInFrames ?? Math.max(1, it.durationInFrames + durTrim);

@@ -147,8 +147,8 @@ export function TimelineToolbar({
       <div className="cc-timeline-tool-group">
         <TrackCreateControl commands={commands} />
         <ToolSep />
-        <TB icon="cursor" title={t('Selection mode (A): drag to move / trim edges')} active={editMode === 'selection'} onClick={() => invokeAction('interaction-mode-selection', undefined, 'toolbar')} />
-        <TB icon="trim" title={t('Trim mode (T): trim clip edges; later clips follow to close the gap (ripple)')} active={editMode === 'trim'} onClick={() => invokeAction('interaction-mode-trim', undefined, 'toolbar')} />
+        <TB icon="cursor" title={t('Selection mode (A): drag to move / trim edges; trimming is magnetic — hold Option to leave a gap')} active={editMode === 'selection'} onClick={() => invokeAction('interaction-mode-selection', undefined, 'toolbar')} />
+        <TB icon="trim" title={t('Trim mode (T): the dedicated trim tool — prominent edge handles, same magnetic trimming as everywhere else')} active={editMode === 'trim'} onClick={() => invokeAction('interaction-mode-trim', undefined, 'toolbar')} />
         <TB
           icon="swap"
           title={t('Slip mode (U): keep timeline position and duration, drag only the source range')}

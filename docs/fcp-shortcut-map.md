@@ -108,6 +108,24 @@ a binding in `src/shortcuts/catalog.ts`, change the matching row here in the sam
 |---|---|---|---|---|---|
 | Add to AI chat (`ask-ai`) | Tab | **Tab** | — | Extension | Aquarius Editor's conversational editing has no FCP counterpart. Ignored while typing so Tab still moves focus in inputs. |
 
+## Modifiers held during a timeline drag
+
+These are not catalog actions (nothing to rebind — they are read straight off the pointer
+event), but they are part of the FCP layout and belong in this file.
+
+| Gesture | Modifier | Behaviour | Final Cut Pro | Status |
+|---|---|---|---|---|
+| Trim a clip edge (either handle, any edit mode) | *none* | **Magnetic trim (the default).** The clip's start frame is anchored; the trim rides on its right edge and every later clip on the affected tracks moves by the same amount. Trimming can never open dead space. | FCP's magnetic timeline ripples trims by default | FCP |
+| Trim a clip edge | **Alt** (⌥ Option) | **Non-magnetic escape hatch.** The old behaviour: a left trim moves the clip's left edge and leaves a gap in front of it, a right trim leaves a gap behind it, and nothing downstream moves. | FCP has no single-gesture equivalent (its closest relatives are Position tool edits) | Extension |
+
+The modifier is read **once, at pointer-down**: a drag that starts magnetic stays magnetic even
+if Option is pressed or released mid-drag, so a gesture can never change meaning under the hand.
+Rate stretch (⌥ is irrelevant there) and slip are unaffected — they have their own geometry.
+
+Implementation: `isMagneticTrim` in `src/components/timeline/trimRipple.ts` is the single
+decision point, shared by the commit path (`useTimelinePointer.ts`) and the live drag preview
+(`TrackLane.tsx`). Covered by `src/components/timeline/magneticTrim.verify.ts`.
+
 ## Conflicts found and how they were resolved
 
 1. **⌥M was double-booked.** The plan moves "add marker and open the dialog" to ⌥M (FCP's
