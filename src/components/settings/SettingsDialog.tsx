@@ -2,21 +2,18 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { theme } from '../../theme';
 import { t, useT } from '../../i18n/locale';
 import { Icon } from '../icons';
-import { VendorIcon } from './vendorIcons';
 import { applyLiveCaps, applyLiveKeyStatus, applyLiveModels } from '../../agent/capabilities';
 import { applyAgentModelStatus } from '../../agent/model-selection';
 import {
-  TRANSCRIPTION_DIARIZATION_KEY,
   TRANSCRIPTION_LANGUAGE_KEY,
+  setAutoTranscribeIngest,
   setPreferredTranscriptionProvider,
 } from '../../transcript/provider';
 import { isTranscriptionProviderId } from '../../transcript/types';
-import { setAutoTranscribeIngest } from '../../transcript/provider';
-import { FieldRow, ON, VendorPane, WARN, type FieldCtx } from './settingsVendorPane';
-import { useCodexSettings } from './useCodexSettings';
-import type { CodexAgentStatus } from '../../../shared/codex-agent';
-import { stageFieldValue } from './codexReasoning';
 import { SettingsVersionControl } from './SettingsVersionControl';
+import { SettingsTabBar } from './SettingsTabBar';
+import { SettingsPaneView } from './SettingsPaneView';
+import type { FieldCtx } from './SettingsFieldRow';
 import {
   CURRENT_APP_VERSION,
   formatDisplayVersion,
@@ -30,28 +27,27 @@ import {
   runUpstreamUpdateCommand,
 } from '../../ui/upstreamUpdateAction';
 import {
-  SETTINGS_CATEGORIES, buildPatch, categoryGroupStats, findGroup, groupConfigured,
-  modelValue, omitKey, savedMessage, vendorConfigured,
-  type KeyStatusResponse, type SettingsCategory, type SettingsField, type SettingsGroup,
-  type SettingsVendorPage, type StagedValues as Values,
+  SETTINGS_TABS, buildPatch, findTab, savedMessage,
+  type KeyStatusResponse, type SettingsField, type StagedValues as Values,
 } from './settingsSchema';
+import { ON, WARN } from './settingsPane.styles';
 import {
-  bodyRow, btnGhost, btnPrimary, catRow, chevronBox, code, dot, foot, footMsg,
-  head, iconBtn, licenseLink, navLabel, navRowStyle, overlay, panel, revealLabel,
-  routeBox, sidebar, sidebarNote, treeScroll, vendorCol,
+  bodyColumn, btnGhost, btnPrimary, code, foot, footMsg,
+  head, iconBtn, licenseLink, overlay, panel, tabHint,
 } from './SettingsDialog.styles';
 
-// Global settings modal, three columns: left = "Classification → Capability" two-level collapsible tree (capability row = status indicator + name);
-// Center = list of providers under the current capability (generating four capabilities with a "default provider" route select at the top);
-// Right = Select the provider's configuration page (header = icon + name + configuration status, body = fields).
-// The key value only flows to the dev server via POST /api/keys (stored in memory + .env.local, already gitignore),
-// Server-side injection; GET only returns Boolean for secret, never backfills. The model/routing field is a non-secret configuration and the current value is
-// Echoed through GET's models channel.
-// values semantics: field name appearing in values = temporary changes; '' = explicit temporary clearing (sent when saving,
-// The backend treats the empty string as deleting the key and deletes the row from .env.local, which means "return to default" for the model field). Temporary baseline:
-// Model field = current value on the server, the rest = '' (the echoed value is not temporarily stored, only the actual changes are entered into the values);
-// values are shared globally by field name and the switching tree nodes are not cleared (MINIMAX_* instant synchronization across capability pages).
-// The right column (vendor configuration page + field rendering + test connection) is in settingsVendorPane.tsx.
+// Global settings modal. Tabs run across the top of the window and the selected
+// tab's panes fill the body below it.
+//
+// Values only ever flow to the local dev/desktop server through POST /api/keys
+// (kept in memory + .env.local, which is gitignored) and are injected
+// server-side. Nothing shown here is a secret: every field is a non-secret
+// choice whose current value GET /api/keys echoes back through its `models`
+// channel.
+//
+// values semantics: a field name present in `values` is a staged change;
+// '' means "clear this key", which the backend turns into a deletion from
+// .env.local — for these fields that reads as "return to the default".
 const CLOSE_CONFIRM_MS = 2000;
 
 // ── hooks ─────────────────────────────────────────────────────────────────
@@ -78,15 +74,14 @@ function useKeyStatus(): {
 function syncTranscriptionPreferences(models: Record<string, string>): void {
   try {
     localStorage.setItem(TRANSCRIPTION_LANGUAGE_KEY, models.TRANSCRIPTION_LANGUAGE?.trim() || 'zh');
-    localStorage.setItem(
-      TRANSCRIPTION_DIARIZATION_KEY,
-      models.TRANSCRIPTION_DIARIZATION === '0' ? '0' : '1',
-    );
   } catch {
-    // Best-effort; runtime language and diarization defaults remain in effect.
+    // Best-effort; the runtime language default remains in effect.
   }
+  // Transcription is a local-model feature now: the built-in Whisper engine is
+  // the default, and a cloud provider only applies when set by hand in
+  // .env.local.
   const provider = models.PREFERRED_TRANSCRIPTION_PROVIDER;
-  setPreferredTranscriptionProvider(isTranscriptionProviderId(provider) ? provider : 'assemblyai');
+  setPreferredTranscriptionProvider(isTranscriptionProviderId(provider) ? provider : 'local');
   const ingest = models.AUTO_TRANSCRIBE_INGEST;
   if (ingest === 'off' || ingest === 'local' || ingest === 'all') setAutoTranscribeIngest(ingest);
 }
@@ -119,9 +114,7 @@ function useSaveKeys(values: Values, onSaved: (next: KeyStatusResponse) => void)
       const body = await res.json().catch(() => ({})) as Partial<KeyStatusResponse> & { error?: string };
       if (!res.ok) throw new Error(body.error || t('Save failed ({n})', { n: res.status }));
       onSaved(body as KeyStatusResponse);
-      // A storage-folder change is copied immediately but only used on the next
-      // launch, so saying "saved" alone would look like nothing happened.
-      setMsg(body.restartRequired ? t('Saved · the new project storage folder takes effect after a restart') : savedMessage());
+      setMsg(savedMessage());
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -131,7 +124,8 @@ function useSaveKeys(values: Values, onSaved: (next: KeyStatusResponse) => void)
   return { save, saving, msg, error };
 }
 
-/** Anti-accidental closing: When there are unsaved changes, Mask/Esc will only warn you for the first time, and it will be truly closed when triggered again within 2 seconds. */
+/** Accidental-close guard: with unsaved changes the first Esc / backdrop click
+ *  only warns; a second one within 2 seconds actually discards and closes. */
 function useCloseGuard(dirty: boolean, onClose: () => void): { requestClose: () => void; warn: string | null } {
   const [warn, setWarn] = useState<string | null>(null);
   const armedAt = useRef(0);
@@ -157,78 +151,14 @@ function useEscape(handler: () => void): void {
   }, []);
 }
 
-function useHover(): [boolean, { onMouseEnter: () => void; onMouseLeave: () => void }] {
-  const [hovered, setHovered] = useState(false);
-  return [hovered, { onMouseEnter: () => setHovered(true), onMouseLeave: () => setHovered(false) }];
-}
-
-/** The left tree capability is selected + the middle column provider is selected; when changing capabilities, the middle column is reset to the first provider with the capability. */
-function useTreeSelection(): {
-  group: SettingsGroup; page: SettingsVendorPage;
-  selectGroup: (key: string) => void; selectVendor: (key: string) => void;
-} {
-  const first = SETTINGS_CATEGORIES[0].groups[0];
-  const [groupKey, setGroupKey] = useState<string>(first.key);
-  const [vendorKey, setVendorKey] = useState<string>(first.vendors[0].key);
-  const group = findGroup(groupKey);
-  const page = group.vendors.find((v) => v.key === vendorKey) ?? group.vendors[0];
-  const selectGroup = (key: string): void => {
-    const nextGroup = findGroup(key);
-    setGroupKey(key);
-    setVendorKey(nextGroup.vendors[0].key);
-  };
-  return { group, page, selectGroup, selectVendor: setVendorKey };
-}
-
 // ── Main component ───────────────────────────────────────────────────────────
 
-/** After successful saving, let the agent side immediately perceive: caps / key Boolean / model routing / LLM interface and model. */
+/** After a successful save, let the agent runtime see the new state immediately. */
 function applySavedToAgent(next: KeyStatusResponse): void {
   applyLiveCaps(next.caps);
   applyLiveKeyStatus(next.keys);
   if (next.models) applyLiveModels(next.models);
   if (next.models) applyAgentModelStatus(next.keys, next.models);
-}
-
-
-function useFieldContext(
-  status: KeyStatusResponse | null,
-  values: Values,
-  setValues: React.Dispatch<React.SetStateAction<Values>>,
-  reveal: boolean,
-  refreshStatus: () => Promise<void>,
-): FieldCtx {
-  const [modelOptions, setModelOptions] = useState<Record<string, readonly string[]>>({});
-  const [autoClearedEffort, setAutoClearedEffort] = useState<string | null>(null);
-  const codex = useCodexSettings(
-    modelValue(status, 'CODEX_MODEL'),
-    modelValue(status, 'CODEX_REASONING_EFFORT'),
-  );
-  const onStage = (field: SettingsField, raw: string): void => {
-    const staged = stageFieldValue(values, field, raw, status, codex.models, autoClearedEffort);
-    setValues(staged.values);
-    setAutoClearedEffort(staged.autoClearedEffort);
-  };
-  useEffect(() => {
-    if (!('CODEX_MODEL' in values) && !('CODEX_REASONING_EFFORT' in values)) {
-      setAutoClearedEffort(null);
-    }
-  }, [values]);
-  const onToggleClear = (field: SettingsField): void => {
-    if (field.name === 'CODEX_MODEL') {
-      onStage(field, values[field.name] === '' ? modelValue(status, field.name) : '');
-      return;
-    }
-    setValues((previous) => previous[field.name] === ''
-      ? omitKey(previous, field.name)
-      : { ...previous, [field.name]: '' });
-  };
-  return {
-    status, values, reveal, onStage, onToggleClear, modelOptions, codex, refreshStatus,
-    onModelsDiscovered: (name, models) => {
-      setModelOptions((previous) => ({ ...previous, [name]: [...new Set(models)] }));
-    },
-  };
 }
 
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
@@ -240,19 +170,8 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
   );
   const { status, setStatus, loadError } = useKeyStatus();
   const [values, setValues] = useState<Values>({});
-  const { group, page, selectGroup, selectVendor } = useTreeSelection();
-  const [reveal, setReveal] = useState(false);
-  const refreshStatus = async (): Promise<void> => {
-    try {
-      const response = await fetch('/api/keys');
-      const next = (await response.json()) as KeyStatusResponse;
-      setStatus(next);
-      applySavedToAgent(next);
-    } catch {
-      // Keep the stale snapshot; the next save or dialog open refreshes it.
-    }
-  };
-  const ctx = useFieldContext(status, values, setValues, reveal, refreshStatus);
+  const [tabKey, setTabKey] = useState<string>(SETTINGS_TABS[0].key);
+  const tab = findTab(tabKey);
   useEffect(() => {
     if (!status?.models) return;
     syncTranscriptionPreferences(status.models);
@@ -264,16 +183,20 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     // saved UI_SCALE changed so the change is visible immediately.
     void window.openChatCutDesktop?.windowAction('apply-ui-scale');
     applySavedToAgent(next);
-    // The status effect synchronizes all transcription runtime preferences.
     setValues({});
   });
+  const ctx: FieldCtx = {
+    status,
+    values,
+    onStage: (field: SettingsField, raw: string) => {
+      setValues((previous) => ({ ...previous, [field.name]: raw }));
+    },
+  };
   const dirty = Object.keys(values).length > 0;
   const { requestClose, warn } = useCloseGuard(dirty, onClose);
   useEscape(requestClose);
 
   const updateAction = resolveUpstreamUpdateAction(updateState, hasDesktopUpdateSupport());
-
-  const codexStatus = ctx.codex.status;
 
   const shownError = error ?? loadError;
   const message = shownError ? { text: shownError, color: WARN }
@@ -286,7 +209,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         <header style={head}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ color: theme.accent, display: 'inline-flex' }}><Icon name="sliders" size={15} /></span>
-            <b style={{ fontSize: 14 }}>{t('Settings · API Keys')}</b>
+            <b style={{ fontSize: 14 }}>{t('Settings')}</b>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <SettingsVersionControl
@@ -298,134 +221,31 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
             <button type="button" onClick={requestClose} title={t('Close')} style={iconBtn}><Icon name="x" size={15} /></button>
           </div>
         </header>
-        <div style={bodyRow}>
-          <CapabilityTree status={status} codexStatus={codexStatus} activeGroup={group.key} onSelect={selectGroup} />
-          <VendorList group={group} activeVendor={page.key} onSelectVendor={selectVendor} ctx={ctx} />
-          <VendorPane page={page} hint={group.hint} ctx={ctx} />
+        <SettingsTabBar tabs={SETTINGS_TABS} activeKey={tab.key} onSelect={setTabKey} />
+        <div style={bodyColumn}>
+          <p style={tabHint}>{t(tab.hint)}</p>
+          {tab.panes.map((pane) => <SettingsPaneView key={pane.key} pane={pane} ctx={ctx} />)}
+          <p style={{ ...tabHint, marginTop: 2 }}>
+            {t('Settings are stored in your local')} <code style={code}>.env.local</code>{t(' (gitignored) and injected by the server — ')}<b>{t('never sent to the browser.')}</b>
+          </p>
         </div>
-        <FooterBar reveal={reveal} onReveal={setReveal} message={message}
-          dirty={dirty} saving={saving} onClose={requestClose} onSave={() => { void save(); }} />
+        <FooterBar message={message} dirty={dirty} saving={saving}
+          onClose={requestClose} onSave={() => { void save(); }} />
       </div>
     </div>
-  );
-}
-
-// ── Left column (categories can be folded → capabilities can be selected) ──────────────────────────────────────
-
-function CapabilityTree({ status, codexStatus, activeGroup, onSelect }: {
-  status: KeyStatusResponse | null; codexStatus: CodexAgentStatus | null;
-  activeGroup: string; onSelect: (key: string) => void;
-}) {
-  const t = useT();
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
-  const toggle = (key: string): void =>
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(key)) next.add(key);
-      return next;
-    });
-  return (
-    <nav style={sidebar}>
-      <div style={treeScroll}>
-        {SETTINGS_CATEGORIES.map((cat) => (
-          <TreeCategory key={cat.key} category={cat} status={status} codexStatus={codexStatus}
-            open={!collapsed.has(cat.key)} activeGroup={activeGroup}
-            onToggle={() => toggle(cat.key)} onSelect={onSelect} />
-        ))}
-      </div>
-      <p style={sidebarNote}>
-        {t('Keys are stored only in your local')} <code style={code}>.env.local</code>{t(' (gitignored), injected by the server — ')}<b>{t('never sent to the browser.')}</b>
-      </p>
-    </nav>
-  );
-}
-
-interface TreeCategoryProps {
-  category: SettingsCategory; status: KeyStatusResponse | null; codexStatus: CodexAgentStatus | null;
-  open: boolean; activeGroup: string; onToggle: () => void; onSelect: (key: string) => void;
-}
-
-function TreeCategory({ category, status, codexStatus, open, activeGroup, onToggle, onSelect }: TreeCategoryProps) {
-  const t = useT();
-  const { done, total } = categoryGroupStats(status, category, codexStatus);
-  return (
-    <div>
-      <button type="button" onClick={onToggle} title={open ? t('Collapse') : t('Expand')} style={catRow}>
-        <span style={{ ...chevronBox, transform: open ? 'none' : 'rotate(-90deg)' }}>
-          <Icon name="chevronDown" size={12} />
-        </span>
-        <Icon name={category.icon} size={13} />
-        <span style={navLabel}>{t(category.title)}</span>
-        <span style={{ fontSize: 10, fontWeight: 400, color: done === total && total > 0 ? ON : theme.textDim }}>
-          {done}/{total}
-        </span>
-      </button>
-      {open && category.groups.map((g) => (
-        <GroupRow key={g.key} title={g.title} on={groupConfigured(status, g, codexStatus)}
-          active={g.key === activeGroup} onSelect={() => onSelect(g.key)} />
-      ))}
-    </div>
-  );
-}
-
-function GroupRow({ title, on, active, onSelect }: {
-  title: string; on: boolean; active: boolean; onSelect: () => void;
-}) {
-  const t = useT();
-  const [hovered, hoverProps] = useHover();
-  return (
-    <button type="button" onClick={onSelect} {...hoverProps}
-      style={{ ...navRowStyle(active, hovered), paddingLeft: 19 }}>
-      <span style={dot(on)} />
-      <span style={navLabel}>{t(title)}</span>
-    </button>
-  );
-}
-
-// ── Middle column (route select + provider list) ────────────────────────────────────────
-
-function VendorList({ group, activeVendor, onSelectVendor, ctx }: {
-  group: SettingsGroup; activeVendor: string; onSelectVendor: (key: string) => void; ctx: FieldCtx;
-}) {
-  return (
-    <div style={vendorCol}>
-      {group.route && <div style={routeBox}><FieldRow field={group.route} ctx={ctx} /></div>}
-      {group.vendors.map((p) => (
-        <VendorRow key={p.key} page={p} on={vendorConfigured(ctx.status, p, ctx.codex.status)}
-          active={p.key === activeVendor} onSelect={() => onSelectVendor(p.key)} />
-      ))}
-    </div>
-  );
-}
-
-function VendorRow({ page, on, active, onSelect }: {
-  page: SettingsVendorPage; on: boolean; active: boolean; onSelect: () => void;
-}) {
-  const t = useT();
-  const [hovered, hoverProps] = useHover();
-  return (
-    <button type="button" onClick={onSelect} {...hoverProps} style={navRowStyle(active, hovered)}>
-      {page.icon ? <Icon name={page.icon} size={15} /> : <VendorIcon vendor={page.vendor} size={15} />}
-      <span style={navLabel}>{t(page.title)}</span>
-      <span style={dot(on)} />
-    </button>
   );
 }
 
 interface FooterBarProps {
-  reveal: boolean; onReveal: (v: boolean) => void; message: { text: string; color: string } | null;
+  message: { text: string; color: string } | null;
   dirty: boolean; saving: boolean; onClose: () => void; onSave: () => void;
 }
 
-function FooterBar({ reveal, onReveal, message, dirty, saving, onClose, onSave }: FooterBarProps) {
+function FooterBar({ message, dirty, saving, onClose, onSave }: FooterBarProps) {
   const t = useT();
   const disabled = saving || !dirty;
   return (
     <footer style={foot}>
-      <label style={revealLabel}>
-        <input type="checkbox" checked={reveal} onChange={(e) => onReveal(e.target.checked)} />
-        {t('Show values')}
-      </label>
       <a href="/fonts/LICENSES.md" target="_blank" rel="noopener noreferrer" style={licenseLink}>
         {t('Third-party font licenses')}
       </a>

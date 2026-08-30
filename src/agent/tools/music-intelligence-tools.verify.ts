@@ -384,7 +384,7 @@ function state(items: TimelineItem[], tracks: TimelineState['tracks'] = {}): Tim
       analysisRef: musicAnalysisRef(analysis),
     }, ctx) as { error?: string; modelPacks?: Array<{ id: string }> };
     assert.ok(result.error, 'missing packs must reject');
-    assert.ok(result.error!.includes('Settings → Transcription → Local models'), 'error must carry the settings guidance');
+    assert.ok(result.error!.includes('Settings → Local models'), 'error must carry the settings guidance');
     assert.equal(result.modelPacks?.length, 2, 'the missing pack ids must be reported');
   } finally {
     globalThis.fetch = previousFetch;

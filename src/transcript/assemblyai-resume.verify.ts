@@ -18,7 +18,22 @@ import {
   getTranscribeJob,
   untranscribedTimelineItemIdsForRevision,
 } from './transcribe-jobs';
+import { TRANSCRIPTION_PROVIDER_KEY } from './provider';
 import type { TranscriptWord } from './types';
+
+// This file exercises the AssemblyAI path specifically, and the app's default
+// provider is the built-in local Whisper engine. Pin the provider through the
+// same localStorage preference the UI writes, rather than leaning on whatever
+// the default happens to be.
+const preferences = new Map<string, string>([[TRANSCRIPTION_PROVIDER_KEY, 'assemblyai']]);
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  value: {
+    getItem: (key: string): string | null => preferences.get(key) ?? null,
+    setItem: (key: string, value: string): void => { preferences.set(key, value); },
+    removeItem: (key: string): void => { preferences.delete(key); },
+  },
+});
 
 const originalFetch = globalThis.fetch;
 const projectId = 'project-asr-verify';

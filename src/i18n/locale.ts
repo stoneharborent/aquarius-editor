@@ -107,6 +107,10 @@ export function useT(): typeof t {
       return () => subscribers.delete(onChange);
     },
     () => current,
+    // Server snapshot: the locale is a plain module variable, so it reads the
+    // same on both sides. Without it, renderToStaticMarkup throws — which is
+    // how the UI verifies render components.
+    () => current,
   );
   return t;
 }

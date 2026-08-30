@@ -43,6 +43,8 @@ import {
 } from './page-origin.ts';
 import type { DesktopPageUrlDecision, DesktopPageUrlSurface } from './page-origin.ts';
 import { preparePackagedRuntime } from './packaged-runtime.ts';
+import { seedBundledModels } from './seed-bundled-models.ts';
+import { BUNDLED_MODELS_DIR_NAME } from '../shared/bundled-models.ts';
 import { focusExistingWindow } from './single-instance.ts';
 import { requestProfileScopedSingleInstanceLock } from './runtime-profile.ts';
 import { applyDesktopWindowFrame, desktopWindowFrameOptions } from './window-frame.ts';
@@ -360,12 +362,28 @@ async function boot(): Promise<void> {
     });
   }));
   const hardware = await detectDesktopHardwareProfile(app);
-  const desktopInference = installDesktopInferenceIpc(
-    origin,
-    modelCachePath(app.getPath('home')),
-    hardware,
-  );
+  const modelCacheDir = modelCachePath(app.getPath('home'));
+  const desktopInference = installDesktopInferenceIpc(origin, modelCacheDir, hardware);
   app.once('before-quit', () => desktopInference.dispose());
+  // The installer ships Whisper Small and the three local intelligence packs.
+  // Copy anything missing into the model cache in the background so the window
+  // opens immediately and the Local models tab shows them already installed.
+  // Deleting a built-in model therefore restores it on the next launch.
+  if (app.isPackaged) {
+    void seedBundledModels({
+      sourceDir: join(process.resourcesPath, BUNDLED_MODELS_DIR_NAME),
+      cacheDir: modelCacheDir,
+    }).then((result) => {
+      if (result.seeded > 0 || result.failed > 0 || result.missingFromResources > 0) {
+        console.log(
+          `[desktop] bundled models: ${result.seeded} seeded, ${result.present} already present,`
+          + ` ${result.missingFromResources} missing from resources, ${result.failed} failed`,
+        );
+      }
+    }).catch((error: unknown) => {
+      console.error('[desktop] bundled model seeding failed:', error);
+    });
+  }
   console.log(`[desktop] ${devOrigin ? 'live source' : 'embedded server'} at ${origin}`);
 
   const initialBounds = resolveInitialDesktopWindowBounds(screen.getPrimaryDisplay().workArea);

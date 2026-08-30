@@ -52,6 +52,10 @@ export function setAutoTranscribeIngest(setting: AutoTranscribeIngestSetting): v
 }
 
 
+/** The built-in Whisper engine is the default: it ships with the app, costs
+ *  nothing and needs no key. Cloud providers still work, but they are opt-in
+ *  through PREFERRED_TRANSCRIPTION_PROVIDER in .env.local now that settings no
+ *  longer carries provider pages. */
 export function preferredTranscriptionProvider(): TranscriptionProviderId {
   try {
     const value = localStorage.getItem(TRANSCRIPTION_PROVIDER_KEY);
@@ -59,7 +63,7 @@ export function preferredTranscriptionProvider(): TranscriptionProviderId {
   } catch {
     // SSR / private browsing: fall through to the default.
   }
-  return 'assemblyai';
+  return 'local';
 }
 
 export function preferredTranscriptionLanguage(): string {

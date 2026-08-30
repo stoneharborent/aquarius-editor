@@ -11,6 +11,7 @@ import { dirname, join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { ASR_MODELS, asrModelFile, type AsrModelFile } from '../../shared/asr-models.ts';
 import { modelCachePath } from '../../shared/model-cache-path.ts';
+import { MODEL_DOWNLOAD_SOURCES } from '../../shared/model-download-sources.ts';
 import { proxyCurlArgs } from '../outbound-proxy.ts';
 import { MODEL_PACKS, type ModelPackFile } from '../../shared/model-packs/catalog.ts';
 import {
@@ -28,29 +29,11 @@ const PARALLEL_CHUNKS = 4; // per-connection throttling → parallel byte ranges
 const PARALLEL_MIN_BYTES = 8 * 1024 * 1024;
 
 /**
- * Download sources in priority order. ModelScope is first: measured 22.9MB/s
- * direct (no proxy) vs ~90KB/s for huggingface.co via proxy on this machine;
- * its mirrored files byte-match HF (sha-verified against the pinned catalog).
- * The official source uses parallel ranges; mirrors fall back to single-stream.
+ * Download sources in priority order, shared with the build-time bundled-model
+ * fetch (shared/model-download-sources.ts). The official source uses parallel
+ * ranges; mirrors fall back to single-stream.
  */
-const SOURCES: ReadonlyArray<{ name: string; url: (target: ProxyTarget) => string }> = [
-  {
-    name: 'modelscope',
-    url: (target) => `https://modelscope.cn/api/v1/models/${target.modelId}/repo?Revision=master&FilePath=${target.filePath}`,
-  },
-  {
-    name: 'huggingface',
-    url: (target) => `https://huggingface.co/${target.modelId}/resolve/${target.revision}/${target.filePath}`,
-  },
-  {
-    name: 'hf-cdn',
-    url: (target) => `https://hf-cdn.sufy.com/${target.modelId}/resolve/${target.revision}/${target.filePath}`,
-  },
-  {
-    name: 'hf-mirror',
-    url: (target) => `https://hf-mirror.com/${target.modelId}/resolve/${target.revision}/${target.filePath}`,
-  },
-];
+const SOURCES = MODEL_DOWNLOAD_SOURCES;
 
 /**
  * Session-scoped "source does not visibly host this model" cache. Populated only

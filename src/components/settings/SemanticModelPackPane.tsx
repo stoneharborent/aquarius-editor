@@ -75,7 +75,7 @@ export function SemanticModelPackPane() {
           {t('Visual semantic search model pack')}
         </div>
         <div style={{ marginTop: 3, fontSize: 11.5, color: theme.textDim }}>
-          {t('A local vector model for searching media by visual content (~178 MB). It runs on this device and never uploads your media.')}
+          {t('A local vector model for searching media by visual content (~178 MB). It ships with the app, runs on this device, and never uploads your media.')}
         </div>
       </div>
       {error && <div role="alert" style={errorStyle}>{t('Operation failed: {err}', { err: error })}</div>}
@@ -98,7 +98,7 @@ export function SemanticModelPackPane() {
       )}
       {ready && (
         <div style={hintStyle}>
-          {t('Installed. Open Media Pool → Semantic Search to index media and search by visual content.')}
+          {t('Built in and ready. Open Media Pool → Semantic Search to index media and search by visual content.')}
         </div>
       )}
     </section>
