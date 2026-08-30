@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { shortcutAllowedForSurface } from './shortcutScope';
 
-for (const surface of ['media-pool', 'agent-chat', 'agent-input', 'inspector', 'other'] as const) {
+for (const surface of ['media-pool', 'inspector', 'other'] as const) {
   for (const action of ['select-all', 'copy', 'cut', 'paste', 'delete', 'split', 'play-pause', 'zoom-fit']) {
     assert.equal(
       shortcutAllowedForSurface(action, surface),
@@ -11,8 +11,8 @@ for (const surface of ['media-pool', 'agent-chat', 'agent-input', 'inspector', '
   }
 }
 
-for (const action of ['undo', 'redo', 'save-version', 'keyboard-shortcuts', 'ask-ai']) {
-  assert.equal(shortcutAllowedForSurface(action, 'agent-chat'), true);
+for (const action of ['undo', 'redo', 'save-version', 'keyboard-shortcuts']) {
+  assert.equal(shortcutAllowedForSurface(action, 'inspector'), true);
 }
 
 assert.equal(shortcutAllowedForSurface('split', 'timeline'), true);

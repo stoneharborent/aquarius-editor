@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { matchShortcut, normalizeKey, isTypingTarget } from './match';
+import { matchShortcut, normalizeKey } from './match';
 import { effectiveCatalog } from './keymap';
 import { invokeAction } from './actionRegistry';
 import { shortcutAllowedForSurface, shortcutSurfaceFromTarget } from './shortcutScope';
@@ -31,9 +31,6 @@ export function useShortcutDispatcher(
       const id = matchShortcut(e, effectiveCatalog(), { held, hasTextSelection });
       if (!id) return;
       if (!shortcutAllowedForSurface(id, shortcutSurfaceFromTarget(e.target))) return;
-
-      // Tab in non-typing: ask-ai; don't steal tab in inputs
-      if (id === 'ask-ai' && isTypingTarget(e.target)) return;
 
       const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
       const handled = invokeAction(id, {

@@ -86,7 +86,6 @@ interface PreviewPanelProps {
   onUpdateCaptions?: (patch: Partial<CaptionsData>, track?: TrackId) => void;
   onSelectCaption?: (selection: CaptionSelectionRef | null) => void;
   activeCaptionSelection?: CaptionSelectionRef | null;
-  onSeedChat?: (text: string) => void;
   onSelectItem?: (id: string | null) => void;
   onSetItemTransform?: (id: string, patch: ClipTransform) => void;
   onSetItemKeyframe?: (id: string, prop: KeyframeProp, localFrame: number, value: number) => void;
@@ -107,7 +106,7 @@ interface PreviewPanelProps {
 }
 
 export const PreviewPanel = memo(function PreviewPanel({
-  state, project, playerRef, onImport, offlineSrcs, onUpdateCaptions, onSelectCaption, activeCaptionSelection, onSeedChat,
+  state, project, playerRef, onImport, offlineSrcs, onUpdateCaptions, onSelectCaption, activeCaptionSelection,
   onSelectItem, onSetItemTransform, onSetItemKeyframe, onBeginHistoryGesture, onEndHistoryGesture,
   onItemPropChange,
   projectId, timelineId, reviewState, selectedItem, reviewRequest, inspectorOpen, onToggleInspector,
@@ -156,7 +155,6 @@ export const PreviewPanel = memo(function PreviewPanel({
       onBeginHistoryGesture,
       onEndHistoryGesture,
       onItemPropChange,
-      onSeedChat,
     }
     : null;
   const hasItems = state.items.length > 0;
@@ -435,7 +433,6 @@ export const PreviewPanel = memo(function PreviewPanel({
                 onUpdateCaptions={(patch) => onUpdateCaptions(patch, id)}
                 onSelectCaption={onSelectCaption}
                 activeSelection={activeCaptionSelection}
-                onSeedChat={onSeedChat}
                 autoEditLaneId={autoEditCaption?.trackId === id ? autoEditCaption.laneId : undefined}
                 onAutoEditHandled={() => setAutoEditCaption(null)}
               />

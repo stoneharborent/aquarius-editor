@@ -1,8 +1,6 @@
 export type ShortcutSurface =
   | 'media-pool'
   | 'timeline'
-  | 'agent-chat'
-  | 'agent-input'
   | 'inspector'
   | 'other';
 
@@ -11,7 +9,6 @@ const PROJECT_SHORTCUTS = new Set([
   'redo',
   'save-version',
   'keyboard-shortcuts',
-  'ask-ai',
 ]);
 
 export function shortcutAllowedForSurface(actionId: string, surface: ShortcutSurface): boolean {
@@ -25,8 +22,6 @@ export function shortcutSurfaceFromTarget(target: EventTarget | null): ShortcutS
   if (
     surface === 'media-pool'
     || surface === 'timeline'
-    || surface === 'agent-chat'
-    || surface === 'agent-input'
     || surface === 'inspector'
   ) return surface;
   return 'other';

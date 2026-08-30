@@ -17,7 +17,6 @@ export interface PreviewTextEditBarProps {
   selection: PreviewCandidateGeometry;
   composition: { width: number; height: number };
   onPropChange: (id: string, key: string, value: unknown) => void;
-  onSeedChat?: (text: string) => void;
   /** Parent requests open the inline text editor (e.g. double-click). */
   autoEdit?: boolean;
   onAutoEditHandled?: () => void;
@@ -25,14 +24,13 @@ export interface PreviewTextEditBarProps {
 
 /**
  * Floating toolbar for a selected text / text-like MG clip.
- * Mirrors caption direct-edit affordances: AI · text · color · size · weight · align.
+ * Mirrors caption direct-edit affordances: text · color · size · weight · align.
  */
 export function PreviewTextEditBar({
   item,
   selection,
   composition,
   onPropChange,
-  onSeedChat,
   autoEdit,
   onAutoEditHandled,
 }: PreviewTextEditBarProps) {
@@ -79,20 +77,8 @@ export function PreviewTextEditBar({
       style={{ left, top, transform: 'translate(-50%, calc(-100% - 14px))' }}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      {onSeedChat && hasText && (
-        <button
-          type="button"
-          className="cc-capedit-btn ai"
-          title={t('Ask AI to rewrite this on-screen text')}
-          onClick={() => onSeedChat(t('Improve this on-screen text (keep layout): "{text}"', { text: fields.text || t('(empty)') }))}
-        >
-          <Icon name="sparkles" size={12} />{t('AI edit')}
-        </button>
-      )}
-
       {hasText && (
         <>
-          {onSeedChat && <span className="cc-capedit-divider" aria-hidden />}
           <button
             type="button"
             className={`cc-capedit-btn${editing ? ' on' : ''}`}

@@ -14,7 +14,7 @@ import { StorageMigrationBanner } from '../settings/StorageMigrationBanner';
 import { SkinPicker } from '../settings/SkinPicker';
 import { LocaleToggle } from '../TopBar';
 import {
-  card, folderHint, importBtn, miniBtn, modelSetupButton, modelSetupCard, modelSetupIcon,
+  card, folderHint, importBtn, miniBtn,
   nameInput, newCard, searchBox, searchClear, searchEmpty, searchIcon, searchInput,
   settingsBtn, thumb,
 } from './dashboardStyles';
@@ -22,22 +22,6 @@ import {
   FolderBreadcrumb, FolderRow, MoveToFolderPicker, PROJECT_DRAG_TYPE,
 } from './FolderViews';
 import { relativeProjectTime, type DashboardModel, type DashboardProps } from './useDashboardModel';
-
-function ModelSetupCard({ onOpen }: { onOpen: () => void }) {
-  const t = useT();
-  return (
-    <section role="status" style={modelSetupCard}>
-      <span style={modelSetupIcon}><Icon name="sparkles" size={18} /></span>
-      <span style={{ flex: 1, minWidth: 0 }}>
-        <strong style={{ display: 'block', color: theme.textStrong, fontSize: 13.5 }}>{t('Configure a model to start using the Agent')}</strong>
-        <span style={{ display: 'block', marginTop: 3, color: theme.textDim, fontSize: 11.5, lineHeight: 1.5 }}>
-          {t('Configure any cloud or local model to use conversational editing in the editor.')}
-        </span>
-      </span>
-      <button type="button" onClick={onOpen} style={modelSetupButton}>{t('Configure Model')}</button>
-    </section>
-  );
-}
 
 function ProjectSearch({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const t = useT();
@@ -230,7 +214,6 @@ export function DashboardContent({ props, model }: { props: DashboardProps; mode
     <main style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
       <div style={{ maxWidth: 1120, margin: '0 auto', padding: '28px 24px 80px' }}>
         <StorageMigrationBanner onOpenDialog={() => model.setDialog('storage', true)} />
-        {model.modelSnapshot.loaded && model.modelSnapshot.choices.length === 0 && <ModelSetupCard onOpen={() => model.setDialog('settings', true)} />}
         <ProjectToolbar projects={props.projects} model={model} />
         <ProjectGrid props={props} model={model} />
       </div>

@@ -1,5 +1,4 @@
 import { useCallback, useEffect } from 'react';
-import type { AgentReference } from '../agent/context';
 import { enqueueVisualAnalysis, refreshVisualAnalysis } from '../agent/progress/visual-analysis-jobs';
 import { appendManualLane, identifyManualCues, isManualCaptionEntry, newManualCaptions } from '../captions/manualCaptions';
 import { placeMediaAssets, reflowPlacedMediaItems } from '../editor/mediaAssetPlacement';
@@ -7,7 +6,6 @@ import { sourceRevisionOf } from '../editor/mediaSourceRevision';
 import { isTimelineMediaAssetKind } from '../editor/mediaTypes';
 import type { EditorCommands } from '../editor/store';
 import { captionsOnTrack, defaultTrackId, trackKind, type MediaAsset, type ProjectDoc, type TimelineState, type TrackId } from '../editor/types';
-import type { Tpl } from '../types';
 import type { t as translate } from '../i18n/locale';
 import { duplicateAssetName } from './assetMenuSelection';
 import { classifyExternalFile, parseDroppedCaptions } from './externalFileDrop';
@@ -15,9 +13,8 @@ import { createImportContentIdentityHooks } from './importContentIdentity';
 import { findMediaNameConflict, MediaImportCancelledError } from './mediaImportConflict';
 import { mediaAssetRelinkPatch, uploadedMediaRelinkPatch } from './mediaAssetRelink';
 import { importUploadedMedia } from './mobileImport';
-import { readProjectAssetDocuments } from './projectFile';
 import type { MobileUploadRecord } from './mobileUploadApi';
-import { createImportTranscriptionGate, createMediaAssetsChatSeed, importMedia, readyMediaAssetsForPaste, type ImportMediaHooks, type ImportTranscriptionStart } from './upload';
+import { createImportTranscriptionGate, importMedia, readyMediaAssetsForPaste, type ImportMediaHooks, type ImportTranscriptionStart } from './upload';
 import { enqueueTranscription, getTranscribeJob, shouldTranscribe, untranscribedTimelineItemIdsForRevision, type TranscribeJob } from '../transcript/transcribe-jobs';
 import { shouldAutoTranscribeIngest } from '../transcript/provider';
 import { showAppToast } from '../ui/appToast';
@@ -29,7 +26,6 @@ type StartAssetTranscription = (
   markRunning?: boolean,
   replaceExisting?: boolean,
 ) => void;
-type ChatSeed = { text: string; nonce: number; references?: AgentReference[] } | null;
 type ImportLifecycle = {
   onPlaceholder?: (asset: MediaAsset) => void;
   onAssetUpdated?: (asset: MediaAsset) => void;
@@ -49,8 +45,6 @@ interface EditorMediaIngestOptions {
   stateRef: { current: TimelineState };
   docRef: { current: ProjectDoc };
   getPlayhead: () => number;
-  setChatCollapsed: (collapsed: boolean) => void;
-  setChatSeed: (seed: ChatSeed) => void;
   t: Translate;
 }
 
@@ -456,30 +450,6 @@ function useMediaPaste(options: EditorMediaIngestOptions) {
   }, [commands, stateRef, t]);
 }
 
-function useMediaAISeeds(options: EditorMediaIngestOptions) {
-  const { setChatCollapsed, setChatSeed, t } = options;
-  const useMediaAI = useCallback(async (assets: MediaAsset[]) => {
-    const seed = createMediaAssetsChatSeed(assets);
-    if (!seed) return;
-    setChatCollapsed(false);
-    const documents = await readProjectAssetDocuments(assets);
-    if (documents.errors[0]) showAppToast(documents.errors[0], { error: true });
-    setChatSeed({
-      ...seed,
-      text: documents.blocks.length ? `${seed.text}\n${documents.blocks.join('\n')}` : seed.text,
-    });
-  }, [setChatCollapsed, setChatSeed]);
-  const useTemplateAI = useCallback((tpl: Tpl) => {
-    setChatCollapsed(false);
-    setChatSeed({
-      text: t('Using template "{name}" as a style reference, generate a similar animation with create_motion_graphic: @{name} ', { name: tpl.name }),
-      nonce: Date.now(),
-      references: [{ id: tpl.id, name: tpl.name, kind: 'template' }],
-    });
-  }, [setChatCollapsed, setChatSeed, t]);
-  return { useMediaAI, useTemplateAI };
-}
-
 export function useEditorMediaIngest(options: EditorMediaIngestOptions) {
   const startAssetTranscription = useAssetTranscription(options);
   const retryAssetTranscription = useCallback<StartAssetTranscription>(
@@ -489,12 +459,10 @@ export function useEditorMediaIngest(options: EditorMediaIngestOptions) {
   const pool = usePoolImports(options, startAssetTranscription);
   const timeline = useTimelineImports(options, startAssetTranscription, pool.importToPool);
   const pasteMediaAssets = useMediaPaste(options);
-  const ai = useMediaAISeeds(options);
   return {
     startAssetTranscription: retryAssetTranscription,
     ...pool,
     ...timeline,
     pasteMediaAssets,
-    ...ai,
   };
 }

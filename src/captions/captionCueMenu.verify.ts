@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { appendManualCue, newManualCaptions } from './manualCaptions';
 
 const modulePath = './captionCueMenu';
-const { captionCueAgentSeed, captionCueText, replaceCaptionCueText } = await import(modulePath).catch(() => {
+const { captionCueText, replaceCaptionCueText } = await import(modulePath).catch(() => {
   assert.fail('caption cue menu helpers must exist as a caption-owned data layer');
 });
 
@@ -12,8 +12,7 @@ captions = { ...captions, ...appendManualCue(captions, laneId, '  Original cue  
 const words = captions.sourceEntries![0]!.words!;
 const target = { laneId, index: 0, words };
 
-assert.equal(captionCueText(target), 'Original cue', 'menu copy/AI actions should receive trimmed cue text');
-assert.equal(captionCueAgentSeed('  Improve this  '), 'Improve this', 'AI seed should be normalized');
+assert.equal(captionCueText(target), 'Original cue', 'menu copy actions should receive trimmed cue text');
 
 const patch = replaceCaptionCueText(captions, target, '  Replacement  ');
 assert.equal(patch?.sourceEntries?.[0]?.words?.[0]?.text, 'Replacement', 'editing a cue should preserve its timing and replace its text');

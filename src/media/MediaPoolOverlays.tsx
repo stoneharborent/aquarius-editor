@@ -25,7 +25,6 @@ interface AssetMenuPortalProps {
   onRemove: () => void;
   onMove: (folderId?: string) => void;
   onAddTimeline?: () => void;
-  onAddChat: () => void;
   /** Transcribe the menu's asset selection (enabled when any is transcribable). */
   onTranscribe?: () => void;
   /** Open the transcript viewer for the menu's anchor asset. */
@@ -196,7 +195,7 @@ function AssetMenuActions(props: AssetMenuPortalProps & { asset: MediaAsset }) {
           {props.folders.map((folder) => <option key={folder.id} value={folder.id}>{folderPath(folder, props.folders)}</option>)}
         </select>
       </label>
-      <AssetMenuDestinations assetName={asset.name} onAddTimeline={props.onAddTimeline} onAddChat={props.onAddChat} />
+      <AssetMenuDestinations assetName={asset.name} onAddTimeline={props.onAddTimeline} />
     </>
   );
 }

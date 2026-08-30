@@ -162,7 +162,7 @@ export function McpGuideDialog({ onClose }: { onClose: () => void }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <strong style={{ fontSize: 14 }}>{t('External agents (MCP)')}</strong>
             <span style={{ color: theme.textMuted, fontSize: 11.5 }}>
-              {t('Streamable HTTP · shares the editing tools with the built-in Agent')}
+              {t('Streamable HTTP · the full editing toolset, driven from outside the app')}
             </span>
           </div>
           <button type="button" onClick={onClose} style={{ marginLeft: 'auto', padding: '3px 9px' }}>{t('Close')}</button>
@@ -212,9 +212,9 @@ export function McpGuideDialog({ onClose }: { onClose: () => void }) {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={cardStyle}>
-            <span style={{ fontSize: 12, fontWeight: 600 }}>{t('Built-in Agent vs external MCP')}</span>
+            <span style={{ fontSize: 12, fontWeight: 600 }}>{t('How an external edit session works')}</span>
             <div style={{ color: theme.textMuted, fontSize: 12, lineHeight: 1.55 }}>
-              {t('The built-in Agent creates a previewable proposal for you to apply or reject. External MCP uses an isolated edit session: manual mode waits for review, while auto mode applies during review. Both modify projects only through EditorCore commands.')}
+              {t('An external agent edits in an isolated session: manual mode produces a previewable proposal you apply or reject in the editor, while auto mode applies during review. Either way the project is only ever modified through EditorCore commands.')}
             </div>
           </div>
           <div style={cardStyle}>

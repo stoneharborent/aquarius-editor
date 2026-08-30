@@ -4,7 +4,7 @@ import assert from 'node:assert';
 import { SHORTCUT_CATALOG, SHORTCUT_BY_ID } from './catalog';
 import { matchShortcut, parseBindingAlts, parseChord } from './match';
 
-assert.strictEqual(SHORTCUT_CATALOG.length, 56);
+assert.strictEqual(SHORTCUT_CATALOG.length, 55);
 assert.ok(SHORTCUT_BY_ID['play-pause']);
 assert.ok(SHORTCUT_BY_ID['shuttle-back']);
 

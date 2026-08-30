@@ -245,11 +245,6 @@ export function TranscriptPanel({
         </div>
       )}
 
-      {pickMode && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 12px', fontSize: 11, color: theme.accent, flexShrink: 0 }}>
-          {t('Selection mode: drag across words to quote them (release to add to chat)')}
-        </div>
-      )}
       <div className="cc-tx-body" ref={bodyRef} onMouseUp={pickFromDomSelection} style={pickMode ? { cursor: 'text' } : undefined}>
         {!track || selectable.length === 0 ? (
           <div className="cc-tx-empty-card blank">

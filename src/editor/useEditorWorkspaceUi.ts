@@ -10,7 +10,6 @@ import {
   type SetStateAction,
 } from 'react';
 import type { PlayerRef } from '@remotion/player';
-import type { AgentReference } from '../agent/context';
 import { refreshVisualAnalysis } from '../agent/progress/visual-analysis-jobs';
 import {
   createExportJobStore,
@@ -29,15 +28,7 @@ import type { EditorCommands } from './store';
 import { revisionAfterRelink } from './mediaSourceRevision';
 import type { MediaAsset, MediaAssetRelinkPatch, ProjectDoc } from './types';
 
-export interface EditorChatSeed {
-  text: string;
-  nonce: number;
-  references?: AgentReference[];
-}
-
 export interface EditorWorkspaceDialogs {
-  chatSeed: EditorChatSeed | null;
-  setChatSeed: Dispatch<SetStateAction<EditorChatSeed | null>>;
   showDesign: boolean;
   setShowDesign: Dispatch<SetStateAction<boolean>>;
   showVersions: boolean;
@@ -61,7 +52,6 @@ export function useEditorWorkspaceDialogs({
   doc,
   playerRef,
 }: EditorWorkspaceDialogsInput): EditorWorkspaceDialogs {
-  const [chatSeed, setChatSeed] = useState<EditorChatSeed | null>(null);
   const [showDesign, setShowDesign] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
@@ -73,8 +63,6 @@ export function useEditorWorkspaceDialogs({
   useAutomaticVersions(projectId, doc);
 
   return {
-    chatSeed,
-    setChatSeed,
     showDesign,
     setShowDesign,
     showSettings,
@@ -89,8 +77,6 @@ export function useEditorWorkspaceDialogs({
 }
 
 export interface EditorWorkspacePanels {
-  chatCollapsed: boolean;
-  setChatCollapsed: Dispatch<SetStateAction<boolean>>;
   panelLayout: EditorPanelLayout;
   inspectorCollapsed: boolean;
   setInspectorCollapsed: Dispatch<SetStateAction<boolean>>;
@@ -104,14 +90,11 @@ interface EditorWorkspacePanelsInput {
 export function useEditorWorkspacePanels({
   commands,
 }: EditorWorkspacePanelsInput): EditorWorkspacePanels {
-  const [chatCollapsed, setChatCollapsed] = usePersistedState('cc.chatCollapsed', false);
-  const panelLayout = useEditorPanelLayout(chatCollapsed);
+  const panelLayout = useEditorPanelLayout();
   const [inspectorCollapsed, setInspectorCollapsed] = usePersistedState('cc.inspectorCollapsed', false);
   const addTemplate = useCallback((template: Tpl) => commands.addMotionGraphic(template), [commands]);
 
   return {
-    chatCollapsed,
-    setChatCollapsed,
     panelLayout,
     inspectorCollapsed,
     setInspectorCollapsed,
@@ -138,7 +121,6 @@ interface EditorWorkspaceExportActionsInput {
   setShowDesign: Dispatch<SetStateAction<boolean>>;
   setShowVersions: Dispatch<SetStateAction<boolean>>;
   setShowShortcuts: Dispatch<SetStateAction<boolean>>;
-  setChatCollapsed: Dispatch<SetStateAction<boolean>>;
   selectAllTimelineContent: () => void;
 }
 
@@ -211,13 +193,6 @@ export function useEditorWorkspaceExportActions(
     openDesign: () => input.setShowDesign(true),
     openHistory: () => input.setShowVersions(true),
     openShortcuts: () => input.setShowShortcuts(true),
-    toggleLayout: () => input.setChatCollapsed((value) => !value),
-    focusAgent: () => {
-      input.setChatCollapsed(false);
-      requestAnimationFrame(() => {
-        document.querySelector<HTMLTextAreaElement>('[data-cc-chat-composer]')?.focus();
-      });
-    },
     selectAll: input.selectAllTimelineContent,
   });
   const relinkMediaAsset = useCallback((id: string, next: MediaAssetRelinkPatch) => {

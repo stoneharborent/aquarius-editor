@@ -204,7 +204,7 @@ function AssetThumbArea(props: MediaAssetCardProps) {
           ? t('Click to relink')
           : t(isTimelineMediaAssetKind(asset.kind)
             ? 'Click to select, double-click to add to the timeline, or drag to a specific track: {name}'
-            : 'Click to select, or drag into the AI chat: {name}', { name: asset.name })}
+            : 'Click to select: {name}', { name: asset.name })}
         style={missing ? undefined : { cursor: 'grab' }}
         onClick={() => { if (missing && props.canRelink) props.onRelink(asset.id); }}
       >

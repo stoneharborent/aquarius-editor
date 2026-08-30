@@ -6,7 +6,7 @@ import type { CaptionsData } from './types';
 import { captionSelectionKey, captionSelectionRef, type CaptionSelectionRef } from './captionSelection';
 import { CAPTION_STYLES } from './styles';
 import { captionPreviewTextColor, captionPreviewTextColorPatch, captionTextStyle, containerStyle } from './renderStyles';
-import { buildCues, fmtCueMs } from './captionCues';
+import { buildCues } from './captionCues';
 import {
   captionPreviewLayoutPatch,
   captionPreviewNudgePatch,
@@ -20,7 +20,7 @@ import { useT } from '../i18n/locale';
 import { captionTemplatePatch } from './captionTemplatePatch';
 import { captionPreviewOutsideClickAction } from './captionPreviewToolbar';
 
-// Preview the caption direct editing layer on the canvas: click on the screen caption → check box + floating toolbar (AI Edit/Style/Font Size).
+// Preview the caption direct editing layer on the canvas: click on the screen caption → check box + floating toolbar (Style/Font Size).
 // Editor side overlay, no synthesis: geometry is recalculated by passing "display area px size" to containerStyle,
 // The hit box is a transparent copy of the text in the same font (same layout as true rendering). Single stream text changes
 // cueTextPatch, the manual lane is directly changed to correspond to the cue; the style/font size/color/position are all updated with updateCaptions, which can be revoked.
@@ -35,7 +35,6 @@ interface CaptionPreviewEditorProps {
   onUpdateCaptions: (patch: Partial<CaptionsData>) => void;
   onSelectCaption?: (selection: CaptionSelectionRef) => void;
   activeSelection?: CaptionSelectionRef | null;
-  onSeedChat?: (text: string) => void;
   autoEditLaneId?: string;
   onAutoEditHandled?: () => void;
 }
@@ -59,7 +58,7 @@ interface DragRef {
   moved: boolean;
 }
 
-export function CaptionPreviewEditor({ trackId, state, captions, playerRef, onUpdateCaptions, onSelectCaption, activeSelection, onSeedChat, autoEditLaneId, onAutoEditHandled }: CaptionPreviewEditorProps) {
+export function CaptionPreviewEditor({ trackId, state, captions, playerRef, onUpdateCaptions, onSelectCaption, activeSelection, autoEditLaneId, onAutoEditHandled }: CaptionPreviewEditorProps) {
   const t = useT();
   const rootRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
@@ -294,18 +293,9 @@ export function CaptionPreviewEditor({ trackId, state, captions, playerRef, onUp
             <div className="cc-capedit-frame" aria-hidden />
           )}
 
-          {/* Floating toolbar (AI editing | text/style/color | font size | delete)*/}
+          {/* Floating toolbar (text/style/color | font size | delete)*/}
           {selected && !drag && (
             <div ref={toolbarRef} className="cc-capedit-bar" onPointerDown={(e) => e.stopPropagation()}>
-              {onSeedChat && (
-                <>
-                  <button type="button" className="cc-capedit-btn ai" title={t('Ask AI to rewrite this line')}
-                    onClick={() => onSeedChat(t('Improve this caption line (at {time}, keep its timing): "{text}"', { time: fmtCueMs(cue.start), text: cue.text }))}>
-                    <Icon name="sparkles" size={12} />{t('AI edit')}
-                  </button>
-                  <span className="cc-capedit-divider" aria-hidden />
-                </>
-              )}
               <button type="button" className="cc-capedit-btn" title={t('Edit text')} onClick={() => {
                 setPop(null);
                 if (!editing) {

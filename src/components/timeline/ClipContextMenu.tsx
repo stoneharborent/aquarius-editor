@@ -8,7 +8,6 @@ import { TRANSITION_LABELS, ZOOM_SHAPE_LABELS, type TimelineItem, type TimelineS
 import { ALL_FX, LUT_EFFECTS } from '../../gl/fx/effects';
 import { Icon, type IconName } from '../icons';
 import { useT } from '../../i18n/locale';
-import { contextReferenceItems } from './clipContextSelection';
 
 // speed presets for the variable speed submenu
 const SPEED_PRESETS = [0.25, 0.5, 1, 1.5, 2, 4] as const;
@@ -54,21 +53,19 @@ interface ClipContextMenuProps {
   onConvertToVideo: (item: TimelineItem) => void;
   onAddComment: (item: TimelineItem, frame: number, clientX: number, clientY: number) => void;
   /** Add the clicked clip or its complete multi-selection as structured AI references. */
-  onAddToChat: (items: TimelineItem[]) => void;
   /** Pick a local replacement for this media clip. */
   onRelinkFile: (item: TimelineItem) => void;
 }
 
 const PASTE_HINT = '⌘⌥V';
 
-export function ClipContextMenu({ item, transitions, x, y, playhead, commands, timeline, selectedIds, fxClip, onCopyFx, onClose, onExportMg, onConvertToVideo, onAddComment, onAddToChat, onRelinkFile }: ClipContextMenuProps) {
+export function ClipContextMenu({ item, transitions, x, y, playhead, commands, timeline, selectedIds, fxClip, onCopyFx, onClose, onExportMg, onConvertToVideo, onAddComment, onRelinkFile }: ClipContextMenuProps) {
   const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   const [syncBusy, setSyncBusy] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
   // Right-click on a multi-selected clip → batch ops on the whole set (NLE convention).
   const batchIds = selectedIds.includes(item.id) && selectedIds.length > 1 ? selectedIds : [item.id];
-  const referenceItems = contextReferenceItems(item.id, selectedIds, timeline.items);
   const batchN = batchIds.length;
   // Multicam: need ≥2 selected video/audio with media
   const multicamIds = (batchN > 1 ? batchIds : selectedIds.length > 1 ? selectedIds : [])
@@ -282,11 +279,6 @@ export function ClipContextMenu({ item, transitions, x, y, playhead, commands, t
         </div>
       )}
       <Sep />
-      <Item
-        label={batchN > 1 ? t('Add to AI chat ({n})', { n: batchN }) : t('Add to AI composer')}
-        icon="sparkles"
-        onClick={run(() => onAddToChat(referenceItems))}
-      />
       <Item label={t('Relink file')} icon="folder" disabled={!canRelink} onClick={run(() => onRelinkFile(item))} />
       <Sep />
       <Item label={t('Export MG animation')} icon="download" disabled={!isDom} onClick={run(() => onExportMg(item))} />

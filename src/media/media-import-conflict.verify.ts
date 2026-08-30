@@ -10,7 +10,6 @@ import {
 import type { MediaAsset } from '../editor/types';
 import {
   createImportTranscriptionGate,
-  createMediaAssetsChatSeed,
   readyMediaAssetsForPaste,
 } from './upload';
 import { uploadedMediaRelinkPatch } from './mediaAssetRelink';
@@ -112,25 +111,6 @@ assert.equal(
   false,
   'the paste payload never retains the URL scheduled for revoke',
 );
-
-const secondReadyMaster: MediaAsset = {
-  ...readyMaster,
-  id: 'voice-master',
-  name: 'voice.wav',
-  sourceFilename: 'voice.wav',
-  kind: 'audio',
-  src: '/media/uploads/voice.wav',
-};
-const mediaSeed = createMediaAssetsChatSeed([readyMaster, secondReadyMaster], 42);
-assert.deepEqual(mediaSeed, {
-  text: '@interview.mov @voice.wav ',
-  nonce: 42,
-  references: [
-    { id: readyMaster.id, name: readyMaster.name, kind: readyMaster.kind },
-    { id: secondReadyMaster.id, name: secondReadyMaster.name, kind: secondReadyMaster.kind },
-  ],
-}, 'one ordered chat seed contains every selected media reference');
-assert.equal(createMediaAssetsChatSeed([], 42), null, 'an empty media selection does not expand or reseed chat');
 
 const canonicalHash = 'aa'.repeat(32);
 const canonicalPoolAsset: MediaAsset = {

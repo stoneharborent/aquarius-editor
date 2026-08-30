@@ -45,7 +45,6 @@ const CHROME_FILES = [
   'src/components/ExportHistory.tsx',
   'src/components/PreviewPanel.tsx',
   'src/components/VersionHistory.tsx',
-  'src/components/chat/ChatComposer.tsx',
   'src/components/settings/DesignStylePanel.tsx',
   'src/components/settings/SettingsDialog.tsx',
   'src/components/settings/SettingsFieldRow.tsx',
@@ -67,7 +66,6 @@ const CHROME_FILES = [
 
 const CONTENT_COLORS_BY_FILE = new Map<string, ReadonlySet<string>>([
   ['src/components/settings/DesignStylePanel.tsx', new Set(['#000000'])],
-  ['src/components/chat/ChatComposer.tsx', new Set(['#e5866a'])],
   ['src/components/PreviewPanel.tsx', new Set([
     '#000', 'rgba(255,255,255,${opacity})', 'rgba(255,255,255,0.18)',
   ])],

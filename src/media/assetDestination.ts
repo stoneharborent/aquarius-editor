@@ -1,8 +1,7 @@
-export type AssetDestination = 'timeline' | 'chat';
+export type AssetDestination = 'timeline';
 
 export interface AssetDestinationActions {
   timeline: () => void;
-  chat: () => void;
 }
 
 export function runAssetDestinationAction(

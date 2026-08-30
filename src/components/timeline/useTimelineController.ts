@@ -5,7 +5,7 @@ import {
 import { theme } from '../../theme';
 import {
   captionTrackEntries, captionsOnTrack, defaultTrackId, selectedIdsOf,
-  timelineTrackIds, trackAlias, trackKind, type TimelineItem, type TrackId,
+  timelineTrackIds, trackAlias, trackKind, type TrackId,
 } from '../../editor/types';
 import { slipPreview as buildSlipPreview } from '../../editor/slip';
 import { usePersistedState } from '../../hooks/usePersistedState';
@@ -13,7 +13,7 @@ import type { FxClip } from './ClipContextMenu';
 import { useRecorder } from '../../audio/recorder';
 import { captionsForTrack } from '../../captions/captionTrack';
 import {
-  captionSelectionKey, captionSelectionsInFrameRange, resolveCaptionSelection,
+  captionSelectionsInFrameRange, resolveCaptionSelection,
   type CaptionSelectionRef,
 } from '../../captions/captionSelection';
 import {
@@ -33,15 +33,12 @@ import {
   seekTimelineFromPointer, timelineGestureHasDragged, timelinePointerShouldSeek,
   timelineSeekFrameAtClientX,
 } from './timelineSeek';
-import { isTimelineDragOverChat } from './timelineChatDrop';
 import {
   HEADER_W, MAX_ROW, MIN_ROW, RULER_H, TRACK_ROW, buildTimelineIndexes,
   rulerMajorSeconds, rulerMinorCount, timelineFrameWindow, timelinePinnedItemIds,
   type EditMode,
 } from './timelineUtil';
-import {
-  emitSelectionRef, itemRef, timerangeRef, useSelectionRefMode,
-} from '../../agent/selection-refs';
+import { useSelectionRefMode } from '../../agent/selection-refs';
 import { getLocale, useT } from '../../i18n/locale';
 import type { TimelineProps } from './timelineTypes';
 import { useTimelineTrackMenus } from './useTimelineTrackMenus';
@@ -152,9 +149,10 @@ export function useTimelineController({
     const captions = captionsForTrack(state, trackId);
     commands.setCaptions(captions ?? newManualCaptions(), trackId);
   };
-  // selection mode: clicks/drags pick REFERENCES for the chat
-  // instead of editing — clip click → item ref, ruler click → timepoint, drag
-  // over ruler/lanes → timerange. Editing gestures are untouched when off.
+  // Selection (pick) mode: clicks/drags emit selection references instead of
+  // editing. Nothing enables it now that the in-app chat composer is gone, so
+  // the machinery below stays dormant; it is kept because the reference shapes
+  // it produces are the same ones the agent context/tools consume.
   const pickMode = useSelectionRefMode();
   /** Clips and caption cues whose range + track lane intersect the marquee. */
   const selectionInMarquee = (left: number, top: number, right: number, bottom: number) => {
@@ -191,22 +189,6 @@ export function useTimelineController({
   // clip right-click menu + effect clipboard (copy effect/paste effect)
   const [ctxMenu, setCtxMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const [fxClip, setFxClip] = useState<FxClip | null>(null);
-  const addSelectionToChat = (selection: { items: TimelineItem[]; captions: CaptionSelectionRef[] }) => {
-    const references = [
-      ...selection.items.map((item) => itemRef(item, state)),
-      ...selection.captions.flatMap((captionSelection) => {
-        const resolved = resolveCaptionSelection(state, captionSelection);
-        if (!resolved) return [];
-        const cue = resolved.target.cue;
-        const startFrame = Math.max(0, Math.round(cue.start * state.fps / 1000));
-        const endFrame = Math.max(startFrame + 1, Math.round(cue.end * state.fps / 1000));
-        const base = timerangeRef(startFrame, endFrame, state, { trackId: resolved.trackId });
-        return [{ ...base, id: `caption:${captionSelectionKey(captionSelection) ?? base.id}`, name: `Caption: ${cue.text}` }];
-      }),
-    ];
-    for (const reference of references) emitSelectionRef(reference);
-    requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>('[data-cc-chat-composer]')?.focus());
-  };
   const [viewport, setViewport] = useState({ scrollLeft: 0, clientWidth: 0 });
   // content is at least as wide as the panel, so track rows/ruler never stop
   // short of the right edge when the project is short or zoomed out.
@@ -294,20 +276,6 @@ export function useTimelineController({
     state, commands, editMode, snapping, pickMode, px,
     playheadRef, scrollRef, frameFromClientX, trackFromClientY, selectionInMarquee,
     selectedCaptions, onMarqueeCaptionSelect,
-    isOverChatComposer: (clientX, clientY) => {
-      const composer = document.querySelector<HTMLElement>('[data-cc-chat-composer]');
-      return composer ? isTimelineDragOverChat(clientX, clientY, composer.getBoundingClientRect()) : false;
-    },
-    onDropSelectionToChat: (selection) => {
-      const itemsById = new Map(state.items.map((item) => [item.id, item]));
-      addSelectionToChat({
-        items: selection.itemIds.flatMap((id) => {
-          const item = itemsById.get(id);
-          return item ? [item] : [];
-        }),
-        captions: selection.captionSelections,
-      });
-    },
   });
   const { drag, marquee, pickDrag, startPick, onPointerMove, onPointerUp, onPointerCancel } = pointer;
   const activeSelectionMovePreview: TimelineSelectionMovePreview | null = captionSelectionMovePreview ?? (
@@ -455,7 +423,7 @@ export function useTimelineController({
     duckMenu, setDuckMenu, captionError, setCaptionError,
     moveCaptionCue, openCaptionTrackMenu, openDuckTrackMenu,
     closeTrackDrillMenu, backFromTrackDrillMenu, recorder, toggleCaptions,
-    pickMode, addSelectionToChat, ctxMenu, setCtxMenu, fxClip, setFxClip, clipJob, setClipJob,
+    pickMode, ctxMenu, setCtxMenu, fxClip, setFxClip, clipJob, setClipJob,
     beginRelink, relinkFile, beginTrackInsert, insertTrackFiles, exportMg, convertToVideo,
     innerW, visibleWindow, rowHeightOf, tracksHeight,
     majorFrames, minorFrames, minorTicksPerMajor, rulerSpanFrames,

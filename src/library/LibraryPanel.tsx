@@ -96,7 +96,6 @@ interface LibraryPanelProps {
   onTranscribeAsset: (asset: MediaAsset) => void;
   onAddMediaItem: (asset: MediaAsset) => void;
   onAddMediaAssetsToTimeline: (assets: MediaAsset[]) => void;
-  onUseMediaAI: (assets: MediaAsset[]) => void;
   onCreateMediaFolder: (name: string, parentId?: string) => string;
   onRenameMediaFolder: (id: string, name: string) => void;
   onDeleteMediaFolder: (id: string) => void;
@@ -109,12 +108,11 @@ interface LibraryPanelProps {
   onRemoveMediaAssets: (ids: string[]) => void;
   onPasteMediaAssets: (assets: MediaAsset[], folderId?: string) => void;
   onRelinkMediaAsset?: (id: string, next: MediaAssetRelinkPatch) => void;
-  /** Creative-mode skill selection (Skill tab): mirrors the chat composer state. */
+  /** Creative-mode skill selection (Skill tab): read by the agent context, so
+   * external agents driving the editor over MCP see the active creative mode. */
   creativeMode: string | null;
   onCreativeModeChange: (id: string | null) => void;
   onAddSolid?: () => void;
-  /** ⋮ menu「Generated with AI」: seed the chat with this template as a reference */
-  onUseTemplateAI: (tpl: Tpl) => void;
   /** currently-selected clip — resource-library tabs apply to it */
   selectedItem: TimelineItem | null;
   /** custom = plugin transition (type='custom-shader' snapshot frag into TransitionItem) */
@@ -130,7 +128,7 @@ function localizeDefaultSequenceName(name: string, t: ReturnType<typeof useT>): 
   const match = /^Sequence (\d+)$/.exec(name);
   return match ? t('Sequence {n}', { n: match[1]! }) : name;
 }
-export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddAudio, playerRef, fps, items, sequenceOptions, onAddSequence, trackOptions, captionTracks, onSetCaptions, onCreateCaptionTrack, onUpdateCaptions, onSetItemTranscript, onToggleWord, onCleanScript, onSetGapCap, onSetTranscriptPlayOrder, onReorderTrackItems, onClearEdits, assets, mediaFolders, usedAssetIds, offlineAssetIds, onAssetLoadError, onImportMedia, onImportMobileMedia, onIngestDirectoryAsset, onTranscribeAsset, onAddMediaItem, onAddMediaAssetsToTimeline, onUseMediaAI, onCreateMediaFolder, onRenameMediaFolder, onDeleteMediaFolder, onMoveMediaAssets, onRenameMediaAsset, onRenameMediaAssets, onSetMediaAssetFavorite, onSetMediaAssetsFavorite, onRemoveMediaAsset, onRemoveMediaAssets, onPasteMediaAssets, onRelinkMediaAsset, creativeMode, onCreativeModeChange, onAddSolid, onUseTemplateAI, selectedItem, onApplyTransition, onApplyFx, onApplyZoom }: LibraryPanelProps) {
+export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddAudio, playerRef, fps, items, sequenceOptions, onAddSequence, trackOptions, captionTracks, onSetCaptions, onCreateCaptionTrack, onUpdateCaptions, onSetItemTranscript, onToggleWord, onCleanScript, onSetGapCap, onSetTranscriptPlayOrder, onReorderTrackItems, onClearEdits, assets, mediaFolders, usedAssetIds, offlineAssetIds, onAssetLoadError, onImportMedia, onImportMobileMedia, onIngestDirectoryAsset, onTranscribeAsset, onAddMediaItem, onAddMediaAssetsToTimeline, onCreateMediaFolder, onRenameMediaFolder, onDeleteMediaFolder, onMoveMediaAssets, onRenameMediaAsset, onRenameMediaAssets, onSetMediaAssetFavorite, onSetMediaAssetsFavorite, onRemoveMediaAsset, onRemoveMediaAssets, onPasteMediaAssets, onRelinkMediaAsset, creativeMode, onCreativeModeChange, onAddSolid, selectedItem, onApplyTransition, onApplyFx, onApplyZoom }: LibraryPanelProps) {
   const t = useT();
   const selKind = selectedItem?.kind ?? null;
   const isVisual = selKind != null && selKind !== 'audio';
@@ -230,7 +228,7 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
         </div>
       ) : isMyAssets ? (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, borderTop: `0.5px solid ${theme.border}` }}>
-          <MediaPoolPanel semanticScopeId={semanticScopeId} assets={assets} folders={mediaFolders} fps={fps} usedAssetIds={usedAssetIds} offlineAssetIds={offlineAssetIds} onAssetLoadError={onAssetLoadError} onImport={onImportMedia} onImportMobile={onImportMobileMedia} directoryImport={directoryImport} directoryImportError={directoryImportError} onAddAsset={onAddMediaItem} onAddAssetsToTimeline={onAddMediaAssetsToTimeline} onAddAssetsToChat={onUseMediaAI}
+          <MediaPoolPanel semanticScopeId={semanticScopeId} assets={assets} folders={mediaFolders} fps={fps} usedAssetIds={usedAssetIds} offlineAssetIds={offlineAssetIds} onAssetLoadError={onAssetLoadError} onImport={onImportMedia} onImportMobile={onImportMobileMedia} directoryImport={directoryImport} directoryImportError={directoryImportError} onAddAsset={onAddMediaItem} onAddAssetsToTimeline={onAddMediaAssetsToTimeline}
             onCreateFolder={onCreateMediaFolder} onRenameFolder={onRenameMediaFolder} onDeleteFolder={onDeleteMediaFolder}
             onMoveAssets={onMoveMediaAssets} onRenameAsset={onRenameMediaAsset} onTranscribe={onTranscribeAsset} onRenameAssets={onRenameMediaAssets} onSetFavorite={onSetMediaAssetFavorite} onSetAssetsFavorite={onSetMediaAssetsFavorite} onRemoveAsset={onRemoveMediaAsset} onRemoveAssets={onRemoveMediaAssets} onPasteAssets={onPasteMediaAssets}
             onRelinkAsset={onRelinkMediaAsset} onAddSolid={onAddSolid} />
@@ -275,7 +273,7 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '10px 10px 14px', minHeight: 0 }}>
         {mainTab === 'Library' && subTab === 'Motion Graphics' ? (
-          <TemplateBrowser templates={templates} onAdd={onAddTemplate} onUseAI={onUseTemplateAI} />
+          <TemplateBrowser templates={templates} onAdd={onAddTemplate} />
         ) : showSfx ? (
           <SoundBrowser fps={fps} onAdd={onAddAudio} />
         ) : subTab === 'Transitions' ? (

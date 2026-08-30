@@ -6,7 +6,7 @@
 // empty-fields error all hold.
 import assert from 'node:assert';
 import { buildFollowupWidget, execFollowupTool, FOLLOWUP_TOOL_NAMES } from './followup-tools';
-import { parseWidgets, type FormMulti, type FormSingle, type WidgetField } from '../../components/chat/widget-parse';
+import { parseWidgets, type FormMulti, type FormSingle, type WidgetField } from './widget-parse';
 import type { AgentContext } from '../context';
 
 const ctx = {} as AgentContext; // followup never touches editor state

@@ -39,7 +39,6 @@ export interface PreviewTransformOverlayProps {
   onEndHistoryGesture: () => void;
   /** Live text style edits for text / text-like MG clips. */
   onItemPropChange?: (id: string, key: string, value: unknown) => void;
-  onSeedChat?: (text: string) => void;
 }
 
 const DOUBLE_CLICK_MS = 320;
@@ -113,7 +112,6 @@ export function PreviewTransformOverlay({
   onBeginHistoryGesture,
   onEndHistoryGesture,
   onItemPropChange,
-  onSeedChat,
 }: PreviewTransformOverlayProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [frame, setFrame] = useState(() => Math.round(playerRef.current?.getCurrentFrame() ?? 0));
@@ -476,7 +474,6 @@ export function PreviewTransformOverlay({
                 selection={selection}
                 composition={{ width: state.width, height: state.height }}
                 onPropChange={onItemPropChange}
-                onSeedChat={onSeedChat}
                 autoEdit={textAutoEdit}
                 onAutoEditHandled={() => setTextAutoEdit(false)}
               />

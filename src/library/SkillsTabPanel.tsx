@@ -1,6 +1,6 @@
-// Skill library tab: creative workflows + custom skills, mirroring the chat
-// composer picker. Selecting a card activates the creative mode (same state
-// the composer uses); the active skill is highlighted. Custom skills get a
+// Skill library tab: creative workflows + custom skills. Selecting a card
+// activates the creative mode, which the agent context reports to external
+// agents over MCP; the active skill is highlighted. Custom skills get a
 // search box, per-card edit (name/summary/body via modal) and delete.
 import { useEffect, useMemo, useState } from 'react';
 import { t as translate, useT } from '../i18n/locale';
@@ -130,7 +130,7 @@ export function SkillsTabPanel({
         ))}
       </div>
       <div style={{ fontSize: 10.5, color: theme.textDim, marginTop: 8, lineHeight: 1.5 }}>
-        {t('Tip: type /skill:name in the chat box to activate quickly, or use Skill Creator to build your own.')}
+        {t('Tip: external agents connected over MCP can activate a skill by name, or use Skill Creator to build your own.')}
       </div>
       {editing && (
         <SkillEditDialog

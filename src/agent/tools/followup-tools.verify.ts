@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { buildFollowupWidget } from './followup-tools';
-import { formatWidgetAnswer, parseWidgets } from '../../components/chat/widget-parse';
+import { formatWidgetAnswer, parseWidgets } from './widget-parse';
 
 const widget = buildFollowupWidget([
   {

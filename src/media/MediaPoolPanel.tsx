@@ -50,7 +50,6 @@ interface MediaPoolPanelProps {
   directoryImportError: string | null;
   onAddAsset: (asset: MediaAsset) => void;
   onAddAssetsToTimeline?: (assets: MediaAsset[]) => void;
-  onAddAssetsToChat?: (assets: MediaAsset[]) => void;
   onCreateFolder: (name: string, parentId?: string) => string;
   onRenameFolder: (id: string, name: string) => void;
   onDeleteFolder: (id: string) => void;
@@ -73,7 +72,7 @@ interface MediaPoolPanelProps {
 
 export function MediaPoolPanel({
   semanticScopeId, assets, folders, fps, usedAssetIds, offlineAssetIds, onAssetLoadError,
-  onImport, onImportMobile, directoryImport, directoryImportError, onAddAsset, onAddAssetsToTimeline, onAddAssetsToChat, onCreateFolder, onRenameFolder,
+  onImport, onImportMobile, directoryImport, directoryImportError, onAddAsset, onAddAssetsToTimeline, onCreateFolder, onRenameFolder,
   onDeleteFolder, onMoveAssets, onRenameAsset, onRenameAssets, onSetFavorite, onSetAssetsFavorite, onRemoveAsset, onRemoveAssets, onPasteAssets, onRelinkAsset, onAddSolid, onTranscribe,
 }: MediaPoolPanelProps) {
   const t = useT();
@@ -448,7 +447,6 @@ export function MediaPoolPanel({
           transcribe: (targets) => targets.filter((asset) => (asset.kind === 'audio' || asset.kind === 'video') && asset.transcribeStatus !== 'running' && asset.transcribeStatus !== 'done').forEach((asset) => onTranscribe(asset)),
           viewTranscript: (asset) => openTranscriptViewer(asset.id),
           move: onMoveAssets, addToTimeline: onAddAssetsToTimeline, addAsset: onAddAsset,
-          addToChat: onAddAssetsToChat,
         }}
         blank={{
           position: blankMenuPos, clipboard: assetClipboard, visibleIds, selected,

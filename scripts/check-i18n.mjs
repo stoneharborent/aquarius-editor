@@ -49,7 +49,6 @@ const ALLOW_CJK_FILES = new Set([
   'src/captions/captionPagination.verify.ts',
   'src/captions/exportCaptions.verify.ts',
   'src/captions/segmenter.verify.ts',
-  'src/components/chat/template-reference-localization.verify.ts',
   'src/export/fcpxml.verify.ts',
   'src/fonts/notoSansOffline.verify.ts',
   'src/media/searchMedia.verify.ts',

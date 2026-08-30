@@ -165,15 +165,6 @@ export function readyMediaAssetsForPaste(
     .filter((asset) => !asset.src.startsWith('blob:'));
 }
 
-export function createMediaAssetsChatSeed(assets: MediaAsset[], nonce = Date.now()) {
-  if (!assets.length) return null;
-  return {
-    text: `${assets.map((asset) => `@${asset.name}`).join(' ')} `,
-    nonce,
-    references: assets.map((asset) => ({ id: asset.id, name: asset.name, kind: asset.kind })),
-  };
-}
-
 const newId = () => (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `a_${Date.now()}`;
 
 /** Post-upload conditional compress (server ffmpeg). No-op for already-efficient sources. */

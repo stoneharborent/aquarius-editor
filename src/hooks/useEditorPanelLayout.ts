@@ -1,14 +1,11 @@
 import { usePersistedState } from './usePersistedState';
 
 const HEADER_HEIGHT = 41;
-const COLLAPSED_CHAT_WIDTH = 46;
 const BASELINE_WIDTH = 1463;
 const BASELINE_CONTENT_HEIGHT = 761;
 
-const DEFAULT_CHAT_RATIO = 356 / BASELINE_WIDTH;
 const DEFAULT_LIBRARY_RATIO = 406 / BASELINE_WIDTH;
 const DEFAULT_TIMELINE_RATIO = 350 / BASELINE_CONTENT_HEIGHT;
-const MIN_CHAT_RATIO = 320 / BASELINE_WIDTH;
 const MIN_LIBRARY_RATIO = 176 / BASELINE_WIDTH;
 const MIN_PREVIEW_RATIO = 280 / BASELINE_WIDTH;
 const MIN_TIMELINE_RATIO = 260 / BASELINE_CONTENT_HEIGHT;
@@ -35,18 +32,12 @@ function contentHeight(): number {
   return Math.max(1, window.innerHeight - HEADER_HEIGHT);
 }
 
-function normalizeRatios(chat: number, library: number, timeline: number) {
-  const chatRatio = clamp(
-    finiteRatio(chat, DEFAULT_CHAT_RATIO),
-    MIN_CHAT_RATIO,
-    1 - MIN_LIBRARY_RATIO - MIN_PREVIEW_RATIO,
-  );
+function normalizeRatios(library: number, timeline: number) {
   return {
-    chatRatio,
     libraryRatio: clamp(
       finiteRatio(library, DEFAULT_LIBRARY_RATIO),
       MIN_LIBRARY_RATIO,
-      1 - chatRatio - MIN_PREVIEW_RATIO,
+      1 - MIN_PREVIEW_RATIO,
     ),
     timelineRatio: clamp(
       finiteRatio(timeline, DEFAULT_TIMELINE_RATIO),
@@ -59,7 +50,6 @@ function normalizeRatios(chat: number, library: number, timeline: number) {
 export interface EditorPanelLayout {
   gridTemplateColumns: string;
   gridTemplateRows: string;
-  resizeChat: (delta: number) => void;
   resizeLibrary: (delta: number) => void;
   resizeTimeline: (delta: number) => void;
 }
@@ -67,12 +57,9 @@ export interface EditorPanelLayout {
 /**
  * Keeps user-resized editor panels as viewport-relative ratios. CSS vw/fr tracks
  * then react to both window resizing and browser zoom without a JS resize loop.
+ * Columns: library | divider | preview. The timeline spans the full width.
  */
-export function useEditorPanelLayout(chatCollapsed: boolean): EditorPanelLayout {
-  const [storedChatRatio, setChatRatio] = usePersistedState(
-    'openchatcut.chatRatio.ui-v2',
-    DEFAULT_CHAT_RATIO,
-  );
+export function useEditorPanelLayout(): EditorPanelLayout {
   const [storedLibraryRatio, setLibraryRatio] = usePersistedState(
     'openchatcut.libraryRatio.ui-v2',
     DEFAULT_LIBRARY_RATIO,
@@ -82,34 +69,24 @@ export function useEditorPanelLayout(chatCollapsed: boolean): EditorPanelLayout 
     DEFAULT_TIMELINE_RATIO,
   );
 
-  const { chatRatio, libraryRatio, timelineRatio } = normalizeRatios(
-    storedChatRatio,
+  const { libraryRatio, timelineRatio } = normalizeRatios(
     storedLibraryRatio,
     storedTimelineRatio,
   );
 
-  const chatTrack = chatCollapsed ? `${COLLAPSED_CHAT_WIDTH}px` : `${chatRatio * 100}vw`;
-  const gridTemplateColumns = `${chatTrack} 0 ${libraryRatio * 100}vw 0 minmax(0, 1fr)`;
+  const gridTemplateColumns = `${libraryRatio * 100}vw 0 minmax(0, 1fr)`;
   const gridTemplateRows = `${HEADER_HEIGHT}px minmax(0, ${1 - timelineRatio}fr) 0 minmax(0, ${timelineRatio}fr)`;
 
-  const resizeChat = (delta: number) => setChatRatio((current) => roundRatio(clamp(
-    finiteRatio(current, DEFAULT_CHAT_RATIO) + delta / viewportWidth(),
-    MIN_CHAT_RATIO,
-    1 - libraryRatio - MIN_PREVIEW_RATIO,
+  const resizeLibrary = (delta: number) => setLibraryRatio((current) => roundRatio(clamp(
+    finiteRatio(current, DEFAULT_LIBRARY_RATIO) + delta / viewportWidth(),
+    MIN_LIBRARY_RATIO,
+    1 - MIN_PREVIEW_RATIO,
   )));
-  const resizeLibrary = (delta: number) => setLibraryRatio((current) => {
-    const chatShare = chatCollapsed ? COLLAPSED_CHAT_WIDTH / viewportWidth() : chatRatio;
-    return roundRatio(clamp(
-      finiteRatio(current, DEFAULT_LIBRARY_RATIO) + delta / viewportWidth(),
-      MIN_LIBRARY_RATIO,
-      1 - chatShare - MIN_PREVIEW_RATIO,
-    ));
-  });
   const resizeTimeline = (delta: number) => setTimelineRatio((current) => roundRatio(clamp(
     finiteRatio(current, DEFAULT_TIMELINE_RATIO) - delta / contentHeight(),
     MIN_TIMELINE_RATIO,
     1 - MIN_UPPER_RATIO,
   )));
 
-  return { gridTemplateColumns, gridTemplateRows, resizeChat, resizeLibrary, resizeTimeline };
+  return { gridTemplateColumns, gridTemplateRows, resizeLibrary, resizeTimeline };
 }

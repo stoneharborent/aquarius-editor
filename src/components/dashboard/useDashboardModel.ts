@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ChangeEvent, type Dispatch, type RefObject, type SetStateAction } from 'react';
-import { getAgentModelSnapshot, subscribeAgentModels, type AgentModelSnapshot } from '../../agent/model-selection';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type Dispatch, type RefObject, type SetStateAction } from 'react';
 import { useT } from '../../i18n/locale';
 import { listFolders, loadProject, loadProjectThumb, saveProjectThumb } from '../../persist/projectStore';
 import type { ProjectFolder, ProjectMeta } from '../../persist/projectStoreCoordinators';
@@ -72,7 +71,6 @@ export interface FolderMoveModel {
 }
 
 export interface DashboardModel {
-  modelSnapshot: AgentModelSnapshot;
   query: string;
   normalizedQuery: string;
   visibleProjects: ProjectMeta[];
@@ -334,7 +332,6 @@ export function countProjectsByFolder(
 }
 
 export function useDashboardModel(props: DashboardProps): DashboardModel {
-  const modelSnapshot = useSyncExternalStore(subscribeAgentModels, getAgentModelSnapshot);
   const [query, setQuery] = useState('');
   const [openFolderId, setOpenFolderId] = useState<string | null>(null);
   const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -353,7 +350,6 @@ export function useDashboardModel(props: DashboardProps): DashboardModel {
   const folderEdit = useFolderEdit(props, reloadFolders, effectiveFolderId, setOpenFolderId);
   const move = useFolderMove(props);
   return {
-    modelSnapshot,
     query,
     normalizedQuery,
     visibleProjects,

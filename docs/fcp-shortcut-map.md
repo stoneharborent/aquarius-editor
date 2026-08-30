@@ -59,7 +59,7 @@ a binding in `src/shortcuts/catalog.ts`, change the matching row here in the sam
 | Nudge right 1 / 10 frames (`nudge-right`) | R / Shift + R | **. / Shift + .** | . / ⇧. | FCP | R is freed. |
 | Trim start (`trim-start`) | Q | **Alt + [** | ⌥[ ("Trim Start") | FCP | Q is freed. |
 | Trim end (`trim-end`) | W | **Alt + ]** | ⌥] ("Trim End") | FCP | W is freed. |
-| Select all (`select-all`) | Mod + A | **Mod + A** | ⌘A | FCP | Suppressed while typing so ⌘A still selects text in the chat/inspector. |
+| Select all (`select-all`) | Mod + A | **Mod + A** | ⌘A | FCP | Suppressed while typing so ⌘A still selects text in the inspector. |
 | Select clips forward (`select-after`) | Y | **Y** | — | Extension | Nearest FCP idea is a range selection; Premiere's Track Select Forward is A, which is now the Select tool. Y stays. |
 | Move clip up (`move-up`) | Alt + ↑ | **Alt + ↑** | ⌥↑ (move a connected clip up a lane) | FCP-ish | Same gesture, applied to this app's track model. |
 | Move clip down (`move-down`) | Alt + ↓ | **Alt + ↓** | ⌥↓ | FCP-ish | |
@@ -104,9 +104,9 @@ a binding in `src/shortcuts/catalog.ts`, change the matching row here in the sam
 
 ## AI
 
-| Action (id) | Old binding | New binding | Final Cut Pro | Status | Notes |
-|---|---|---|---|---|---|
-| Add to AI chat (`ask-ai`) | Tab | **Tab** | — | Extension | Aquarius Editor's conversational editing has no FCP counterpart. Ignored while typing so Tab still moves focus in inputs. |
+Removed. Aquarius Editor no longer has an in-app chat, so the `ask-ai` action
+(Tab) and its **AI** shortcut group are gone; agents drive the editor from
+outside over MCP. Tab is free again.
 
 ## Modifiers held during a timeline drag
 

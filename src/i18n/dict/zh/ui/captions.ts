@@ -148,7 +148,7 @@ export default {
   'Improve this caption line (at {time}, keep its timing): "{text}"': '优化这句字幕（{time} 处，保持时间不变）：「{text}」',
   'Edit lines': '逐句编辑',
   ' ({n} lines)': '（{n} 句）',
-  'Edit transcript-driven lanes in chat; manual lanes can be edited directly in “Manual captions” above.': '转写字幕车道请在对话里修改；手动车道可在上方「手动字幕」中直接编辑。',
+  'Transcript-driven lanes follow their transcript; manual lanes can be edited directly in “Manual captions” above.': '转写字幕车道跟随转写内容；手动车道可在上方「手动字幕」中直接编辑。',
   'No caption lines to edit yet (transcribe and generate captions first).': '还没有可编辑的字幕句（先转写并生成字幕）。',
   'Click a timecode to jump there; click the text to edit it. Clearing the text removes the line. Undo with ⌘Z.': '点时间码跳到对应画面；点句子文字直接改，清空文字＝删掉这句。改动可撤销（⌘Z）。',
   'Jump to this line': '跳到这句',

@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react';
 import { theme } from '../theme';
 import { ExportDialog } from '../export/ExportDialog';
 import { TopBar } from '../components/TopBar';
-import { ChatPanel } from '../components/chat/ChatPanel';
+import { ExternalAgentOverlay } from '../components/external/ExternalAgentOverlay';
 import { LibraryPanel } from '../library/LibraryPanel';
 import { PreviewPanel } from '../components/PreviewPanel';
 import { InspectorPanel } from '../components/InspectorPanel';
@@ -24,9 +24,7 @@ export interface EditorWorkspaceViewProps {
   versionHistory: ComponentProps<typeof VersionHistory> | null;
   shortcutsDialog: ComponentProps<typeof ShortcutsDialog> | null;
   settingsDialog: ComponentProps<typeof SettingsDialog> | null;
-  chatPanel: ComponentProps<typeof ChatPanel>;
-  chatCollapsed: boolean;
-  onResizeChat: ComponentProps<typeof Divider>['onResize'];
+  externalAgentOverlay: ComponentProps<typeof ExternalAgentOverlay>;
   libraryPanel: ComponentProps<typeof LibraryPanel>;
   onResizeLibrary: ComponentProps<typeof Divider>['onResize'];
   previewPanel: ComponentProps<typeof PreviewPanel>;
@@ -39,7 +37,7 @@ export interface EditorWorkspaceViewProps {
 
 function renderLibrary(props: EditorWorkspaceViewProps) {
   return (
-    <div style={{ gridColumn: 3, gridRow: 2, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
+    <div style={{ gridColumn: 1, gridRow: 2, minHeight: 0, minWidth: 0, overflow: 'hidden' }}>
       <LibraryPanel {...props.libraryPanel} />
     </div>
   );
@@ -47,7 +45,7 @@ function renderLibrary(props: EditorWorkspaceViewProps) {
 
 function renderPreview(props: EditorWorkspaceViewProps) {
   return (
-    <div className="cc-preview-workspace" style={{ gridColumn: 5, gridRow: 2 }}>
+    <div className="cc-preview-workspace" style={{ gridColumn: 3, gridRow: 2 }}>
       <PreviewPanel {...props.previewPanel} />
       {props.inspectorPanel && <InspectorPanel {...props.inspectorPanel} />}
     </div>
@@ -56,7 +54,7 @@ function renderPreview(props: EditorWorkspaceViewProps) {
 
 function renderTimeline(props: EditorWorkspaceViewProps) {
   return (
-    <div style={{ gridColumn: '3 / -1', gridRow: 4, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+    <div style={{ gridColumn: '1 / -1', gridRow: 4, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
       <TimelineTabs {...props.timelineTabs} />
       <Timeline {...props.timeline} />
     </div>
@@ -84,19 +82,16 @@ export function EditorWorkspaceView(props: EditorWorkspaceViewProps) {
       {props.designStylePanel && <DesignStylePanel {...props.designStylePanel} />}
       {props.versionHistory && <VersionHistory {...props.versionHistory} />}
       {props.shortcutsDialog && <ShortcutsDialog {...props.shortcutsDialog} />}
-      <ChatPanel {...props.chatPanel} />
-      <div style={{ gridColumn: 2, gridRow: '2 / 5' }}>
-        {!props.chatCollapsed && <Divider onResize={props.onResizeChat} />}
-      </div>
       {renderLibrary(props)}
-      <div style={{ gridColumn: 4, gridRow: 2 }}>
+      <div style={{ gridColumn: 2, gridRow: 2 }}>
         <Divider onResize={props.onResizeLibrary} />
       </div>
       {renderPreview(props)}
-      <div style={{ gridColumn: '3 / -1', gridRow: 3 }}>
+      <div style={{ gridColumn: '1 / -1', gridRow: 3 }}>
         <Divider orientation="horizontal" onResize={props.onResizeTimeline} />
       </div>
       {renderTimeline(props)}
+      <ExternalAgentOverlay {...props.externalAgentOverlay} />
       <AppToastHost />
     </div>
   );

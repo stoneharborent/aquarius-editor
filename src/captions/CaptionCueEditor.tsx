@@ -43,7 +43,7 @@ export function CaptionCueEditor({ captions, items, fps, onUpdate, onSeekMs }: C
         <span className="cc-cap-hint">{open ? t('Collapse') : t('Expand')}</span>
       </button>
       {open && multiLane && (
-        <p className="cc-cap-hint">{t('Edit transcript-driven lanes in chat; manual lanes can be edited directly in “Manual captions” above.')}</p>
+        <p className="cc-cap-hint">{t('Transcript-driven lanes follow their transcript; manual lanes can be edited directly in “Manual captions” above.')}</p>
       )}
       {open && !multiLane && rows.length === 0 && (
         <p className="cc-cap-hint">{t('No caption lines to edit yet (transcribe and generate captions first).')}</p>

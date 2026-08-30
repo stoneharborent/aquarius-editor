@@ -71,10 +71,6 @@ interface PointerDeps {
     options: { additive: boolean; preserveWithItems: boolean },
   ) => void;
   selectedCaptions: CaptionSelectionRef[];
-  /** True when a timeline drag is released over the Agent composer. */
-  isOverChatComposer?: (clientX: number, clientY: number) => boolean;
-  /** Add the frozen mixed selection to chat instead of committing a timeline move. */
-  onDropSelectionToChat?: (selection: TimelineMarqueeSelection) => void;
 }
 
 /**
@@ -200,7 +196,7 @@ export function useTimelinePointer(deps: PointerDeps) {
   const {
     state, commands, editMode, snapping, pickMode, px,
     playheadRef, scrollRef, frameFromClientX, trackFromClientY, selectionInMarquee,
-    onMarqueeCaptionSelect, selectedCaptions, isOverChatComposer, onDropSelectionToChat,
+    onMarqueeCaptionSelect, selectedCaptions,
   } = deps;
   const [drag, setDrag, dragRef] = usePointerState<Drag | null>(null);
   // pen mode: one opacity keyframe dot being dragged (live preview, atomic commit on release)
@@ -441,7 +437,7 @@ export function useTimelinePointer(deps: PointerDeps) {
       pendingMove.current = null;
     };
   }, [cancelPointerGesture, dragRef, marqueeRef, penDragRef, pickDragRef]);
-  const onPointerUp = (event: React.PointerEvent) => {
+  const onPointerUp = (_event: React.PointerEvent) => {
     flushPointerMove(false);
     const currentMarquee = marqueeRef.current;
     if (currentMarquee) {
@@ -505,14 +501,6 @@ export function useTimelinePointer(deps: PointerDeps) {
     const currentDrag = dragRef.current;
     if (!currentDrag) return;
     if (currentDrag.mode === 'move') {
-      if (onDropSelectionToChat && isOverChatComposer?.(event.clientX, event.clientY)) {
-        onDropSelectionToChat(dragSelectionRef.current);
-        snapHold.current = null;
-        gestureSnapPoints.current = [];
-        dragSelectionRef.current = { itemIds: [], captionSelections: [] };
-        setDrag(null);
-        return;
-      }
       const validTrack = !!currentDrag.targetTrack
         && trackKind(state, currentDrag.targetTrack) === trackKind(state, currentDrag.baseTrack)
         && !state.tracks?.[currentDrag.targetTrack]?.locked;

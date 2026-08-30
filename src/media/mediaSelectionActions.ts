@@ -11,7 +11,3 @@ export function toggleVisibleAssetSelection(selected: ReadonlySet<string>, visib
   }
   return next;
 }
-
-export function addAssetsToChat<T>(assets: T[], callback?: (assets: T[]) => void) {
-  callback?.(assets);
-}

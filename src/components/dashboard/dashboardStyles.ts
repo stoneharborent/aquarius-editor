@@ -13,19 +13,6 @@ export const thumb: CSSProperties = {
 export const nameInput: CSSProperties = { font: 'inherit', fontSize: 13, fontWeight: 550, background: theme.panelAlt, color: theme.text, border: `0.5px solid ${theme.accent}`, borderRadius: 5, padding: '2px 6px', width: '100%' };
 export const miniBtn: CSSProperties = { background: 'none', border: 'none', color: theme.textDim, cursor: 'pointer', fontSize: 12, padding: '2px 4px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' };
 export const settingsBtn: CSSProperties = { background: 'none', border: 'none', color: theme.textDim, cursor: 'pointer', padding: 6, borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' };
-export const modelSetupCard: CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, padding: '13px 14px',
-  border: `0.5px solid ${theme.accent}`, borderRadius: 6, background: theme.panelAlt,
-};
-export const modelSetupIcon: CSSProperties = {
-  width: 34, height: 34, flex: '0 0 auto', display: 'grid', placeItems: 'center',
-  borderRadius: 6, color: theme.textStrong, background: theme.hover,
-};
-export const modelSetupButton: CSSProperties = {
-  flex: '0 0 auto', border: `0.5px solid ${theme.accent}`, borderRadius: 5,
-  background: theme.accent, color: theme.onAccent, padding: '7px 12px',
-  fontSize: 12, fontWeight: 650, cursor: 'pointer',
-};
 export const importBtn: CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: theme.text,
   background: 'none', border: `0.5px solid ${theme.border}`, borderRadius: 6, padding: '4px 10px', cursor: 'pointer',

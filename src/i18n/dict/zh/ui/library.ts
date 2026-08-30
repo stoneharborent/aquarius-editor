@@ -153,7 +153,7 @@ export default {
   'Choosing a creative workflow guides the Agent\'s planning and tool use; the next message runs under it.': '选择创作工作流会约束 Agent 的规划与工具调用；激活后下一条消息按该工作流执行。',
   'Active: {name}': '当前：{name}',
   'Click to exit creative mode and return to freeform': '点击取消创作模式，回到自由创作',
-  'Tip: type /skill:name in the chat box to activate quickly, or use Skill Creator to build your own.': '提示：也可在聊天输入框用 /skill:名称 快速激活，或用「技能创作器」创建自己的技能。',
+  'Tip: external agents connected over MCP can activate a skill by name, or use Skill Creator to build your own.': '提示：通过 MCP 连接的外部 Agent 可按名称激活技能，也可用「技能创作器」创建自己的技能。',
   'Edit skill': '修改技能',
   'Delete skill': '删除技能',
   'Name': '名称',

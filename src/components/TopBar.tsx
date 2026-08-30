@@ -81,12 +81,11 @@ export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, ex
 
       <div className="cc-topbar-actions">
 
-      {/* right: undo · redo · shortcuts · history · layout · export · avatar */}
+      {/* right: undo · redo · shortcuts · history · export · avatar */}
       <TopBarIconButton icon="undo" label={t('Undo')} onClick={() => invokeAction('undo', undefined, 'toolbar')} disabled={!canUndo} />
       <TopBarIconButton icon="redo" label={t('Redo')} onClick={() => invokeAction('redo', undefined, 'toolbar')} disabled={!canRedo} />
       <TopBarIconButton icon="keyboard" label={t('Edit keyboard shortcuts')} onClick={() => invokeAction('keyboard-shortcuts', undefined, 'toolbar')} />
       <TopBarIconButton icon="plug" label={t('External agents (MCP)')} onClick={() => setMcpOpen(true)} />
-      <span id="cc-agent-change-log-slot" style={{ display: 'contents' }} />
       <TopBarIconButton icon="palette" label={t('Design style (brand)')} onClick={() => invokeAction('open-design', undefined, 'toolbar')} />
       <SkinPicker />
       <GenerationActivity projectId={projectId} onResume={onResumeGeneration} />
@@ -94,7 +93,6 @@ export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, ex
       {/* self-contained: trigger + popover, global export history, zero props */}
       <ExportHistory />
       <LocaleToggle />
-      <TopBarIconButton icon="layoutPanel" label={t('Toggle panel layout')} onClick={() => invokeAction('toggle-layout', undefined, 'toolbar')} />
       <button onClick={() => invokeAction('open-export', undefined, 'toolbar')}
         className="cc-tip cc-tip-r"
         data-tip={exporting ? t('View background export tasks') : t('Export MP4')}

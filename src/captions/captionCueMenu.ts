@@ -33,7 +33,3 @@ export function replaceCaptionCueText(
   if (!cue || !clean) return null;
   return updateManualCue(captions, target.laneId, target.index, clean, cue.start, cue.end);
 }
-
-export function captionCueAgentSeed(text: string): string {
-  return text.trim();
-}

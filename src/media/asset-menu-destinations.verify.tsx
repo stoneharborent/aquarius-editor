@@ -41,14 +41,10 @@ try {
   ) as typeof import('./assetMenuSelection');
 
   const calls: string[] = [];
-  const actions = {
-    timeline: () => calls.push('timeline'),
-    chat: () => calls.push('chat'),
-  };
+  const actions = { timeline: () => calls.push('timeline') };
 
   runAssetDestinationAction('timeline', actions);
-  runAssetDestinationAction('chat', actions);
-  assert.deepEqual(calls, ['timeline', 'chat']);
+  assert.deepEqual(calls, ['timeline']);
   assert.deepEqual(
     assetMenuSelectionIds('asset-b', new Set(['asset-a', 'asset-b']), ['asset-a', 'asset-b', 'asset-c']),
     ['asset-a', 'asset-b'],
@@ -86,22 +82,18 @@ try {
   const markup = renderToStaticMarkup(createElement(AssetMenuDestinations, {
     assetName: 'july-7.mp4',
     onAddTimeline: () => undefined,
-    onAddChat: () => undefined,
   }));
 
   assert.match(markup, /Add to:/);
   assert.match(markup, />Timeline</);
-  assert.match(markup, />AI chat</);
-  assert.ok(markup.indexOf('>AI chat<') < markup.indexOf('>Timeline<'), 'AI chat should appear on the left, Timeline on the right');
+  assert.doesNotMatch(markup, /AI chat/, 'the in-app chat destination is gone');
   assert.match(markup, /aria-label="Add july-7\.mp4 to timeline"/);
-  assert.match(markup, /aria-label="Add july-7\.mp4 to AI chat"/);
 
+  // A document asset has no timeline destination, so the whole row disappears.
   const documentMarkup = renderToStaticMarkup(createElement(AssetMenuDestinations, {
     assetName: 'script.md',
-    onAddChat: () => undefined,
   }));
-  assert.match(documentMarkup, />AI chat</);
-  assert.doesNotMatch(documentMarkup, />Timeline</);
+  assert.equal(documentMarkup, '', 'with no destination left the row must not render an empty shell');
 
   const blankMenuMarkup = renderToStaticMarkup(createElement(BlankMediaMenuActions, {
     clipboardCount: 2,

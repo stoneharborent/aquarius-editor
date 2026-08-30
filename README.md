@@ -249,7 +249,7 @@ Existing installs see it on their next check.
 
 | Folder | What's in it |
 |---|---|
-| `src/` | The app you see — the editor UI, the timeline, the agent chat panel. |
+| `src/` | The app you see — the editor UI, the timeline, the media library. |
 | `server/` | The local background service: media processing, transcription, AI provider calls. |
 | `desktop/` | The Electron wrapper that turns the web app into a real desktop app. |
 | `config/` | Build settings, including `electron-builder.config.mjs` — how the app is packaged. |

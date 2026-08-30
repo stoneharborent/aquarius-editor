@@ -424,7 +424,10 @@ export function useSelectionRefMode(): boolean {
 
 const PICK_EVENT = 'cc:selection-ref';
 
-/** A panel picked something in selection mode → hand it to the chat composer. */
+/** A panel picked something in selection mode → publish it to any subscriber.
+ * Dormant: the in-app chat composer was the only subscriber and is gone, so
+ * nothing turns selection mode on today. The reference shapes above are still
+ * the ones AgentContext/the agent tools consume. */
 export function emitSelectionRef(ref: SelectionReference): void {
   window.dispatchEvent(new CustomEvent<SelectionReference>(PICK_EVENT, { detail: ref }));
 }

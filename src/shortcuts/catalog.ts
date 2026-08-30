@@ -9,7 +9,6 @@
 // on macOS where those chords produce a different character (see match.ts).
 
 export type ShortcutGroup =
-  | 'ai'
   | 'edit'
   | 'markers'
   | 'navigation'
@@ -32,10 +31,9 @@ export const SHORTCUT_GROUPS: { id: ShortcutGroup; label: string }[] = [
   { id: 'navigation', label: 'Navigation' },
   { id: 'markers', label: 'Markers' },
   { id: 'view', label: 'View' },
-  { id: 'ai', label: 'AI' },
 ];
 
-/** Canonical 56 actions — source of truth for help UI + matcher. */
+/** Canonical 55 actions — source of truth for help UI + matcher. */
 export const SHORTCUT_CATALOG: ShortcutAction[] = [
   { id: 'play-pause', label: 'Play / Pause', group: 'playback', keys: 'Space' },
   { id: 'seek-back', label: 'Previous frame', group: 'playback', keys: '←' },
@@ -99,7 +97,6 @@ export const SHORTCUT_CATALOG: ShortcutAction[] = [
   { id: 'fullscreen', label: 'Fullscreen preview', group: 'view', keys: 'Mod + Shift + F / `' },
   { id: 'keyboard-shortcuts', label: 'Keyboard shortcuts', group: 'view', keys: 'Mod + Alt + K', disabledWhenTyping: false },
 
-  { id: 'ask-ai', label: 'Add to AI chat', group: 'ai', keys: 'Tab' },
 ];
 
 export const SHORTCUT_BY_ID = Object.fromEntries(

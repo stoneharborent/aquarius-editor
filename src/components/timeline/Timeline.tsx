@@ -17,7 +17,6 @@ import { trackDeletePlan } from './trackDelete';
 import { TrackContextMenu } from './TrackContextMenu';
 import { TransitionContextMenu } from './TransitionContextMenu';
 import { closeCaptionTrackGaps, trackClearPlan } from './trackContextOperations';
-import { isTimelineDragOverChat } from './timelineChatDrop';
 import { HEADER_W, RULER_H } from './timelineUtil';
 import { trimRipplePreviewShifts } from './trimRipple';
 import {
@@ -44,7 +43,7 @@ export function Timeline(props: TimelineProps) {
     duckMenu, setDuckMenu, captionError, setCaptionError,
     moveCaptionCue, openCaptionTrackMenu, openDuckTrackMenu,
     closeTrackDrillMenu, backFromTrackDrillMenu, recorder, toggleCaptions,
-    pickMode, addSelectionToChat, ctxMenu, setCtxMenu, fxClip, setFxClip, clipJob, setClipJob,
+    pickMode, ctxMenu, setCtxMenu, fxClip, setFxClip, clipJob, setClipJob,
     beginRelink, relinkFile, beginTrackInsert, insertTrackFiles, exportMg, convertToVideo,
     innerW, visibleWindow, rowHeightOf, tracksHeight,
     majorFrames, minorFrames, minorTicksPerMajor, rulerSpanFrames,
@@ -97,14 +96,6 @@ export function Timeline(props: TimelineProps) {
         captionsVisible={captionsVisible}
         zoom={zoom} setZoom={setZoom}
       />
-
-      {/* selection-mode hint strip (subtle banner while picking refs) */}
-      {pickMode && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 12px', fontSize: 11, color: theme.accent, borderBottom: `0.5px solid ${theme.border}`, background: theme.panelAlt, flexShrink: 0 }}>
-          <Icon name="cursor" size={12} />
-          {t('Selection mode: click a clip for an item reference · drag across the ruler/empty space for a time range · click the ruler for a timepoint — references are added to the chat input')}
-        </div>
-      )}
 
       {/* scrollable ruler + tracks (playhead spans both). Ctrl/⌘+wheel = time
           zoom at cursor, Alt+wheel = track-height zoom (native listener above). */}
@@ -197,20 +188,6 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
                   onMove={(move) => moveCaptionCue(trackId, move)}
                   onDropExternalFiles={onDropExternalFiles}
                   frameFromClientX={frameFromClientX}
-                  isOverChatComposer={(clientX, clientY) => {
-                    const composer = document.querySelector<HTMLElement>('[data-cc-chat-composer]');
-                    return composer ? isTimelineDragOverChat(clientX, clientY, composer.getBoundingClientRect()) : false;
-                  }}
-                  onAddSelectionToChat={(selection) => {
-                    const itemsById = new Map(state.items.map((item) => [item.id, item]));
-                    addSelectionToChat({
-                      items: selection.itemIds.flatMap((id) => {
-                        const item = itemsById.get(id);
-                        return item ? [item] : [];
-                      }),
-                      captions: selection.captionSelections,
-                    });
-                  }}
                   onTrackContextMenu={(menu) => {
                     setCtxMenu(null);
                     setCaptionMenu(null);
@@ -447,7 +424,6 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
               playerRef.current?.seekTo(frame);
               onReviewItem?.({ itemId: target.id, frame, clientX, clientY });
             }}
-            onAddToChat={(items) => addSelectionToChat({ items, captions: [] })}
             onRelinkFile={beginRelink} />
         );
       })()}

@@ -4,7 +4,7 @@ import type { AssetMenuPosition } from './useAssetMenu';
 import type { MediaSortKey, MediaTypeFilter } from './mediaPoolFilter';
 import { AssetMenuPortal, BlankMediaMenuPortal, FolderMenuPortal } from './MediaPoolOverlays';
 import { assetMenuFavoriteValue } from './assetMenuSelection';
-import { addAssetsToChat, allVisibleAssetsSelected, toggleVisibleAssetSelection } from './mediaSelectionActions';
+import { allVisibleAssetsSelected, toggleVisibleAssetSelection } from './mediaSelectionActions';
 import { toggleMediaView } from './mediaView';
 import { assetCanTranscribe } from '../transcript/transcribe-jobs';
 import { isTimelineMediaAssetKind } from '../editor/mediaTypes';
@@ -45,7 +45,6 @@ interface AssetMenuContext {
   move: (ids: string[], folderId?: string) => void;
   addToTimeline?: (assets: MediaAsset[]) => void;
   addAsset: (asset: MediaAsset) => void;
-  addToChat?: (assets: MediaAsset[]) => void;
   transcribe: (assets: MediaAsset[]) => void;
   viewTranscript: (asset: MediaAsset) => void;
 }
@@ -116,7 +115,6 @@ function MediaAssetMenu({ asset: context }: Pick<MediaPoolMenusProps, 'asset'>) 
     onRemove={remove}
     onMove={(folderId) => { if (context.assetIds.length) context.move(context.assetIds, folderId); close(); }}
     onAddTimeline={timelineAssets.length ? () => { if (context.addToTimeline) context.addToTimeline(timelineAssets); else timelineAssets.forEach(context.addAsset); close(); } : undefined}
-    onAddChat={() => { addAssetsToChat(context.assets, context.addToChat); close(); }}
     onTranscribe={context.assets.some((item) => assetCanTranscribe(item.kind, item.transcribeStatus))
       ? () => { context.transcribe(context.assets); close(); }
       : undefined}
