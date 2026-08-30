@@ -524,6 +524,34 @@ export const LUT_EFFECTS: Record<string, FxDef> = {
     cube: '/luts/CinemaGamut_CanonLog3-to-Canon709_33_Ver.1.0.cube',
     props: [{ key: 'intensity', label: 'Intensity', default: 1, min: 0, max: 1, step: 0.01 }],
   },
+  // Generated conversion LUTs — built from the vendors' published transfer-function and gamut
+  // specs by scripts/generate-conversion-luts.mjs (we cannot redistribute vendor .cube files).
+  // Plain colorimetric conversions: no shoulder, no contrast curve. Highlights past Rec.709's
+  // ~2.5 stops over middle grey clip; pull Intensity down or grade on top for a softer top end.
+  'builtin:nlog-709': {
+    id: 'builtin:nlog-709',
+    name: 'Nikon N-Log → Rec.709',
+    desc: 'Nikon N-Log / BT.2020 → Rec.709. Generated from Nikon\'s published N-Log Specification Document v1.0.0 (33³ .cube) — colorimetric conversion, no highlight rolloff.',
+    frag: lutFrag,
+    cube: '/luts/Nikon_NLog_BT2020_to_Rec709.cube',
+    props: [{ key: 'intensity', label: 'Intensity', default: 1, min: 0, max: 1, step: 0.01 }],
+  },
+  'builtin:gplog2-709': {
+    id: 'builtin:gplog2-709',
+    name: 'GoPro GP-Log2 → Rec.709',
+    desc: 'GoPro GP-Log2 (log base 600) / Rec.2020 → Rec.709, with GoPro\'s published +1.8 EV default. Generated from the GoPro Labs GP-Log2 white paper (33³ .cube). For MISSION 1 / MAX 2 — HERO13\'s GP-Log is a different, unpublished curve.',
+    frag: lutFrag,
+    cube: '/luts/GoPro_GPLog2_Rec2020_to_Rec709.cube',
+    props: [{ key: 'intensity', label: 'Intensity', default: 1, min: 0, max: 1, step: 0.01 }],
+  },
+  'builtin:ilog-709': {
+    id: 'builtin:ilog-709',
+    name: 'Insta360 i-Log → Rec.709',
+    desc: 'Insta360 i-Log → Rec.709. Approximation — Insta360 publishes the Rec.2020 gamut but no i-Log transfer function, so the curve is modelled (see scripts/generate-conversion-luts.mjs). Good starting point, not colorimetrically exact.',
+    frag: lutFrag,
+    cube: '/luts/Insta360_iLog_Rec2020_to_Rec709.cube',
+    props: [{ key: 'intensity', label: 'Intensity', default: 1, min: 0, max: 1, step: 0.01 }],
+  },
   // creative looks (formula grades — not camera-log cubes)
   'builtin:look-teal-orange': {
     id: 'builtin:look-teal-orange',
@@ -686,6 +714,9 @@ export const LUT_EFFECTS: Record<string, FxDef> = {
 export const LUT_ORDER = [
   'builtin:slog3-s709',
   'builtin:canon-log3-709',
+  'builtin:nlog-709',
+  'builtin:gplog2-709',
+  'builtin:ilog-709',
   // film / camera aesthetics first for the library tab
   'builtin:look-fuji-chrome',
   'builtin:look-fuji-portra',
