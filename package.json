@@ -1,7 +1,7 @@
 {
   "name": "aquarius-editor",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Aquarius Editor — the professional editing app of AquariusOS. Local-first, agent-native AI video editing. Based on OpenChatCut.",
   "license": "AGPL-3.0-or-later",
   "author": "Aquarius Editor Contributors (a fork of OpenChatCut)",

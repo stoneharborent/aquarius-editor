@@ -1,5 +1,49 @@
 # Aquarius Editor changelog
 
+## v0.5.0 — 2026-08-30
+
+### Added
+- **Folders on the home screen.** Create folders, file projects into them from the card's
+  "Move to folder…" menu or by dragging a card onto a folder, and browse in and out with a
+  breadcrumb. Search still reaches every folder and says where each hit lives. Deleting a
+  folder never deletes a project — its projects return to the root. Filing a project does
+  not count as editing it, so the grid order stays put.
+- **HyperFrames graphic generation.** A new **Hyperframes** tab in the Library: describe
+  the graphic you want in the input bar and it is generated as a real motion-graphics clip —
+  previewable, scrubbable, exportable, stored with the project, and draggable to the
+  timeline. Right-clicking an empty spot on the timeline offers **Hyperframes…** too: type
+  the prompt where you clicked and the finished clip is placed at that exact spot (and kept
+  in the tab). Each card supports insert-at-playhead, regenerate, rename, and delete.
+  Generation runs through whichever model you configure on the tab's one-time setup card —
+  a cloud provider with an API key, or a local runtime (Ollama / LM Studio) with no key.
+  Generated compositions are linted and auto-repaired server-side before they reach you.
+- **Log conversion LUTs built in**: Nikon N-Log → Rec.709 (from Nikon's official
+  specification), GoPro GP-Log2 → Rec.709 (from GoPro Labs' published white paper, matrix
+  cross-checked against GoPro's own), and Insta360 i-Log → Rec.709 (clearly labelled
+  approximation — Insta360 publishes no transfer function). All three are generated from
+  published math by a committed script, never copied from vendor files, and a test
+  regenerates them on every run to prove the shipped files match the math.
+- **Local models ship inside the app.** The recommended Whisper transcription model and all
+  three analysis packs (beat, music, visual) are bundled with the installer and installed
+  on first launch — transcription and analysis work immediately, offline, with nothing to
+  download. Deleting a built-in model just restores it on restart. Local transcription is
+  now the default engine.
+
+### Changed
+- **Settings is now two tabs across the top** — Interface and Local models — instead of a
+  sidebar of sections. The Network proxy, AI Generation, Assets · Transcription, Storage,
+  Power Tools, and Agent Model sections are gone.
+- **The agent chat window is gone.** Aquarius Editor no longer has a built-in chatbot;
+  AI-assisted editing happens through external agents connected over MCP (Settings →
+  External agents), which can still drive the open editor live — reading the timeline,
+  proposing edits, and asking for your approval through a small floating proposal card.
+  The space the chat column occupied goes to the preview and a full-width timeline.
+
+### Removed
+- All chat-related entry points: drop-to-chat on the timeline, "Add to AI chat" in menus,
+  the AI shortcut group, and the model-setup card on the home screen. Project files that
+  contain old chat history still open fine.
+
 ## v0.4.0 — 2026-08-29
 
 ### Added
