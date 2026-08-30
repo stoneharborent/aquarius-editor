@@ -170,5 +170,5 @@ export function modelPackInstallGuidance(packs: readonly { id: string }[]): stri
     const def = MODEL_PACKS.find((entry) => entry.id === pack.id);
     return def ? `${def.label} (${def.id})` : pack.id;
   }).join(', ');
-  return `Go to Settings → Transcription → Local models to download: ${names}`;
+  return `Go to Settings → Local models to download: ${names}`;
 }

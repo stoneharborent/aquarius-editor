@@ -249,7 +249,7 @@ export async function assertAsrModelDownloaded(config: AsrConfig): Promise<void>
     if (entry && entry.downloaded === false) {
       throw new TranscriptionError(
         'service-unavailable',
-        `The local transcription model is not fully downloaded (${config.modelId}). Go to Settings → Transcription → Local models to re-download it, then try again.`,
+        `The local transcription model is not fully downloaded (${config.modelId}). Go to Settings → Local models to re-download it, then try again.`,
       );
     }
   } catch (error) {

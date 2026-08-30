@@ -1,15 +1,18 @@
-// Settings → Transcription → Local models: model selection + on-demand download management.
-// Models are NOT bundled — users pick and download them on demand through the
-// local hf-proxy (multi-source accelerated download into the disk cache).
+// Settings → Local models → Local transcription: model selection plus the
+// installer list. The recommended tier (Whisper Small) ships inside the desktop
+// app and is seeded into the model cache on first launch, so it shows as built
+// in; the other tiers still download on demand through the local hf-proxy
+// (multi-source, sha-verified, into the same disk cache).
 // Whisper is OpenAI's open-source model, so the official OpenAI mark is used.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { theme } from '../../theme';
 import { useT } from '../../i18n/locale';
 import { warmUpLocalAsr } from '../../transcript/local-asr';
 import { asrBackendPreference } from '../../transcript/deviceProfile';
-import { VendorIcon } from './vendorIcons';
+import { WhisperMark } from './WhisperMark';
 import type { AsrDownloadStatus } from '../../../shared/asr-models';
-import { FieldRow, type FieldCtx } from './settingsVendorPane';
+import { isBundledAsrModel } from '../../../shared/bundled-models';
+import { FieldRow, type FieldCtx } from './SettingsFieldRow';
 import type { SettingsField } from './settingsSchema';
 import { mutateLocalAsrModel } from './local-asr-model-mutation';
 import {
@@ -146,6 +149,9 @@ export function LocalAsrPane({ fields, ctx }: { fields: readonly SettingsField[]
 
   const statusLabel = (m: AsrModelState): { text: string; color: string } => {
     const task = m.task;
+    if (isBundledAsrModel(m.id) && m.downloaded) {
+      return { text: t('Built in'), color: theme.success };
+    }
     if (task?.status === 'downloading') {
       // Byte totals are unknown before a file finishes; file-level progress
       // advances reliably (configs first, then the big ONNX weights).
@@ -162,7 +168,7 @@ export function LocalAsrPane({ fields, ctx }: { fields: readonly SettingsField[]
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <VendorIcon vendor="openai" size={16} />
+        <WhisperMark size={16} />
         <span style={{ fontSize: 12, fontWeight: 600 }}>{t('Default model')}</span>
       </div>
       {fields.map((field) => <FieldRow key={field.name} field={field} ctx={ctx} />)}
@@ -200,7 +206,7 @@ export function LocalAsrPane({ fields, ctx }: { fields: readonly SettingsField[]
         </span>
       </label>
       <div style={{ fontSize: 11.5, color: theme.textDim }}>
-        {t('Models are downloaded to this machine on demand — they are not bundled with the app. Downloads use the accelerated pipeline automatically.')}
+        {t('Whisper Small is built in — restored on restart if you remove it. Other tiers download to this machine on demand.')}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
         {loadError && <div style={{ fontSize: 11.5, color: theme.danger }}>{t('Cannot load the model list: {err}', { err: loadError })}</div>}
@@ -215,7 +221,7 @@ export function LocalAsrPane({ fields, ctx }: { fields: readonly SettingsField[]
               padding: '8px 10px', borderRadius: 8,
               border: `0.5px solid ${theme.border}`, background: theme.panel,
             }}>
-              <VendorIcon vendor="openai" size={18} />
+              <WhisperMark size={18} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 12.5, fontWeight: 600 }}>{m.label}</div>
                 <div style={{ fontSize: 11, color: theme.textDim }}>
@@ -225,6 +231,10 @@ export function LocalAsrPane({ fields, ctx }: { fields: readonly SettingsField[]
               <span style={{ fontSize: 11, color: status.color, whiteSpace: 'nowrap' }}>{status.text}</span>
               {downloading ? (
                 <span style={{ fontSize: 11, color: theme.textDim }}>…</span>
+              ) : isBundledAsrModel(m.id) && m.downloaded ? (
+                // Deleting a built-in model only makes it come back on the next
+                // launch, so the pane offers no button that undoes itself.
+                <span style={{ fontSize: 11, color: theme.textDim, whiteSpace: 'nowrap' }}>{t('Ships with the app')}</span>
               ) : m.downloaded ? (
                 <button type="button" disabled={busy} onClick={() => void deleteModel(m.id)}
                   style={smallBtn}>{t('Delete')}</button>

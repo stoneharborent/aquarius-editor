@@ -112,6 +112,14 @@ export default {
     { from: 'dist', to: 'dist', filter: ['**/*', '!media/uploads/**'] },
     { from: 'desktop-dist/remotion-bundle', to: 'remotion-bundle' },
     { from: 'desktop-dist/chrome-headless-shell', to: 'chrome-headless-shell' },
+    // Pre-installed local models (Whisper Small + the three intelligence packs),
+    // staged by desktop/fetch-bundled-models.mts during desktop:prebundle.
+    // main.ts copies whatever is missing into ~/.openchatcut/asr-models on the
+    // first launch, so a fresh install never waits for a model download.
+    // Adds roughly 1.3 GiB uncompressed to each installer payload.
+    // The directory name must match BUNDLED_MODELS_DIR_NAME in
+    // shared/bundled-models.ts (this file is plain .mjs and cannot import it).
+    { from: 'desktop-dist/bundled-models', to: 'bundled-models' },
   ],
   npmRebuild: false,
   mac: {

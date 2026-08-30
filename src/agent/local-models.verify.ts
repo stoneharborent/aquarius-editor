@@ -5,10 +5,7 @@ import {
   normalizeLlmProvider,
 } from '../../shared/llm-providers.ts';
 import { KEY_NAMES } from '../../server/keystore.ts';
-import {
-  SETTINGS_CATEGORIES,
-  vendorConfigured,
-} from '../components/settings/settingsSchema.ts';
+import { SETTINGS_TABS } from '../components/settings/settingsSchema.ts';
 import {
   applyAgentModelStatus,
   applyCodexAgentStatus,
@@ -36,27 +33,26 @@ for (const name of [
   assert.ok(KEY_NAMES.includes(name), `${name} must be whitelisted`);
 }
 
-const llmGroup = SETTINGS_CATEGORIES.flatMap((category) => category.groups)
-  .find((group) => group.key === 'llm');
-assert.ok(llmGroup);
-const ollamaPage = llmGroup.vendors.find((page) => page.vendor === 'ollama');
-assert.ok(ollamaPage);
-assert.equal(ollamaPage.fields.find((field) => field.kind === 'secret')?.label, 'API Key (optional)');
+// LLM providers are configured through the keystore (.env.local) and consumed
+// by the agent runtime; the settings window no longer carries a provider list,
+// so nothing here may reintroduce one.
+const settingsFieldNames = SETTINGS_TABS
+  .flatMap((tab) => tab.panes)
+  .flatMap((pane) => pane.fields.map((field) => field.name));
+assert.deepEqual(
+  settingsFieldNames.filter((name) => name.startsWith('LLM_') || name.startsWith('CODEX_')),
+  [],
+  'model provider configuration is not a settings surface any more',
+);
 
 applyAgentModelStatus({}, {});
 assert.deepEqual(getAgentModelSnapshot(), { activeId: '', choices: [], loaded: true });
-assert.equal(vendorConfigured({ keys: {}, caps: {}, models: {} }, ollamaPage), false);
 
 applyAgentModelStatus({}, { LLM_OLLAMA_MODEL: 'llama3.2' });
 assert.deepEqual(
   getAgentModelSnapshot().choices.map((choice) => [choice.provider, choice.model]),
   [['ollama', 'llama3.2']],
 );
-assert.equal(vendorConfigured({
-  keys: {},
-  caps: {},
-  models: { LLM_OLLAMA_MODEL: 'llama3.2' },
-}, ollamaPage), true);
 
 applyAgentModelStatus({ LLM_ANTHROPIC_API_KEY: { configured: true } }, {});
 assert.equal(getAgentModelSnapshot().choices[0]?.provider, 'anthropic');
@@ -134,9 +130,6 @@ const defaultCodex = getAgentModelSnapshot().choices.find((choice) => choice.bac
 assert.equal(defaultCodex?.model, 'gpt-5.6-sol');
 assert.equal(defaultCodex?.requestModel, undefined, 'unset CODEX_MODEL keeps the request model omitted');
 
-const codexPage = llmGroup.vendors.find((page) => page.connection === 'codex');
-assert.ok(codexPage);
-assert.equal(vendorConfigured(null, codexPage, signedInCodex), true);
 applyCodexAgentStatus({
   installed: true,
   version: '0.146.0',
@@ -144,10 +137,6 @@ applyCodexAgentStatus({
   loginPending: false,
 }, 'gpt-5.4');
 assert.equal(getAgentModelSnapshot().choices.some((choice) => choice.backend === 'codex'), false);
-assert.equal(vendorConfigured(null, codexPage, {
-  ...signedInCodex,
-  account: { type: 'apiKey', email: null, planType: null },
-}), false);
 globalThis.fetch = originalFetch;
 
 console.log('local model verification passed');

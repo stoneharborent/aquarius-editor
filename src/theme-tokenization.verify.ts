@@ -48,8 +48,10 @@ const CHROME_FILES = [
   'src/components/chat/ChatComposer.tsx',
   'src/components/settings/DesignStylePanel.tsx',
   'src/components/settings/SettingsDialog.tsx',
+  'src/components/settings/SettingsFieldRow.tsx',
+  'src/components/settings/SettingsPaneView.tsx',
+  'src/components/settings/SettingsTabBar.tsx',
   'src/components/settings/SkinPicker.tsx',
-  'src/components/settings/settingsVendorPane.tsx',
   'src/components/timeline/ClipContextMenu.tsx',
   'src/components/timeline/MarkerEditor.tsx',
   'src/components/timeline/Timeline.tsx',
@@ -66,7 +68,6 @@ const CHROME_FILES = [
 const CONTENT_COLORS_BY_FILE = new Map<string, ReadonlySet<string>>([
   ['src/components/settings/DesignStylePanel.tsx', new Set(['#000000'])],
   ['src/components/chat/ChatComposer.tsx', new Set(['#e5866a'])],
-  ['src/components/settings/settingsVendorPane.tsx', new Set(['#f77'])],
   ['src/components/PreviewPanel.tsx', new Set([
     '#000', 'rgba(255,255,255,${opacity})', 'rgba(255,255,255,0.18)',
   ])],

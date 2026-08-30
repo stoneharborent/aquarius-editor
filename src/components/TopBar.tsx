@@ -50,9 +50,9 @@ export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, ex
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(projectName);
   const [mcpOpen, setMcpOpen] = useState(false);
-  // The settings dialog (and anything else) can summon the MCP guide through the
-  // action registry: the Anthropic pane names this panel as the way in for
-  // Claude Code subscribers, so it has to be able to actually open it.
+  // Anything can summon the MCP guide through the action registry. Settings no
+  // longer does — its provider pages are gone — but the panel stays the way in
+  // for external agents, and the top bar's own button opens it directly.
   useEffect(() => bindAction('open-mcp-guide', () => setMcpOpen(true)), []);
   const commit = () => { setEditing(false); if (onRename && draft.trim() && draft.trim() !== projectName) onRename(draft.trim()); };
 

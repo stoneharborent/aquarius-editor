@@ -74,7 +74,7 @@ export function DashboardTitlebarContent({ model }: { model: DashboardModel }) {
         <LocaleToggle />
         <SkinPicker />
         <button onClick={() => model.setDialog('storage', true)} data-tip={t('Data storage')} aria-label={t('Data storage')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="database" size={16} /></button>
-        <button onClick={() => model.setDialog('settings', true)} data-tip={t('Settings · API Keys')} aria-label={t('Settings · API Keys')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="sliders" size={16} /></button>
+        <button onClick={() => model.setDialog('settings', true)} data-tip={t('Settings')} aria-label={t('Settings')} className="cc-header-btn cc-tip cc-tip-r" style={settingsBtn}><Icon name="sliders" size={16} /></button>
       </span>
     </>
   );
@@ -239,10 +239,9 @@ export function DashboardContent({ props, model }: { props: DashboardProps; mode
 }
 
 export function DashboardDialogs({ model }: { model: DashboardModel }) {
-  // The settings dialog's Anthropic pane summons the MCP guide through the
-  // action registry; in the editor the top bar answers, here the dashboard's
-  // own dialog state does. Without this the button silently does nothing on
-  // the projects page, which is exactly where a new user starts.
+  // The MCP guide is summonable through the action registry; in the editor the
+  // top bar answers, here the dashboard's own dialog state does. Both pages
+  // also open it directly from their own header button.
   useEffect(() => bindAction('open-mcp-guide', () => model.setDialog('mcp', true)), [model]);
   return (
     <>

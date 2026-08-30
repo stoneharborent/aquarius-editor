@@ -4,8 +4,8 @@ import path from 'node:path';
 import ts from 'typescript';
 import { ZH } from '../zh/ui';
 import { IT } from './index';
-import { SETTINGS_CATEGORIES } from '../../../components/settings/settingsSchema';
-import type { SettingsField, SettingsVendorPage } from '../../../components/settings/settingsFields';
+import { SETTINGS_TABS } from '../../../components/settings/settingsSchema';
+import type { SettingsField, SettingsPane } from '../../../components/settings/settingsFields';
 
 const ROOT = process.cwd();
 const SETTINGS_ROOT = path.join(ROOT, 'src', 'components', 'settings');
@@ -51,24 +51,18 @@ function add(value: string | undefined): void {
 function addField(field: SettingsField): void {
   add(field.label);
   add(field.defaultLabel);
-  add(field.placeholder);
   add(field.note);
   field.options?.forEach((option) => add(option.label));
 }
-function addPage(page: SettingsVendorPage): void {
-  add(page.title);
-  add(page.note);
-  add(page.noteAction?.label);
-  page.fields.forEach(addField);
+function addPane(pane: SettingsPane): void {
+  add(pane.title);
+  add(pane.note);
+  pane.fields.forEach(addField);
 }
-for (const category of SETTINGS_CATEGORIES) {
-  add(category.title);
-  for (const group of category.groups) {
-    add(group.title);
-    add(group.hint);
-    if (group.route) addField(group.route);
-    group.vendors.forEach(addPage);
-  }
+for (const tab of SETTINGS_TABS) {
+  add(tab.title);
+  add(tab.hint);
+  tab.panes.forEach(addPane);
 }
 
 const missingItalianDataKeys = [...dataKeys].filter((key) => !IT[key]).sort((a, b) => a.localeCompare(b));

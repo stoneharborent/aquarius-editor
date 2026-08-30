@@ -9,6 +9,7 @@ import {
   type ModelPackCatalogEntry,
   type ModelPackId,
 } from '../../../shared/model-packs';
+import { isBundledModelPack } from '../../../shared/bundled-models';
 import { executeModelPackMutation, type ModelPackMutation } from './model-pack-actions';
 
 const POLL_MS = 1_000;
@@ -79,7 +80,7 @@ interface LocalModelPackPaneProps {
   description?: string;
 }
 
-export function LocalModelPackPane({ packIds, title = 'Local intelligence models', description = 'Models are never installed automatically. Once installed, beat and music-semantic analysis runs locally.' }: LocalModelPackPaneProps) {
+export function LocalModelPackPane({ packIds, title = 'Local intelligence models', description = 'Built in and ready to use — beat and music-semantic analysis runs on this machine.' }: LocalModelPackPaneProps) {
   const t = useT();
   const { packs, loadError, refresh } = usePackCatalog();
   const actions = usePackActions(refresh);
@@ -165,7 +166,9 @@ function PackProgress({ pack }: { pack: ModelPackCatalogEntry }) {
 function PackStatus({ pack }: { pack: ModelPackCatalogEntry }) {
   const t = useT();
   const display = pack.status === 'installed'
-    ? { text: t('Installed'), color: theme.success }
+    ? isBundledModelPack(pack.id)
+      ? { text: t('Built in'), color: theme.success }
+      : { text: t('Installed'), color: theme.success }
     : pack.status === 'downloading'
       ? { text: t('Installing'), color: theme.accent }
       : pack.status === 'error'
@@ -180,6 +183,11 @@ function PackActions({ pack, busy, install, remove, cancel }: Omit<PackCardProps
     return <button type="button" disabled={busy} onClick={() => void cancel(pack.id)} style={smallButton}>{t('Cancel')}</button>;
   }
   if (pack.status === 'installed') {
+    // Built-in packs are re-seeded from the app's resources on the next launch,
+    // so offering Delete would only offer a button that undoes itself.
+    if (isBundledModelPack(pack.id)) {
+      return <span style={{ fontSize: 10.5, color: theme.textDim, whiteSpace: 'nowrap' }}>{t('Ships with the app')}</span>;
+    }
     return <button type="button" disabled={busy} onClick={() => void remove(pack.id)} style={smallButton}>{t('Delete')}</button>;
   }
   return <div style={{ display: 'flex', gap: 5 }}>
