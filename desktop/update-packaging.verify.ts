@@ -18,10 +18,11 @@ interface BuilderConfig {
   productName?: string;
   artifactName?: string;
   publish?: PublishConfig[] | null;
-  mac?: { target?: string[]; icon?: string };
+  mac?: { target?: string[]; icon?: string; signIgnore?: string[] };
   win?: { icon?: string };
   linux?: { icon?: string; executableName?: string; syncDesktopName?: boolean };
   files?: string[];
+  extraResources?: { from: string; to: string; filter?: string[] }[];
 }
 
 async function configFor(target: string): Promise<BuilderConfig> {
@@ -63,7 +64,45 @@ assert.ok(
   'foreign ONNX Runtime binaries must be excluded',
 );
 
+// The bundled ONNX weights are inert data. Signing them individually gains nothing and,
+// before this was pinned, packaging died on them outright (see the isbinaryfile override
+// asserted further down). Both halves are load-bearing and must stay in sync: signIgnore
+// matches the resources path that extraResources writes.
+const bundledModelsResource = arm64.extraResources
+  ?.find((resource) => resource.to === 'bundled-models');
+assert.ok(
+  bundledModelsResource,
+  'the installer must still stage the pre-installed local models into resources/bundled-models',
+);
+assert.equal(bundledModelsResource?.from, 'desktop-dist/bundled-models');
+assert.deepEqual(
+  arm64.mac?.signIgnore,
+  ['/Contents/Resources/bundled-models/'],
+  'arm64 macOS signing must skip the bundled model weights',
+);
+// electron-builder compiles each entry to a RegExp and tests it against the absolute path,
+// so assert against a path shaped exactly like the one the packaged app ends up with.
+const packagedModelPath = `/tmp/Aquarius Editor.app/Contents/Resources/${bundledModelsResource!.to}`
+  + '/Xenova/whisper-small/onnx/decoder_model_merged_quantized.onnx';
+for (const pattern of arm64.mac?.signIgnore ?? []) {
+  assert.match(
+    packagedModelPath,
+    new RegExp(pattern),
+    'signIgnore must match the path extraResources actually writes the models to',
+  );
+}
+assert.doesNotMatch(
+  '/tmp/Aquarius Editor.app/Contents/MacOS/Aquarius Editor',
+  new RegExp(arm64.mac!.signIgnore!.join('|')),
+  'signIgnore must never swallow the application binaries themselves',
+);
+
 const x64 = await configFor('darwin-x64');
+assert.deepEqual(
+  x64.mac?.signIgnore,
+  arm64.mac?.signIgnore,
+  'both macOS architectures must skip the same unsignable payload',
+);
 // One channel per architecture: a shared latest.yml would let an x64 build offer an arm64
 // download (and the other way round) for the same version.
 assert.equal(x64.publish?.[0]?.channel, 'latest-x64');
@@ -134,6 +173,7 @@ const packageJson = JSON.parse(await readFile(new URL('../package.json', import.
   desktopName: string;
   scripts: Record<string, string>;
   devDependencies: Record<string, string>;
+  overrides?: Record<string, Record<string, string>>;
 };
 assert.equal(packageJson.name, 'aquarius-editor');
 assert.equal(
@@ -146,6 +186,33 @@ assert.equal(
   '26.15.7',
   'Windows NSIS packaging must retain the BCJ extraction fix shipped in electron-builder 26.15.6+',
 );
+// @electron/osx-sign walks every file in the .app and runs isbinaryfile on each one to decide
+// what to codesign. That walk happens in full BEFORE the `ignore` predicate (mac.signIgnore) is
+// ever consulted, so signIgnore cannot protect the sniffer — only the version pin can. Below
+// 5.0.6, isbinaryfile's protobuf-tasting path reads a length prefix out of an ONNX file and
+// tries to materialise it as a JS array, throwing an uncaught `RangeError: Invalid array length`
+// inside an fs.read callback that kills the whole packaging process. That is what broke the
+// first release to bundle local models. 6.x is ESM-only and osx-sign require()s it, so the
+// range must stay inside 5.x.
+assert.equal(
+  packageJson.overrides?.['@electron/osx-sign']?.isbinaryfile,
+  '^5.0.6',
+  'osx-sign must resolve an isbinaryfile whose protobuf sniffer cannot crash on bundled ONNX weights',
+);
+const packageLock = JSON.parse(await readFile(new URL('../package-lock.json', import.meta.url), 'utf8')) as {
+  packages: Record<string, { version?: string }>;
+};
+const lockedSniffers = Object.entries(packageLock.packages)
+  .filter(([specifier]) => specifier.endsWith('node_modules/isbinaryfile'));
+assert.ok(lockedSniffers.length > 0, 'the lockfile must pin isbinaryfile for reproducible CI packaging');
+for (const [specifier, entry] of lockedSniffers) {
+  const [major, minor, patch] = (entry.version ?? '0.0.0').split('.').map(Number);
+  assert.ok(
+    major === 5 && (minor > 0 || patch >= 6),
+    `${specifier} resolves to isbinaryfile ${entry.version}; packaging needs >=5.0.6 <6 (the crash fix, still CommonJS)`,
+  );
+}
+
 assert.match(
   packageJson.scripts['desktop:build:main'],
   /native-rhythm-worker\.ts.*native-rhythm-worker\.mjs/,

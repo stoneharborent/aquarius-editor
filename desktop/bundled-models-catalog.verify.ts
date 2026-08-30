@@ -93,10 +93,26 @@ assert.doesNotMatch(code, /\b[a-f0-9]{64}\b/,
   'the fetch script must not contain a hand-written SHA-256');
 
 // ── Packaging wiring ─────────────────────────────────────────────────────
-const builderConfig = readFileSync(join(REPO_ROOT, 'config', 'electron-builder.config.mjs'), 'utf8');
+// Read the evaluated config rather than its source text: the directory name is a constant
+// in there now, shared between extraResources and mac.signIgnore. The URL indirection is
+// what update-packaging.verify.ts uses too — the config is plain untyped .mjs, so a literal
+// import specifier would need a declaration file.
+const builderConfigUrl = new URL('../config/electron-builder.config.mjs', import.meta.url);
+const builderConfig = (await import(builderConfigUrl.href) as {
+  default: { extraResources?: { from: string; to: string }[]; mac?: { signIgnore?: string[] } };
+}).default;
 assert.ok(
-  builderConfig.includes(`{ from: 'desktop-dist/${BUNDLED_MODELS_DIR_NAME}', to: '${BUNDLED_MODELS_DIR_NAME}' }`),
+  builderConfig.extraResources?.some(
+    (resource) => resource.from === `desktop-dist/${BUNDLED_MODELS_DIR_NAME}`
+      && resource.to === BUNDLED_MODELS_DIR_NAME,
+  ),
   'electron-builder must ship the staged bundled models as extraResources',
+);
+// macOS signing walks the whole bundle; the weights are inert data and are skipped there.
+// The pattern has to follow BUNDLED_MODELS_DIR_NAME or it would silently stop matching.
+assert.ok(
+  builderConfig.mac?.signIgnore?.some((pattern) => pattern.includes(BUNDLED_MODELS_DIR_NAME)),
+  'macOS signing must skip the bundled models at the directory name they are staged under',
 );
 const packageJson = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as {
   scripts: Record<string, string>;

@@ -62,6 +62,11 @@ const sqliteVecFilters = SQLITE_VEC_PACKAGES
   .map((packageSuffix) => `!node_modules/sqlite-vec-${packageSuffix}/**`);
 const hasMacSigningCertificate = Boolean(process.env.CSC_LINK || process.env.CSC_NAME);
 
+// Resources directory holding the pre-installed local models. Must match
+// BUNDLED_MODELS_DIR_NAME in shared/bundled-models.ts (this file is plain .mjs
+// and cannot import it). Used by extraResources and by mac.signIgnore below.
+const BUNDLED_MODELS_RESOURCE_DIR = 'bundled-models';
+
 export default {
   appId: 'os.aquarius.editor',
   productName: 'Aquarius Editor',
@@ -117,9 +122,7 @@ export default {
     // main.ts copies whatever is missing into ~/.openchatcut/asr-models on the
     // first launch, so a fresh install never waits for a model download.
     // Adds roughly 1.3 GiB uncompressed to each installer payload.
-    // The directory name must match BUNDLED_MODELS_DIR_NAME in
-    // shared/bundled-models.ts (this file is plain .mjs and cannot import it).
-    { from: 'desktop-dist/bundled-models', to: 'bundled-models' },
+    { from: `desktop-dist/${BUNDLED_MODELS_RESOURCE_DIR}`, to: BUNDLED_MODELS_RESOURCE_DIR },
   ],
   npmRebuild: false,
   mac: {
@@ -135,6 +138,16 @@ export default {
     // Sign the bundle ad hoc without a Developer ID so Finder still treats it as executable.
     // When CI injects CSC_LINK / CSC_NAME, electron-builder selects the official certificate automatically.
     ...(hasMacSigningCertificate ? {} : { identity: '-' }),
+    // The bundled ONNX weights are data, not loadable Mach-O code — nothing in the app dlopen()s
+    // them, so a signature on each one buys nothing and costs a codesign spawn per 150 MiB file.
+    // electron-builder turns each entry into a RegExp tested against the absolute path.
+    //
+    // IMPORTANT — this is a courtesy, not the crash fix. @electron/osx-sign runs its whole
+    // walkAsync() (which calls isbinaryfile on every file) BEFORE it ever consults `ignore`,
+    // so an ignored file has already been sniffed by the time this matches. The actual guard
+    // against the "RangeError: Invalid array length" that ONNX protobufs used to trigger is
+    // the `isbinaryfile` override pinned in package.json — keep both.
+    signIgnore: [`/Contents/Resources/${BUNDLED_MODELS_RESOURCE_DIR}/`],
   },
   win: {
     target: ['nsis'],

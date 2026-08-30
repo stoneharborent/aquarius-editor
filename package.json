@@ -81,6 +81,11 @@
     "verify:sqlite-migration": "tsx server/storage/sqlite-store.verify.ts && tsx server/storage/sqlite-migration-http.verify.ts && tsx server/plugins/project-store-export-recovery-sqlite.verify.ts && tsx src/export/serverExportRecovery.verify.ts",
     "verify:extract-audio": "tsx server/plugins/extract-audio.verify.ts"
   },
+  "overrides": {
+    "@electron/osx-sign": {
+      "isbinaryfile": "^5.0.6"
+    }
+  },
   "dependencies": {
     "@ai-sdk/alibaba": "^2.0.16",
     "@ai-sdk/anthropic": "^4.0.16",
