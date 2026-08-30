@@ -107,6 +107,9 @@ export function useT(): typeof t {
       return () => subscribers.delete(onChange);
     },
     () => current,
+    // Static renders (renderToStaticMarkup in the verify suite) have no store to
+    // subscribe to; the current language is the same answer either way.
+    () => current,
   );
   return t;
 }

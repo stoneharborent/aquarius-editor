@@ -14,10 +14,13 @@ import { StorageMigrationBanner } from '../settings/StorageMigrationBanner';
 import { SkinPicker } from '../settings/SkinPicker';
 import { LocaleToggle } from '../TopBar';
 import {
-  card, importBtn, miniBtn, modelSetupButton, modelSetupCard, modelSetupIcon,
+  card, folderHint, importBtn, miniBtn, modelSetupButton, modelSetupCard, modelSetupIcon,
   nameInput, newCard, searchBox, searchClear, searchEmpty, searchIcon, searchInput,
   settingsBtn, thumb,
 } from './dashboardStyles';
+import {
+  FolderBreadcrumb, FolderRow, MoveToFolderPicker, PROJECT_DRAG_TYPE,
+} from './FolderViews';
 import { relativeProjectTime, type DashboardModel, type DashboardProps } from './useDashboardModel';
 
 function ModelSetupCard({ onOpen }: { onOpen: () => void }) {
@@ -89,7 +92,9 @@ function ProjectToolbar({ projects, model }: { projects: ProjectMeta[]; model: D
         <button onClick={() => model.transfer.fileRef.current?.click()} disabled={model.transfer.busy} style={importBtn} title={t('Import a .ccproj project file (legacy .ccproj.json is also supported)')}><Icon name="upload" size={13} /> {t('Import Project')}</button>
         <input ref={model.transfer.fileRef} type="file" accept=".ccproj,.json,application/json,application/x-openchatcut-project" onChange={model.transfer.pickImport} style={{ display: 'none' }} />
         <span style={{ color: theme.textDim, fontSize: 12.5 }}>
-          {model.normalizedQuery
+          {/* Any scoped view — a search, or standing inside a folder — has to
+              say it is showing a subset, or the count contradicts the grid. */}
+          {model.normalizedQuery || model.openFolder
             ? t('{n} of {total}', { n: model.visibleProjects.length, total: projects.length })
             : t('{n} total', { n: projects.length })}
         </span>
@@ -129,20 +134,48 @@ function ProjectActions({ project, props, model }: { project: ProjectMeta; props
       title={t('Permanently delete this project and purge assets only it references')}
     >{t('Confirm Delete')}</button>;
   }
+  const picking = model.move.projectId === project.id;
   return (
     <>
       <button onClick={() => model.rename.start(project)} style={miniBtn} title={t('Rename')}><Icon name="pencil" size={13} /></button>
       <button onClick={() => props.onDuplicate(project.id)} style={miniBtn} title={t('Copy')}><Icon name="copy" size={13} /></button>
+      <button
+        onClick={() => (picking ? model.move.close() : model.move.open(project.id))}
+        style={picking ? { ...miniBtn, color: theme.accent } : miniBtn}
+        aria-expanded={picking}
+        aria-haspopup="menu"
+        title={t('Move to folder…')}
+      ><Icon name="folder" size={13} /></button>
       <button onClick={() => void model.transfer.run(props.onExport(project.id, project.name))} disabled={model.transfer.busy} style={miniBtn} title={t('Export as streaming .ccproj (with assets; importable on another machine)')}><Icon name="download" size={13} /></button>
       <button onClick={() => model.rename.setConfirmId(project.id)} style={miniBtn} title={t('Delete')}><Icon name="trash" size={13} /></button>
+      {picking && <MoveToFolderPicker project={project} model={model} />}
     </>
   );
 }
 
 function ProjectCard({ project, props, model }: { project: ProjectMeta; props: DashboardProps; model: DashboardModel }) {
   const t = useT();
+  const folder = model.folderOf(project);
+  const dragging = model.move.draggingId === project.id;
+  // The card clips its thumbnail, so the move picker — which floats above the
+  // action row — needs the clip lifted (and the card raised over its
+  // neighbours) for as long as it is open.
+  const picking = model.move.projectId === project.id;
   return (
-    <div style={card}>
+    <div
+      style={{
+        ...card,
+        ...(dragging ? { opacity: 0.55 } : {}),
+        ...(picking ? { overflow: 'visible', position: 'relative', zIndex: 30 } : {}),
+      }}
+      draggable
+      onDragStart={(event) => {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData(PROJECT_DRAG_TYPE, project.id);
+        model.move.setDraggingId(project.id);
+      }}
+      onDragEnd={() => { model.move.setDraggingId(null); model.move.setDropTargetId(null); }}
+    >
       <button onClick={() => props.onOpen(project.id)} style={thumb} title={t('Open {name}', { name: project.name })}>
         {model.thumbs[project.id]
           ? <img src={model.thumbs[project.id]} alt="" draggable={false} loading="lazy" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
@@ -150,9 +183,16 @@ function ProjectCard({ project, props, model }: { project: ProjectMeta; props: D
       </button>
       <div style={{ padding: '9px 11px', display: 'flex', flexDirection: 'column', gap: 4 }}>
         <ProjectName project={project} model={model} />
+        {/* Search spans every folder, so a hit has to say where it was filed. */}
+        {model.normalizedQuery !== '' && (
+          <span style={folderHint}>
+            <Icon name="folder" size={10} />
+            {folder ? folder.name : t('No folder')}
+          </span>
+        )}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 11, color: theme.textDim, fontVariantNumeric: 'tabular-nums' }}>{relativeProjectTime(project.updatedAt, t)}</span>
-          <div style={{ display: 'flex', gap: 2 }} className="acts"><ProjectActions project={project} props={props} model={model} /></div>
+          <div style={{ display: 'flex', gap: 2, position: 'relative' }} className="acts"><ProjectActions project={project} props={props} model={model} /></div>
         </div>
       </div>
     </div>
@@ -161,10 +201,15 @@ function ProjectCard({ project, props, model }: { project: ProjectMeta; props: D
 
 function ProjectGrid({ props, model }: { props: DashboardProps; model: DashboardModel }) {
   const t = useT();
+  // While searching, folders would be misleading chrome: the results already
+  // span all of them, and each hit says which one it came from.
+  const browsing = model.normalizedQuery === '';
   return (
     <>
+      {browsing && (model.openFolder ? <FolderBreadcrumb model={model} /> : <FolderRow model={model} />)}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(232px, 1fr))', alignItems: 'start', gap: 16 }}>
-        <button onClick={props.onNew} style={newCard} title={t('New Project')}>
+        {/* A project started while inside a folder is filed there. */}
+        <button onClick={() => props.onNew(model.openFolder?.id ?? null)} style={newCard} title={t('New Project')}>
           <span style={{ fontSize: 30, color: theme.textDim, lineHeight: 1 }}>＋</span>
           <span style={{ fontSize: 13, color: theme.textDim }}>{t('New Project')}</span>
         </button>
@@ -172,6 +217,9 @@ function ProjectGrid({ props, model }: { props: DashboardProps; model: Dashboard
       </div>
       {model.normalizedQuery && model.visibleProjects.length === 0 && (
         <div role="status" style={searchEmpty}><Icon name="search" size={14} />{t('No projects match “{query}”', { query: model.query.trim() })}</div>
+      )}
+      {browsing && model.openFolder && model.visibleProjects.length === 0 && (
+        <div role="status" style={searchEmpty}><Icon name="folder" size={14} />{t('This folder is empty. Drag a project onto it, or use “Move to folder…”.')}</div>
       )}
     </>
   );

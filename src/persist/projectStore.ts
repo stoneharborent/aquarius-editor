@@ -29,10 +29,16 @@ import {
   ProjectIndexCoordinator,
   SaveCoordinator,
   type ProjectFlushResult,
+  type ProjectFolder,
   type ProjectIndexMutation,
   type ProjectMeta,
   type ProjectSaveResult,
 } from './projectStoreCoordinators';
+import {
+  normalizeFolderName,
+  projectFolderCoordinator,
+  sortFolders,
+} from './projectFolders';
 
 // Server-backed multi-project store with an IndexedDB cache. The server store is
 // shared by every local browser and dev port; Node checks use a memory fallback.
@@ -70,6 +76,7 @@ export const projectSaveCoordinator = new SaveCoordinator(persistProjectSnapshot
 export function resetProjectStoreMemory(): void {
   projectSaveCoordinator.reset();
   projectIndexCoordinator.reset();
+  projectFolderCoordinator.reset();
   chatWriteQueues.clear();
   resetSharedKvMemory();
   resetAgentSessionGenerationMemory();
@@ -312,13 +319,14 @@ export function hasProjectSaveFailure(projectId?: string): boolean {
 export async function createProject(
   name: string,
   doc: ProjectDoc,
-  opts?: { description?: string },
+  opts?: { description?: string; folderId?: string | null },
 ): Promise<ProjectMeta> {
   const meta: ProjectMeta = {
     id: newId(),
     name,
     updatedAt: now(),
     ...(opts?.description ? { description: opts.description } : {}),
+    ...(opts?.folderId ? { folderId: opts.folderId } : {}),
   };
   await idbSet(projectKey(meta.id), doc);
   await mutateProjectIndex((index) => ({
@@ -366,7 +374,11 @@ export async function duplicateProject(id: string, name?: string): Promise<Proje
   // Allow duplicating soft-deleted sources too (copy is active).
   const src = (await readIndex()).find((m) => m.id === id);
   const copyName = (name?.trim() || `[Copy] ${src?.name ?? 'Projects'}`);
-  return createProject(copyName, doc, src?.description ? { description: src.description } : undefined);
+  // A copy belongs on the same shelf as its source.
+  return createProject(copyName, doc, {
+    ...(src?.description ? { description: src.description } : {}),
+    ...(src?.folderId ? { folderId: src.folderId } : {}),
+  });
 }
 
 /** Soft-delete: hide from dashboard/list; data kept for restore_project. */
@@ -408,6 +420,95 @@ export async function restoreProject(id: string): Promise<ProjectMeta | null> {
     return {
       next: index.map((meta) => (meta.id === id ? next : meta)),
       value: next,
+    };
+  });
+}
+
+// ── Dashboard folders ─────────────────────────────────────────────────────
+// One level deep: a project is either in exactly one folder or at the root.
+// A folder is a label, never an owner — deleting one never deletes a project.
+
+/** Every folder, alphabetical. */
+export async function listFolders(): Promise<ProjectFolder[]> {
+  try {
+    return sortFolders(await projectFolderCoordinator.read());
+  } catch {
+    return [];
+  }
+}
+
+/** Create a folder. Reuses an existing folder when the name already exists,
+ * so a double submit cannot leave two identical shelves behind. */
+export async function createFolder(name: string): Promise<ProjectFolder> {
+  const clean = normalizeFolderName(name);
+  if (!clean) throw new Error('A folder needs a name');
+  return projectFolderCoordinator.mutate((folders) => {
+    const existing = folders.find((folder) => folder.name === clean);
+    if (existing) return { next: null, value: existing };
+    const folder: ProjectFolder = { id: newId(), name: clean, createdAt: now() };
+    return { next: [...folders, folder], value: folder };
+  });
+}
+
+/** Rename a folder; returns null when it no longer exists. */
+export async function renameFolder(id: string, name: string): Promise<ProjectFolder | null> {
+  const clean = normalizeFolderName(name);
+  if (!clean) return null;
+  return projectFolderCoordinator.mutate((folders) => {
+    const entry = folders.find((folder) => folder.id === id);
+    if (!entry || entry.name === clean) return { next: null, value: entry ?? null };
+    const renamed: ProjectFolder = { ...entry, name: clean };
+    return {
+      next: folders.map((folder) => (folder.id === id ? renamed : folder)),
+      value: renamed,
+    };
+  });
+}
+
+/** Remove a folder. Its projects are moved back to the root, never deleted.
+ * The projects move first: if the second write fails the worst case is an
+ * empty folder, not a shelf full of projects nobody can reach. */
+export async function deleteFolder(id: string): Promise<void> {
+  await mutateProjectIndex((index) => {
+    if (!index.some((meta) => meta.folderId === id)) return { next: null, value: undefined };
+    return {
+      next: index.map((meta) => {
+        if (meta.folderId !== id) return meta;
+        const moved: ProjectMeta = { ...meta };
+        delete moved.folderId;
+        return moved;
+      }),
+      value: undefined,
+    };
+  });
+  await projectFolderCoordinator.mutate((folders) => {
+    if (!folders.some((folder) => folder.id === id)) return { next: null, value: undefined };
+    return { next: folders.filter((folder) => folder.id !== id), value: undefined };
+  });
+}
+
+/** Move a project into a folder, or to the root with `null`.
+ * Returns null when the project — or the named folder — does not exist.
+ * `updatedAt` deliberately does not change: filing a project is not editing
+ * it, and bumping it would reshuffle the dashboard and drop the poster cache. */
+export async function moveProjectToFolder(
+  projectId: string,
+  folderId: string | null,
+): Promise<ProjectMeta | null> {
+  if (folderId !== null) {
+    const folders = await projectFolderCoordinator.read();
+    if (!folders.some((folder) => folder.id === folderId)) return null;
+  }
+  return mutateProjectIndex((index) => {
+    const entry = index.find((meta) => meta.id === projectId);
+    if (!entry) return { next: null, value: null };
+    if ((entry.folderId ?? null) === folderId) return { next: null, value: entry };
+    const moved: ProjectMeta = { ...entry };
+    if (folderId === null) delete moved.folderId;
+    else moved.folderId = folderId;
+    return {
+      next: index.map((meta) => (meta.id === projectId ? moved : meta)),
+      value: moved,
     };
   });
 }
