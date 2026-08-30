@@ -1,9 +1,13 @@
 import { useT } from '../i18n/locale';
 import { purgeProjectCascade } from '../persist/mediaCleanup';
 import {
+  createFolder,
   createProject,
+  deleteFolder,
   duplicateProject,
+  moveProjectToFolder,
   randomProjectName,
+  renameFolder,
   renameProject,
 } from '../persist/projectStore';
 import { buildProjectExport, importProjectPackage } from '../persist/projectTransfer';
@@ -13,12 +17,17 @@ type Translate = (zh: string, params?: Record<string, string | number>) => strin
 
 export interface DashboardActions {
   onOpen: (id: string) => void;
-  onNew: () => Promise<void>;
+  /** `folderId` files the new project straight into the folder being browsed. */
+  onNew: (folderId?: string | null) => Promise<void>;
   onRename: (id: string, name: string) => Promise<void>;
   onDuplicate: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onExport: (id: string, name: string) => Promise<string>;
   onImport: (file: File) => Promise<string>;
+  onCreateFolder: (name: string) => Promise<void>;
+  onRenameFolder: (id: string, name: string) => Promise<void>;
+  onDeleteFolder: (id: string) => Promise<void>;
+  onMoveToFolder: (projectId: string, folderId: string | null) => Promise<void>;
 }
 
 function downloadBlob(blob: Blob, filename: string): void {
@@ -64,8 +73,8 @@ export function useDashboardActions(refresh: () => Promise<void>): DashboardActi
   const t = useT();
   return {
     onOpen: (id) => navigateTo(`#/editor/${id}`),
-    onNew: async () => {
-      const project = await createProject(randomProjectName(), emptyProjectDoc());
+    onNew: async (folderId) => {
+      const project = await createProject(randomProjectName(), emptyProjectDoc(), { folderId });
       await refresh();
       navigateTo(`#/editor/${project.id}`);
     },
@@ -74,5 +83,14 @@ export function useDashboardActions(refresh: () => Promise<void>): DashboardActi
     onDelete: async (id) => { await purgeProjectCascade(id); refresh(); },
     onExport: (id, name) => exportProject(t, id, name),
     onImport: (file) => importProject(t, file, refresh),
+    onCreateFolder: async (name) => { await createFolder(name); },
+    onRenameFolder: async (id, name) => { await renameFolder(id, name); },
+    // Deleting a folder rewrites the folderId of every project it held, so the
+    // project list has to be re-read even though no project was deleted.
+    onDeleteFolder: async (id) => { await deleteFolder(id); await refresh(); },
+    onMoveToFolder: async (projectId, folderId) => {
+      await moveProjectToFolder(projectId, folderId);
+      await refresh();
+    },
   };
 }

@@ -8,6 +8,17 @@ export interface ProjectMeta {
   deletedAt?: number;
   /** Optional free-text project description. */
   description?: string;
+  /** Dashboard folder this project lives in; absent means the root ("No folder").
+   * Older indexes have no such field, which is exactly what "root" means, so
+   * nothing has to be migrated when folders first appear. */
+  folderId?: string;
+}
+
+/** A dashboard folder. One level only — folders never nest. */
+export interface ProjectFolder {
+  id: string;
+  name: string;
+  createdAt: number;
 }
 
 export interface ProjectSaveResult {
@@ -179,23 +190,25 @@ export class SaveCoordinator {
   }
 }
 
-export interface ProjectIndexMutation<T> {
+export interface ProjectIndexMutation<T, TEntry = ProjectMeta> {
   /** null means the operation was a read/no-op and must not rewrite the index. */
-  next: ProjectMeta[] | null;
+  next: TEntry[] | null;
   value: T;
 }
 
-type ReadProjectIndex = () => Promise<ProjectMeta[]>;
-type WriteProjectIndex = (index: ProjectMeta[]) => Promise<void>;
+type ReadProjectIndex<TEntry> = () => Promise<TEntry[]>;
+type WriteProjectIndex<TEntry> = (index: TEntry[]) => Promise<void>;
 
-/** Owns every project-index read-modify-write transaction. */
-export class ProjectIndexCoordinator {
+/** Owns every project-index read-modify-write transaction.
+ * Generic over the record type so the folder index gets the same
+ * serialized read-modify-write guarantee as the project index. */
+export class ProjectIndexCoordinator<TEntry = ProjectMeta> {
   private tail: Promise<void> = Promise.resolve();
-  private readonly readStore: ReadProjectIndex;
-  private readonly writeStore: WriteProjectIndex;
+  private readonly readStore: ReadProjectIndex<TEntry>;
+  private readonly writeStore: WriteProjectIndex<TEntry>;
 
 
-  constructor(readStore: ReadProjectIndex, writeStore: WriteProjectIndex) {
+  constructor(readStore: ReadProjectIndex<TEntry>, writeStore: WriteProjectIndex<TEntry>) {
     this.readStore = readStore;
     this.writeStore = writeStore;
   }
@@ -206,12 +219,13 @@ export class ProjectIndexCoordinator {
     return run;
   }
 
-  read(): Promise<ProjectMeta[]> {
+  read(): Promise<TEntry[]> {
     return this.enqueue(() => this.readStore());
   }
 
   mutate<T>(
-    operation: (current: ProjectMeta[]) => ProjectIndexMutation<T> | Promise<ProjectIndexMutation<T>>,
+    operation: (current: TEntry[]) =>
+    ProjectIndexMutation<T, TEntry> | Promise<ProjectIndexMutation<T, TEntry>>,
   ): Promise<T> {
     return this.enqueue(async () => {
       const current = await this.readStore();
