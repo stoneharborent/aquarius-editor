@@ -16,6 +16,7 @@ import { newManualCaptions } from '../captions/manualCaptions';
 import { MediaPoolPanel } from '../media/MediaPoolPanel';
 import { useDirectoryImport } from '../media/useDirectoryImport';
 import { SkillsTabPanel } from './SkillsTabPanel';
+import { HyperframesPanel } from '../hyperframes/HyperframesPanel';
 import { TemplateBrowser } from './TemplateBrowser';
 import { ResourceBrowser, type ResourceItem } from './ResourceBrowser';
 import { TransitionThumb } from './TransitionThumb';
@@ -122,7 +123,7 @@ interface LibraryPanelProps {
   onApplyZoom: (zoom: ZoomEffect) => void;
 }
 
-const MAIN_TABS = ['My Media', 'Sequences', 'Library', 'Transcript', 'Captions', 'Skill'] as const;
+const MAIN_TABS = ['My Media', 'Hyperframes', 'Sequences', 'Library', 'Transcript', 'Captions', 'Skill'] as const;
 const SUB_TABS = ['Motion Graphics', 'Sound Effects', 'Transitions', 'Effects', 'Zoom', 'LUT'] as const;
 function localizeDefaultSequenceName(name: string, t: ReturnType<typeof useT>): string {
   const match = /^Sequence (\d+)$/.exec(name);
@@ -167,6 +168,7 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
   const isMyAssets = mainTab === 'My Media';
   const isSequences = mainTab === 'Sequences';
   const isSkills = mainTab === 'Skill';
+  const isHyperframes = mainTab === 'Hyperframes';
   const openCaptionStyles = (sourceItemIds: string[]) => {
     const target = captionTracks[0];
     if (!target?.captions && sourceItemIds.length) {
@@ -233,6 +235,8 @@ export function LibraryPanel({ semanticScopeId, templates, onAddTemplate, onAddA
             onMoveAssets={onMoveMediaAssets} onRenameAsset={onRenameMediaAsset} onTranscribe={onTranscribeAsset} onRenameAssets={onRenameMediaAssets} onSetFavorite={onSetMediaAssetFavorite} onSetAssetsFavorite={onSetMediaAssetsFavorite} onRemoveAsset={onRemoveMediaAsset} onRemoveAssets={onRemoveMediaAssets} onPasteAssets={onPasteMediaAssets}
             onRelinkAsset={onRelinkMediaAsset} onAddSolid={onAddSolid} />
         </div>
+      ) : isHyperframes ? (
+        <HyperframesPanel />
       ) : isSkills ? (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, borderTop: `0.5px solid ${theme.border}` }}>
           <SkillsTabPanel

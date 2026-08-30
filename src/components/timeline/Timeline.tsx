@@ -17,7 +17,10 @@ import { trackDeletePlan } from './trackDelete';
 import { TrackContextMenu } from './TrackContextMenu';
 import { TransitionContextMenu } from './TransitionContextMenu';
 import { closeCaptionTrackGaps, trackClearPlan } from './trackContextOperations';
-import { HEADER_W, RULER_H } from './timelineUtil';
+import { fmt, HEADER_W, RULER_H } from './timelineUtil';
+import { HyperframesPromptPopup } from '../../hyperframes/HyperframesPromptPopup';
+import { useOptionalHyperframes } from '../../hyperframes/HyperframesContext';
+import { showAppToast } from '../../ui/appToast';
 import { trimRipplePreviewShifts } from './trimRipple';
 import {
   CAPTION_SELECTION_OWNER_SELECTOR,
@@ -40,6 +43,7 @@ export function Timeline(props: TimelineProps) {
     playheadRef, playheadLineRef, toolbarTimecodeRef, rulerTimecodeRef,
     playing, editMode, placeMode, setPlaceMode, snapping,
     captionsVisible, captionMenu, setCaptionMenu, trackMenu, setTrackMenu, transitionMenu, setTransitionMenu,
+    hyperframesPrompt, setHyperframesPrompt,
     duckMenu, setDuckMenu, captionError, setCaptionError,
     moveCaptionCue, openCaptionTrackMenu, openDuckTrackMenu,
     closeTrackDrillMenu, backFromTrackDrillMenu, recorder, toggleCaptions,
@@ -54,6 +58,9 @@ export function Timeline(props: TimelineProps) {
     clearHoverPreview, updateHoverPreview, startSeekGesture, updateSeekGesture, finishSeekGesture,
     markers, zoneIn, zoneOut, editing, editMarker, setEditMarker, pinnedItemIds,
   } = useTimelineController(props);
+  // Null outside the editor workspace (the provider lives there); the menu item
+  // and the prompt simply do not appear.
+  const hyperframes = useOptionalHyperframes();
 
   // Live magnetic-trim preview: while a trim drag is in flight every clip the
   // reducer's ripple will shift is drawn at its shifted position, so no gap ever
@@ -363,6 +370,11 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
             hasSelectable={kind === 'caption' ? captionSelections.length > 0 : items.length > 0}
             deleteBlockedReason={deletePlan.blockedReason}
             onInsert={() => beginTrackInsert(trackId, trackMenu.frame)}
+            {...(hyperframes && kind === 'video' ? {
+              onHyperframes: () => setHyperframesPrompt({
+                trackId, frame: trackMenu.frame, x: trackMenu.x, y: trackMenu.y,
+              }),
+            } : {})}
             onTighten={() => {
               if (kind === 'caption' && captionTighten?.changed) commands.setCaptions(captionTighten.captions, trackId);
               else if (kind !== 'caption') commands.tightenTrack(trackId);
@@ -408,6 +420,26 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
           />
         );
       })()}
+
+      {/* Hyperframes prompt, floated at the point that was right-clicked. The
+          generated clip lands on that track at that frame when it is ready. */}
+      {hyperframes && hyperframesPrompt && (
+        <HyperframesPromptPopup
+          x={hyperframesPrompt.x}
+          y={hyperframesPrompt.y}
+          atLabel={`${trackAlias(state, hyperframesPrompt.trackId)} · ${fmt(hyperframesPrompt.frame, state.fps)}`}
+          configured={hyperframes.config?.configured !== false}
+          onSubmit={(prompt) => {
+            hyperframes.generate(prompt, {
+              track: hyperframesPrompt.trackId,
+              startFrame: hyperframesPrompt.frame,
+            });
+            showAppToast(t('Generating a graphic — it drops in when it is ready.'));
+          }}
+          onConfigured={hyperframes.refreshConfig}
+          onClose={() => setHyperframesPrompt(null)}
+        />
+      )}
 
       {/* clip right-click menu */}
       {ctxMenu && (() => {

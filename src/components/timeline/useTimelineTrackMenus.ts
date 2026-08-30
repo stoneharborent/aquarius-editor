@@ -20,6 +20,14 @@ interface TrackMenuLocation {
   frame: number;
 }
 
+/** Where the Hyperframes prompt floats, and which spot it will fill. */
+export interface HyperframesPromptLocation {
+  trackId: TrackId;
+  frame: number;
+  x: number;
+  y: number;
+}
+
 interface UseTimelineTrackMenusOptions {
   state: TimelineState;
   commands: EditorCommands;
@@ -31,6 +39,7 @@ export function useTimelineTrackMenus({ state, commands, t }: UseTimelineTrackMe
   const [trackMenu, setTrackMenu] = useState<TrackMenuLocation | null>(null);
   const [transitionMenu, setTransitionMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const [trackMenuReturn, setTrackMenuReturn] = useState<TrackMenuLocation | null>(null);
+  const [hyperframesPrompt, setHyperframesPrompt] = useState<HyperframesPromptLocation | null>(null);
   const [captionError, setCaptionError] = useState<string | null>(null);
 
   const moveCaptionCue = (sourceTrackId: TrackId, move: CaptionCueMove) => {
@@ -151,6 +160,8 @@ export function useTimelineTrackMenus({ state, commands, t }: UseTimelineTrackMe
     setCaptionMenu,
     trackMenu,
     setTrackMenu,
+    hyperframesPrompt,
+    setHyperframesPrompt,
     transitionMenu,
     setTransitionMenu,
     captionError,

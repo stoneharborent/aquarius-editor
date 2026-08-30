@@ -38,6 +38,7 @@ import { subtitleExportPlugin } from "./subtitles.ts";
 import { generationProgressPlugin } from "./generation-jobs.ts";
 import { stockSearchPlugin } from "./stock.ts";
 import { firecrawlPlugin } from "./firecrawl.ts";
+import { hyperframesPlugin } from "./hyperframes.ts";
 import { settingsPlugin } from "./settings.ts";
 import { skillFilesPlugin } from "./skill-files.ts";
 import { skillInstallPlugin } from "./skill-install.ts";
@@ -62,6 +63,7 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
     llmProxyPlugin(),
     xaiOauthPlugin(),
     agentRunsPlugin(),
+    hyperframesPlugin(),
     skillFilesPlugin(),
     skillInstallPlugin(),
     skillExecPlugin(),

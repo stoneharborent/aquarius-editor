@@ -16,6 +16,8 @@ interface TrackContextMenuProps {
   hasSelectable: boolean;
   deleteBlockedReason: TrackDeletePlan['blockedReason'];
   onInsert: () => void;
+  /** Generate a graphic for this spot. Absent on tracks that cannot hold one. */
+  onHyperframes?: () => void;
   onTighten: () => void;
   onSelectAll: () => void;
   onClear: () => void;
@@ -66,7 +68,7 @@ function insertMenuItem(kind: TrackKind, t: (text: string) => string): { label: 
 
 export function TrackContextMenu({
   kind, x, y, hidden, muted, locked, canTighten, hasContents, hasSelectable, deleteBlockedReason,
-  onInsert, onTighten, onSelectAll, onClear, onToggleHidden, onToggleMuted, onToggleLocked,
+  onInsert, onHyperframes, onTighten, onSelectAll, onClear, onToggleHidden, onToggleMuted, onToggleLocked,
   onRename, onOpenDuck, onOpenCaptionStyle, onOpenTranslate, onDelete, onClose,
 }: TrackContextMenuProps) {
   const t = useT();
@@ -112,6 +114,9 @@ export function TrackContextMenu({
       onPointerDown={(event) => event.stopPropagation()}
     >
       <MenuItem label={insert.label} icon={insert.icon} disabled={locked} onClick={run(onInsert)} />
+      {onHyperframes && (
+        <MenuItem label={t('Hyperframes…')} icon="sparkles" disabled={locked} onClick={run(onHyperframes)} />
+      )}
       <MenuItem label={t('Close gaps')} icon="magnet" disabled={locked || !canTighten} onClick={run(onTighten)} />
       <Separator />
       <MenuItem label={t('Select all')} icon="check" disabled={!hasSelectable} onClick={run(onSelectAll)} />

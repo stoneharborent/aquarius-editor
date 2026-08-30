@@ -14,6 +14,7 @@ import { VersionHistory } from '../components/VersionHistory';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { ShortcutsDialog } from '../shortcuts/ShortcutsDialog';
 import { AppToastHost } from '../ui/AppToastHost';
+import { HyperframesProvider, type HyperframesHost } from '../hyperframes/HyperframesContext';
 
 export interface EditorWorkspaceViewProps {
   gridTemplateColumns: string;
@@ -32,6 +33,8 @@ export interface EditorWorkspaceViewProps {
   onResizeTimeline: ComponentProps<typeof Divider>['onResize'];
   timelineTabs: ComponentProps<typeof TimelineTabs>;
   timeline: ComponentProps<typeof Timeline>;
+  /** Owns generated graphics for both the Library tab and the timeline prompt. */
+  hyperframes: HyperframesHost;
 }
 
 
@@ -63,6 +66,7 @@ function renderTimeline(props: EditorWorkspaceViewProps) {
 
 export function EditorWorkspaceView(props: EditorWorkspaceViewProps) {
   return (
+    <HyperframesProvider host={props.hyperframes}>
     <div
       className="cc-editor-shell"
       style={{
@@ -94,5 +98,6 @@ export function EditorWorkspaceView(props: EditorWorkspaceViewProps) {
       <ExternalAgentOverlay {...props.externalAgentOverlay} />
       <AppToastHost />
     </div>
+    </HyperframesProvider>
   );
 }

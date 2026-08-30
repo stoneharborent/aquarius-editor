@@ -137,6 +137,7 @@ export function useTimelineController({
   const {
     captionMenu, setCaptionMenu, trackMenu, setTrackMenu, transitionMenu, setTransitionMenu,
     captionError, setCaptionError, duckMenu, setDuckMenu,
+    hyperframesPrompt, setHyperframesPrompt,
     moveCaptionCue, openCaptionTrackMenu, openDuckTrackMenu,
     closeTrackDrillMenu, backFromTrackDrillMenu,
   } = useTimelineTrackMenus({ state, commands, t });
@@ -420,6 +421,7 @@ export function useTimelineController({
     playheadRef, playheadLineRef, toolbarTimecodeRef, rulerTimecodeRef,
     paintPlayhead, playing, editMode, placeMode, setPlaceMode, snapping,
     captionsVisible, captionMenu, setCaptionMenu, trackMenu, setTrackMenu, transitionMenu, setTransitionMenu,
+    hyperframesPrompt, setHyperframesPrompt,
     duckMenu, setDuckMenu, captionError, setCaptionError,
     moveCaptionCue, openCaptionTrackMenu, openDuckTrackMenu,
     closeTrackDrillMenu, backFromTrackDrillMenu, recorder, toggleCaptions,
