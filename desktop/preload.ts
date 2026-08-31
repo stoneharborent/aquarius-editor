@@ -13,6 +13,12 @@ import {
   type EditorBootstrapInfo,
 } from '../shared/editor-auth-transport.ts';
 import {
+  isDesktopWindowState,
+  WINDOW_CHROME_CHANNELS,
+  type DesktopWindowChrome,
+  type DesktopWindowState,
+} from '../shared/window-chrome.ts';
+import {
   DESKTOP_UPDATE_CHANNELS,
   isDesktopUpdateState,
   type DesktopUpdateCheckSource,
@@ -105,6 +111,10 @@ export interface OpenChatCutDesktopApi {
   importAgentPaths(request: AgentPathImportRequest): Promise<AgentPathImportResult>;
   subscribeImportDirectory(listener: (event: DirectoryImportEvent) => void): () => void;
   windowAction(action: 'close' | 'minimize' | 'toggle-maximize' | 'apply-ui-scale'): Promise<void>;
+  /** Report the app-drawn titlebar so native chrome can be placed over it. */
+  setWindowChrome(chrome: DesktopWindowChrome): Promise<void>;
+  readWindowState(): Promise<DesktopWindowState>;
+  subscribeWindowState(listener: (state: DesktopWindowState) => void): () => void;
   zoomStep(step: number | 'reset'): Promise<void>;
   subscribeUiScale(listener: (scale: number) => void): () => void;
   openTranscriptWindow(payload: TranscriptWindowPayload): Promise<void>;
@@ -171,6 +181,19 @@ const api: OpenChatCutDesktopApi = {
   },
   windowAction: (action) =>
     ipcRenderer.invoke('openchatcut:window-action', action) as Promise<void>,
+  setWindowChrome: (chrome) =>
+    ipcRenderer.invoke(WINDOW_CHROME_CHANNELS.setChrome, chrome) as Promise<void>,
+  readWindowState: async () => {
+    const value: unknown = await ipcRenderer.invoke(WINDOW_CHROME_CHANNELS.readState);
+    return isDesktopWindowState(value) ? value : { maximized: false, fullScreen: false };
+  },
+  subscribeWindowState: (listener) => {
+    const handleState = (_event: IpcRendererEvent, value: unknown): void => {
+      if (isDesktopWindowState(value)) listener(value);
+    };
+    ipcRenderer.on(WINDOW_CHROME_CHANNELS.stateChanged, handleState);
+    return () => { ipcRenderer.removeListener(WINDOW_CHROME_CHANNELS.stateChanged, handleState); };
+  },
   zoomStep: (step) =>
     ipcRenderer.invoke('openchatcut:zoom-step', step) as Promise<void>,
   subscribeUiScale: (listener) => {

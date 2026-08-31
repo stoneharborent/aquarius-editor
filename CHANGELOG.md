@@ -30,6 +30,22 @@
   with the exact error instead of reaching you broken.
 
 ### Changed
+- **One window, one surface: the File/Edit menu bar is gone and the app draws its own
+  title bar.** On AquariusOS and Windows there is no menu bar at all any more — not hidden,
+  removed, so Alt cannot summon it back — and no operating-system title bar above the app
+  either. The strip with the project name *is* the window's title bar now: same colour, same
+  skin, one continuous piece from the top of the screen down. Drag it to move the window,
+  double-click it to maximize. On AquariusOS the minimize / maximize / close buttons are
+  drawn by the app in the skin's own colours; on Windows they stay the system's (so Snap
+  Layouts still works when you hover maximize) but painted in the skin's colours; on Mac the
+  real traffic lights sit on the bar where they always were, instead of the three fake dots
+  the app used to draw. Switch skins and every part of it follows, including the buttons the
+  system draws. Nothing was lost with the menu: copy/paste/undo work as they always did
+  (and are still on the right-click menu), the zoom shortcuts already belonged to the app,
+  **F11** now toggles full screen and **Ctrl+Q** quits on Linux. Reload and the "Learn more"
+  link are gone on purpose — and three editor shortcuts the menu used to steal
+  (**Ctrl+R** move right to boundary, **Ctrl+M** delete marker, **Ctrl +/-/0** zoom) finally
+  reach the timeline.
 - **The editor wears AquariusOS's colour identity: Ice, with Midnight as its dark twin.**
   Ice is a light theme — soft azure papers, deep-ocean navy ink, Aquarius Blue accents —
   and it is now the skin the app opens with, because AquariusOS is light-first on purpose.

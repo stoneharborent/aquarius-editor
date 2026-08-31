@@ -5,6 +5,7 @@ import type {
 } from '../shared/project-store-transport';
 import type { AgentPathImportRequest, AgentPathImportResult } from '../shared/directory-import';
 import type { EditorBootstrapInfo } from '../shared/editor-auth-transport';
+import type { DesktopWindowChrome, DesktopWindowState } from '../shared/window-chrome';
 import type {
   DesktopUpdateCheckSource,
   DesktopUpdateState,
@@ -81,6 +82,9 @@ declare global {
       importAgentPaths(request: AgentPathImportRequest): Promise<AgentPathImportResult>;
       subscribeImportDirectory(listener: (event: DirectoryImportEvent) => void): () => void;
       windowAction(action: 'close' | 'minimize' | 'toggle-maximize' | 'apply-ui-scale'): Promise<void>;
+      setWindowChrome(chrome: DesktopWindowChrome): Promise<void>;
+      readWindowState(): Promise<DesktopWindowState>;
+      subscribeWindowState(listener: (state: DesktopWindowState) => void): () => void;
       zoomStep(step: number | 'reset'): Promise<void>;
       subscribeUiScale(listener: (scale: number) => void): () => void;
       openTranscriptWindow(payload: TranscriptWindowPayload): Promise<void>;

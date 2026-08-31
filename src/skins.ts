@@ -441,11 +441,24 @@ export function getSkin(): string {
   return DEFAULT_SKIN;
 }
 
+// Anything painted OUTSIDE the document has to be told when the skin changes: the
+// desktop titlebar hands the live chrome colours to the main process so the native
+// window controls sitting on it (macOS traffic lights, the Windows Controls
+// Overlay) are repainted to match. CSS variables cascade on their own; native
+// chrome does not. See src/hooks/useDesktopWindowChrome.ts.
+const skinListeners = new Set<(skin: string) => void>();
+
+export function subscribeSkin(listener: (skin: string) => void): () => void {
+  skinListeners.add(listener);
+  return () => { skinListeners.delete(listener); };
+}
+
 export function applySkin(id: string): void {
   const skin = SKINS.some((s) => s.id === id) ? id : DEFAULT_SKIN;
   if (skin === DEFAULT_SKIN) delete document.documentElement.dataset.ccSkin;
   else document.documentElement.dataset.ccSkin = skin;
   try { localStorage.setItem(STORAGE_KEY, skin); } catch { /* neglect*/ }
+  for (const listener of skinListeners) listener(skin);
 }
 
 /** Boot injection (main.tsx rendering pre-tuning): Create a style sheet + apply persistent skin to avoid flashing default colors.*/

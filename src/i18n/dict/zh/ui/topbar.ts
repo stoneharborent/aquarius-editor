@@ -14,5 +14,6 @@ export default {
   'Window controls': '窗口控制',
   'Close window': '关闭窗口',
   'Minimize window': '最小化窗口',
-  'Zoom window': '缩放窗口',
+  'Maximize window': '最大化窗口',
+  'Restore window': '还原窗口',
 } as Record<string, string>;

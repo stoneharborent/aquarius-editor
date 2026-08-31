@@ -19,6 +19,7 @@ const markup = renderToStaticMarkup(
     />
     <DesktopWindowControlButtons
       translate={(text) => text}
+      maximized={false}
       onAction={() => undefined}
     />
   </div>,
@@ -33,7 +34,7 @@ assert.match(markup, /left:50%/, 'the update notice should be horizontally cente
 assert.match(markup, /z-index:190/, 'the update notice must sit below the settings dialog so it never blocks settings actions');
 assert.match(markup, /transform:translate\(-50%,\s*-50%\)/, 'the update notice should align its own center with the window center');
 assert.match(markup, /aria-label="Window controls"/, 'desktop window controls must be renderable in the same dashboard chrome as the home-page update notice');
-assert.equal((markup.match(/class="cc-window-control /g) ?? []).length, 3, 'the macOS title bar should retain all three window control buttons');
+assert.equal((markup.match(/class="cc-window-control /g) ?? []).length, 3, 'the app-drawn title bar keeps all three window control buttons');
 
 
 console.log('upstream-update-notice.verify: dashboard-only centered upstream update notice OK');

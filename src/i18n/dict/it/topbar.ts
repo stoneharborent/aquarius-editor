@@ -18,5 +18,6 @@ export default {
   'Window controls': 'Controlli finestra',
   'Close window': 'Chiudi finestra',
   'Minimize window': 'Riduci a icona',
-  'Zoom window': 'Ingrandisci finestra',
+  'Maximize window': 'Ingrandisci finestra',
+  'Restore window': 'Ripristina finestra',
 } as Record<string, string>;

@@ -9,7 +9,11 @@ import { ALL_LOCALES, getLocale, setLocale, useT } from '../i18n/locale';
 import { ZH_LOCALE_LABEL } from '../i18n/dict/zh';
 import { invokeAction, bindAction } from '../shortcuts/actionRegistry';
 import { DesktopWindowControls } from './DesktopWindowControls';
+import { useDesktopWindowChrome } from '../hooks/useDesktopWindowChrome';
 import { TopBarIconButton } from './TopBarIconButton';
+
+/** Editor titlebar height in CSS px — useEditorPanelLayout's HEADER_HEIGHT. */
+export const TOPBAR_HEIGHT = 41;
 
 // Language switching: The text pill displays the current language; clicking
 // cycles through the supported locales. First run defaults to the
@@ -46,7 +50,10 @@ interface TopBarProps {
 
 export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, exportJobCount = 0, onHome, onRename, onResumeGeneration }: TopBarProps) {
   const t = useT();
-  const isMacDesktop = window.openChatCutDesktop?.platform === 'darwin';
+  // This header is the window's titlebar on the desktop: it drags the window, the
+  // native controls are placed on it, and it paints the same skin surface as the
+  // rest of the chrome. In a browser the binding is inert.
+  const chrome = useDesktopWindowChrome(TOPBAR_HEIGHT);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(projectName);
   const [mcpOpen, setMcpOpen] = useState(false);
@@ -57,8 +64,8 @@ export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, ex
   const commit = () => { setEditing(false); if (onRename && draft.trim() && draft.trim() !== projectName) onRename(draft.trim()); };
 
   return (
-    <header className={`cc-topbar cc-window-titlebar${isMacDesktop ? ' cc-window-titlebar--mac' : ''}`} style={{ gridColumn: '1 / -1', gridRow: 1, position: 'relative', height: '100%', display: 'flex', alignItems: 'center', padding: '0 6px', borderBottom: `0.5px solid ${theme.border}`, background: theme.panel, gap: 4 }}>
-      <DesktopWindowControls />
+    <header className={`cc-topbar ${chrome.className}`} onDoubleClick={chrome.onDoubleClick} style={{ gridColumn: '1 / -1', gridRow: 1, position: 'relative', height: '100%', display: 'flex', alignItems: 'center', padding: '0 6px', borderBottom: `0.5px solid ${theme.border}`, background: theme.panel, gap: 4 }}>
+      <DesktopWindowControls placement="leading" platform={chrome.platform} maximized={chrome.maximized} fullScreen={chrome.fullScreen} />
       {/* home in a rounded chip + a vertical divider */}
       <button className="cc-tip" data-tip={t('Back to projects')} aria-label={t('Back to projects')} onClick={onHome}
         style={{ width: 28, height: 28, background: 'none', border: 'none', borderRadius: 4, cursor: onHome ? 'pointer' : 'default', padding: 0, lineHeight: 0, display: 'grid', placeItems: 'center', color: theme.textDim }}
@@ -75,7 +82,9 @@ export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, ex
             onKeyDown={(e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false); }}
             style={{ font: 'inherit', fontSize: 14, textAlign: 'center', background: theme.panelAlt, color: theme.text, border: `0.5px solid ${theme.accent}`, borderRadius: 5, padding: '2px 8px', minWidth: 200 }} />
         ) : (
-          <span onDoubleClick={() => { if (onRename) { setDraft(projectName); setEditing(true); } }} title={onRename ? t('Double-click to rename') : undefined} style={{ cursor: onRename ? 'text' : 'default' }}>{projectName}</span>
+          /* data-cc-titlebar-control keeps this out of the window drag region, so a
+             double-click here renames the project instead of maximizing the window. */
+          <span data-cc-titlebar-control="true" onDoubleClick={() => { if (onRename) { setDraft(projectName); setEditing(true); } }} title={onRename ? t('Double-click to rename') : undefined} style={{ cursor: onRename ? 'text' : 'default' }}>{projectName}</span>
         )}
       </div>
 
@@ -101,6 +110,7 @@ export function TopBar({ projectId, projectName, canUndo, canRedo, exporting, ex
         {exporting ? t('{n} exports', { n: Math.max(1, exportJobCount) }) : t('Export')}
       </button>
       <div title={t('Account')} style={{ width: 20, height: 20, borderRadius: '50%', marginLeft: 2, background: 'conic-gradient(from 210deg, #6d6cff, #ff5f9e, #ffb35f, #6d6cff)', flexShrink: 0 }} />
+      <DesktopWindowControls placement="trailing" platform={chrome.platform} maximized={chrome.maximized} fullScreen={chrome.fullScreen} />
       </div>
       {mcpOpen && <McpGuideDialog onClose={() => setMcpOpen(false)} />}
     </header>

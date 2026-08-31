@@ -49,7 +49,19 @@ import { BUILTIN_LLM_AUTO_DOWNLOAD_ENV } from '../server/builtin-llm/download.ts
 import { BUNDLED_MODELS_DIR_NAME } from '../shared/bundled-models.ts';
 import { focusExistingWindow } from './single-instance.ts';
 import { requestProfileScopedSingleInstanceLock } from './runtime-profile.ts';
-import { applyDesktopWindowFrame, desktopWindowFrameOptions } from './window-frame.ts';
+import { installApplicationMenu } from './app-menu.ts';
+import { resolveWindowKeyAction } from './window-keys.ts';
+import {
+  applyDesktopWindowChrome,
+  applyDesktopWindowFrame,
+  desktopWindowFrameOptions,
+} from './window-frame.ts';
+import {
+  isDesktopWindowChrome,
+  WINDOW_CHROME_CHANNELS,
+  type DesktopWindowChrome,
+  type DesktopWindowState,
+} from '../shared/window-chrome.ts';
 import { applyResponsiveWindowScale, DESKTOP_UI_SCALE_MAX, DESKTOP_UI_SCALE_MIN, installResponsiveWindowScale, parseUserUiScale } from './window-scale.ts';
 import { resolveInitialDesktopWindowBounds } from './window-scale.ts';
 import {
@@ -85,6 +97,63 @@ const SMOKE = process.env.CC_SMOKE === '1';
 const SMOKE_RENDER = process.env.CC_SMOKE_RENDER === '1';
 const SMOKE_TIMEOUT_MS = SMOKE_RENDER ? 240_000 : 90_000;
 let mainWindow: BrowserWindow | null = null;
+
+// The renderer paints the titlebar (see window-frame.ts). It reports the bar's CSS
+// height and the live skin's colours, and the main process mirrors those onto the
+// native chrome that sits on top — the macOS traffic lights, the Windows Controls
+// Overlay. Remembered per window so a zoom change can re-place the native pieces
+// without another round trip: window-scale.ts scales the renderer, and native
+// chrome is measured in screen points, not CSS pixels.
+const windowChrome = new WeakMap<BrowserWindow, DesktopWindowChrome>();
+
+function syncNativeWindowChrome(win: BrowserWindow): void {
+  if (win.isDestroyed() || win.webContents.isDestroyed()) return;
+  const chrome = windowChrome.get(win);
+  if (!chrome) return;
+  applyDesktopWindowChrome(win, chrome, win.webContents.getZoomFactor());
+}
+
+function currentWindowState(win: BrowserWindow): DesktopWindowState {
+  return { maximized: win.isMaximized(), fullScreen: win.isFullScreen() };
+}
+
+/** Keep the renderer's restore icon and titlebar insets honest. */
+function installWindowStateBroadcast(win: BrowserWindow): void {
+  const send = (): void => {
+    if (win.isDestroyed() || win.webContents.isDestroyed()) return;
+    win.webContents.send(WINDOW_CHROME_CHANNELS.stateChanged, currentWindowState(win));
+  };
+  win.on('maximize', send);
+  win.on('unmaximize', send);
+  win.on('restore', send);
+  win.on('enter-full-screen', send);
+  win.on('leave-full-screen', send);
+  win.on('resize', () => syncNativeWindowChrome(win));
+  win.webContents.on('did-finish-load', send);
+}
+
+/** The window-level accelerators the removed application menu used to own. */
+function installWindowKeyActions(win: BrowserWindow, devTools: boolean): void {
+  win.webContents.on('before-input-event', (event, input) => {
+    const action = resolveWindowKeyAction(
+      {
+        type: input.type,
+        code: input.code,
+        control: input.control,
+        meta: input.meta,
+        shift: input.shift,
+        alt: input.alt,
+      },
+      { platform: process.platform, devTools },
+    );
+    if (!action) return;
+    event.preventDefault();
+    if (action === 'toggle-fullscreen') win.setFullScreen(!win.isFullScreen());
+    else if (action === 'quit') app.quit();
+    else if (win.webContents.isDevToolsOpened()) win.webContents.closeDevTools();
+    else win.webContents.openDevTools({ mode: 'detach' });
+  });
+}
 
 type DesktopIpcHandler = Parameters<typeof ipcMain.handle>[1];
 
@@ -272,6 +341,17 @@ function registerDesktopHandlers(trustedOrigin: string): void {
       applyResponsiveWindowScale(win);
     }
   }));
+  ipcMain.handle(WINDOW_CHROME_CHANNELS.setChrome, trustedDesktopHandler(trustedOrigin, (event, value: unknown) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
+    if (!isDesktopWindowChrome(value)) throw new Error('invalid window chrome');
+    windowChrome.set(win, value);
+    syncNativeWindowChrome(win);
+  }));
+  ipcMain.handle(WINDOW_CHROME_CHANNELS.readState, trustedDesktopHandler(trustedOrigin, (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    return win ? currentWindowState(win) : { maximized: false, fullScreen: false };
+  }));
   // Zoom accelerators (issue #85): step the saved UI scale and re-apply.
   ipcMain.handle('openchatcut:zoom-step', trustedDesktopHandler(trustedOrigin, async (event, step: unknown) => {
     const win = BrowserWindow.fromWebContents(event.sender);
@@ -283,6 +363,7 @@ function registerDesktopHandlers(trustedOrigin: string): void {
       : Math.min(DESKTOP_UI_SCALE_MAX, Math.max(DESKTOP_UI_SCALE_MIN, Math.round((current + step) * 100) / 100));
     await setKeys({ UI_SCALE: String(next) });
     applyResponsiveWindowScale(win);
+    syncNativeWindowChrome(win);
     win.webContents.send('openchatcut:ui-scale-changed', next);
   }));
   ipcMain.handle('openchatcut:reveal-export', trustedDesktopHandler(trustedOrigin, async (
@@ -308,6 +389,13 @@ function registerDesktopHandlers(trustedOrigin: string): void {
 
 async function boot(): Promise<void> {
   await app.whenReady();
+  // Before the first window exists: Electron installs a default File/Edit/View menu
+  // for any app that never sets one, and on Linux/Windows that menu is drawn inside
+  // the window. See app-menu.ts for what each removed item became.
+  installApplicationMenu({
+    buildFromTemplate: (template) => Menu.buildFromTemplate(template),
+    setApplicationMenu: (menu) => Menu.setApplicationMenu(menu as Menu | null),
+  });
   if (app.isPackaged) {
     await preparePackagedRuntime({
       resourcesPath: process.resourcesPath,
@@ -417,6 +505,8 @@ async function boot(): Promise<void> {
     },
   });
   applyDesktopWindowFrame(win);
+  installWindowStateBroadcast(win);
+  installWindowKeyActions(win, !app.isPackaged);
   installResponsiveWindowScale(win);
   mainWindow = win;
   win.once('closed', () => {
