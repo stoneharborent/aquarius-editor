@@ -3,10 +3,19 @@
 // and generation itself only ever sees composition source.
 import { LLM_PROVIDER_PRESETS, llmProviderConfigNames, type LlmProvider } from '../../shared/llm-providers';
 
-/** Codes `server/builtin-llm/model-file.ts` reports for unusable bundled weights. */
-export type HyperframesProblem = 'model-missing' | 'model-corrupt' | 'runtime-unavailable';
+/**
+ * Codes `server/builtin-llm/model-file.ts` reports for weights it cannot use.
+ * `model-downloading` is the hopeful one: they are on their way.
+ */
+export type HyperframesProblem =
+  | 'model-missing'
+  | 'model-downloading'
+  | 'model-corrupt'
+  | 'runtime-unavailable';
 
-const PROBLEMS: readonly string[] = ['model-missing', 'model-corrupt', 'runtime-unavailable'];
+const PROBLEMS: readonly string[] = [
+  'model-missing', 'model-downloading', 'model-corrupt', 'runtime-unavailable',
+];
 
 function problemOf(value: unknown): HyperframesProblem | undefined {
   return typeof value === 'string' && PROBLEMS.includes(value) ? value as HyperframesProblem : undefined;
@@ -25,6 +34,24 @@ export interface HyperframesConfigStatus {
    * a build without the local runtime, gets told, never left with a dead button.
    */
   problem?: HyperframesProblem;
+}
+
+/**
+ * May the user type a brief and press Generate?
+ *
+ * Yes when a model is ready — and also while the built-in one is downloading.
+ * The alternative is a prompt bar that is dead for the several minutes a 2.3 GB
+ * transfer takes, which reads as a broken tab rather than a busy one. The
+ * attempt comes back with one sentence saying the model is still on its way,
+ * which is a better answer than an input that will not accept typing and never
+ * says why. It deliberately does NOT queue: the transfer takes minutes, and a
+ * brief held that long is one its author has moved on from.
+ */
+export function hyperframesAcceptsPrompts(
+  config: Pick<HyperframesConfigStatus, 'configured' | 'problem'> | null,
+): boolean {
+  if (!config) return true;
+  return config.configured || config.problem === 'model-downloading';
 }
 
 export interface HyperframesGenerationRequest {

@@ -5,11 +5,15 @@
 // local `/llm` proxy that injects the real key server-side. Nothing about the
 // removed chat UI is resurrected; this is one stateless POST.
 //
-// It also has somewhere to go when nothing is configured. The installer ships a
-// quantized 4B model (`shared/llm-model-catalog.ts`) that runs locally through
-// llama.cpp, and this route falls back to it, so a fresh install generates a
-// graphic with no setup at all. Anything the user has explicitly configured wins
-// — the built-in model is the floor, never a ceiling.
+// It also has somewhere to go when nothing is configured. A quantized 4B model
+// (`shared/llm-model-catalog.ts`) runs locally through llama.cpp, and this route
+// falls back to it, so an install generates a graphic with no setup at all. Those
+// weights are 2.33 GiB and cannot ride inside the installer — GitHub refuses a
+// release asset that large — so the app fetches them itself in the background on
+// first launch (`server/builtin-llm/download.ts`). While that is happening this
+// route reports `model-downloading`, which is a "nearly there", not a fault.
+// Anything the user has explicitly configured wins — the built-in model is the
+// floor, never a ceiling.
 //
 // The generated source is linted against `shared/hyperframes-contract.ts` AND
 // compiled and rendered through `server/hyperframes-compile.ts` before it is
@@ -54,6 +58,7 @@ import {
   type BuiltinLlmModelState,
   type BuiltinLlmProblem,
 } from '../builtin-llm/model-file.ts';
+import { builtinLlmDownloadInFlight } from '../builtin-llm/download.ts';
 
 /** Two repairs after the first attempt — three model calls at the very worst. */
 export const MAX_HYPERFRAMES_REPAIRS = 2;
@@ -214,6 +219,7 @@ export function resolveHyperframesLlm(
   read: (name: string) => string = (name) => getKey(name as KeyName),
   builtinState: () => BuiltinLlmModelState = () => builtinLlmModelState(),
   runtimeAvailable: () => boolean = builtinLlmRuntimeAvailable,
+  downloading: () => boolean = builtinLlmDownloadInFlight,
 ): HyperframesLlmSelection {
   const provider = normalizeLlmProvider(read('LLM_PROVIDER'));
   const config = resolveLlmProviderConfig(provider, read);
@@ -237,7 +243,7 @@ export function resolveHyperframesLlm(
     maxRepairs: MAX_HYPERFRAMES_REPAIRS,
   };
   if (state.status !== 'ready') {
-    return { ...unconfigured, problem: builtinLlmModelProblem(state) ?? undefined };
+    return { ...unconfigured, problem: builtinLlmModelProblem(state, downloading()) ?? undefined };
   }
   if (!runtimeAvailable()) {
     return {

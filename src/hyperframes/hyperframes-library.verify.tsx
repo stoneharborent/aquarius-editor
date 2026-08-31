@@ -186,10 +186,11 @@ assert.match(
 );
 
 // ── No local weights says so rather than failing silently ────────────────────
-// Since v0.6.0 the installer carries no model (it did not fit under GitHub's
-// 2 GiB release-asset limit — see shared/bundled-models.ts), so this is the
-// ordinary state on a fresh install rather than a damaged one. It still has to
-// be explained in the card instead of leaving a dead input behind.
+// The installer carries no model — it did not fit under GitHub's 2 GiB
+// release-asset limit, see shared/bundled-models.ts — so the app downloads it
+// instead. These renders have no server behind them, which is exactly the case
+// where `HyperframesSetup` cannot learn whether a download is possible: it must
+// degrade to the provider card rather than offer a download it cannot promise.
 const missingWeights = render(api({
   records: [],
   config: {
@@ -201,10 +202,32 @@ const missingWeights = render(api({
     problem: 'model-missing',
   },
 }));
-assert.match(missingWeights, /does not include a built-in model/,
+assert.match(missingWeights, /has not been downloaded yet/,
   'having no local weights must be explained, never presented as an unconfigured app');
 assert.match(missingWeights, /Connect a model to generate graphics/,
   'and the setup card must come back as the way out');
+
+// A download already under way is a "nearly there", not a fault: the copy must
+// point at waiting as a real option, not only at connecting something else.
+const downloadingWeights = render(api({
+  records: [],
+  config: {
+    configured: false,
+    provider: 'anthropic',
+    providerLabel: 'Anthropic · Claude',
+    model: 'claude-fable-5',
+    builtin: false,
+    problem: 'model-downloading',
+  },
+}));
+assert.match(downloadingWeights, /still downloading/,
+  'a model on its way must never be reported as a missing one');
+assert.doesNotMatch(
+  /<input[^>]*>/.exec(downloadingWeights)![0],
+  /disabled/,
+  'the prompt bar stays live during the download — a 2.3 GB wait behind a dead '
+  + 'input reads as a broken tab; pressing Generate answers "still downloading" instead',
+);
 
 const corruptWeights = render(api({
   records: [],

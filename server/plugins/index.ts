@@ -39,6 +39,7 @@ import { generationProgressPlugin } from "./generation-jobs.ts";
 import { stockSearchPlugin } from "./stock.ts";
 import { firecrawlPlugin } from "./firecrawl.ts";
 import { hyperframesPlugin } from "./hyperframes.ts";
+import { builtinLlmPlugin } from "./builtin-llm.ts";
 import { settingsPlugin } from "./settings.ts";
 import { skillFilesPlugin } from "./skill-files.ts";
 import { skillInstallPlugin } from "./skill-install.ts";
@@ -64,6 +65,7 @@ export function serverPlugins(options: { projectStoreHttp?: boolean } = {}): Plu
     xaiOauthPlugin(),
     agentRunsPlugin(),
     hyperframesPlugin(),
+    builtinLlmPlugin(),
     skillFilesPlugin(),
     skillInstallPlugin(),
     skillExecPlugin(),

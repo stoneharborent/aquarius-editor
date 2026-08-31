@@ -14,6 +14,7 @@ import { modelCachePath } from '../../shared/model-cache-path.ts';
 import { MODEL_DOWNLOAD_SOURCES } from '../../shared/model-download-sources.ts';
 import { proxyCurlArgs } from '../outbound-proxy.ts';
 import { MODEL_PACKS, type ModelPackFile } from '../../shared/model-packs/catalog.ts';
+import { llmModelFile, type LlmModelFile } from '../../shared/llm-model-catalog.ts';
 import {
   fileMatchesIntegrity,
   openContainedVerifiedFile,
@@ -22,7 +23,26 @@ import {
 const MODEL_ID = /^[A-Za-z0-9_-]+\/[A-Za-z0-9_.-]+$/;
 const REV = /^[A-Za-z0-9_.-]+$/;
 const SEGMENT = /^[A-Za-z0-9_.-]+$/;
-const MAX_CACHE_FILE_BYTES = 2 * 1024 * 1024 * 1024; // 2 GiB hard cap
+/**
+ * Ceiling for any file whose exact bytes are NOT pinned by a first-party
+ * catalog. This is the number that stops a compromised or drifting mirror from
+ * filling the disk with something nobody asked for, so it stays where it was.
+ */
+export const MAX_CACHE_FILE_BYTES = 2 * 1024 * 1024 * 1024; // 2 GiB
+/**
+ * Absolute ceiling, pinned or not. The built-in HyperFrames GGUF is 2.33 GiB —
+ * genuinely larger than the unpinned limit — and the app has to be able to fetch
+ * it, because GitHub will not host a release asset of 2 GiB or more and so the
+ * weights cannot ride inside the installer (see `shared/bundled-models.ts`).
+ *
+ * The raise is deliberately NOT "the limit is now 3 GiB". It is: a file that a
+ * first-party catalog pins with an exact size AND an exact SHA-256 may spend up
+ * to its own pinned size, and nothing may ever exceed this hard number. So the
+ * allowance is per-entry, is bounded above by bytes we published ourselves, and
+ * an unpinned or caller-supplied expectation can never reach past
+ * MAX_CACHE_FILE_BYTES. `cacheFileLimit` below is the only place that decides.
+ */
+export const MAX_PINNED_CACHE_FILE_BYTES = 3 * 1024 * 1024 * 1024; // 3 GiB
 const CURL_TIMEOUT_S = 1800;
 const CURL_ROUNDS = 6; // each round also retries internally (--retry 8)
 const PARALLEL_CHUNKS = 4; // per-connection throttling → parallel byte ranges
@@ -103,6 +123,14 @@ function contentTypeOf(file: string): string {
 
 export interface ProxyTarget { modelId: string; revision: string; filePath: string }
 
+/**
+ * Catalog files this server will SERVE over /api/hf-proxy — model packs and ASR
+ * tiers, i.e. the things transformers.js and whisper.cpp fetch through the
+ * proxy. The LLM catalog is deliberately absent: nothing in the browser can use
+ * a 2.33 GiB GGUF, and answering a request for one would mean SHA-256ing 2.33
+ * GiB per request. Downloading it is a different question — `pinnedModelFile`
+ * below is what the downloader asks.
+ */
 function fixedModelFile(target: ProxyTarget): ModelPackFile | AsrModelFile | undefined {
   for (const pack of MODEL_PACKS) {
     if (pack.modelId !== target.modelId || pack.revision !== target.revision) continue;
@@ -110,6 +138,53 @@ function fixedModelFile(target: ProxyTarget): ModelPackFile | AsrModelFile | und
     if (file) return file;
   }
   return asrModelFile(target.modelId, target.revision, target.filePath);
+}
+
+/** What a first-party catalog pins for this exact tuple: exact size, exact digest. */
+export interface PinnedFileIntegrity {
+  readonly sizeBytes: number;
+  readonly sha256: string;
+}
+
+/**
+ * Every first-party catalog the DOWNLOADER trusts: packs, ASR tiers, and the
+ * local-LLM catalog. One lookup, no second copy of any size, digest or URL —
+ * `shared/llm-model-catalog.ts` remains the single source of truth for the GGUF.
+ */
+function pinnedModelFile(target: ProxyTarget): PinnedFileIntegrity | undefined {
+  const servable = fixedModelFile(target);
+  if (servable) return servable;
+  const llm: LlmModelFile | undefined = llmModelFile(target.modelId, target.revision, target.filePath);
+  return llm;
+}
+
+/** A pin only counts when both halves are real — an exact size and a lowercase digest. */
+function pinIsExact(pin: PinnedFileIntegrity | undefined): pin is PinnedFileIntegrity {
+  return !!pin
+    && Number.isSafeInteger(pin.sizeBytes)
+    && pin.sizeBytes > 0
+    && /^[a-f0-9]{64}$/.test(pin.sha256);
+}
+
+/**
+ * How many bytes this one file may occupy. THE security decision in this module.
+ *
+ *   • No target, or a target no first-party catalog pins → MAX_CACHE_FILE_BYTES.
+ *   • A catalog entry missing an exact size or a lowercase SHA-256 → the same;
+ *     a half-written pin buys nothing.
+ *   • A fully pinned entry → exactly its own pinned size, and never more than
+ *     MAX_PINNED_CACHE_FILE_BYTES whatever the catalog claims.
+ *
+ * So the ceiling is only ever raised for bytes we published, to the exact length
+ * we published, and the file is still SHA-256 verified before it is kept. There
+ * is no argument, header or request shape that reaches the raised limit.
+ */
+export function cacheFileLimit(target?: ProxyTarget): number {
+  if (!target) return MAX_CACHE_FILE_BYTES;
+  const pin = pinnedModelFile(target);
+  if (!pinIsExact(pin)) return MAX_CACHE_FILE_BYTES;
+  if (pin.sizeBytes <= MAX_CACHE_FILE_BYTES) return MAX_CACHE_FILE_BYTES;
+  return Math.min(pin.sizeBytes, MAX_PINNED_CACHE_FILE_BYTES);
 }
 
 /** Parse an encoded proxy path and accept only exact catalog file tuples. */
@@ -151,9 +226,23 @@ export function parseTarget(rawPath: string): ProxyTarget | null {
 export interface DownloadModelFileOptions {
   signal?: AbortSignal; onProgress?: (bytes: number) => void;
   expectedBytes?: number; expectedSha256?: string;
+  /**
+   * Continue an existing `.part` from where it stopped instead of discarding it.
+   * Off by default: a multi-gigabyte transfer is the only case where restarting
+   * actually hurts, and resuming forces the single-stream path (curl `-C -`), so
+   * a small file would give up its parallel ranges for nothing. Resuming is
+   * still safe across mirrors — they serve byte-identical files, and the whole
+   * result is SHA-256 verified before it is kept — and a resume that fails
+   * verification throws the partial away rather than keeping it.
+   */
+  resume?: boolean;
 }
 
-interface CurlContext extends DownloadModelFileOptions { progress: Map<string, number> }
+interface CurlContext extends DownloadModelFileOptions {
+  progress: Map<string, number>;
+  /** Per-file byte ceiling from `cacheFileLimit`; never the raw constant. */
+  limit: number;
+}
 
 function downloadAborted(signal?: AbortSignal): Error {
   const error = signal?.reason instanceof Error ? signal.reason : new Error('Model download cancelled');
@@ -177,7 +266,7 @@ function runCurl(
   noProxy = false,
 ): Promise<void> {
   throwIfDownloadAborted(context.signal);
-  const transferLimit = Math.min(MAX_CACHE_FILE_BYTES, maxBytes + 64 * 1024);
+  const transferLimit = Math.min(context.limit, maxBytes + 64 * 1024);
   const args = [
     '-sSL', '--fail', '--max-time', String(CURL_TIMEOUT_S),
     '--max-filesize', String(transferLimit),
@@ -237,7 +326,7 @@ async function downloadSingle(
   for (let round = 0; round < CURL_ROUNDS; round += 1) {
     throwIfDownloadAborted(context.signal);
     try {
-      await runCurl(url, tmpPath, undefined, context.expectedBytes ?? MAX_CACHE_FILE_BYTES, context, noProxy);
+      await runCurl(url, tmpPath, undefined, context.expectedBytes ?? context.limit, context, noProxy);
       return;
     } catch (error) {
       lastError = error;
@@ -246,7 +335,12 @@ async function downloadSingle(
   throw lastError;
 }
 
-function probeRemoteSize(url: string, expectedBytes: number | undefined, signal?: AbortSignal): Promise<number> {
+function probeRemoteSize(
+  url: string,
+  expectedBytes: number | undefined,
+  limit: number,
+  signal?: AbortSignal,
+): Promise<number> {
   throwIfDownloadAborted(signal);
   return new Promise<number>((resolve, reject) => {
     const child = spawn('curl', ['-sS', '--max-time', '60', '-L', '-r', '0-0', '-D', '-', '-o', '/dev/null', url], {
@@ -264,7 +358,7 @@ function probeRemoteSize(url: string, expectedBytes: number | undefined, signal?
       if (code !== 0) { reject(new Error(`range probe failed (curl exit ${code})`)); return; }
       const match = /content-range:\s*bytes\s+\d+-\d+\/(\d+)/i.exec(stdout);
       const size = match ? Number(match[1]) : NaN;
-      if (!Number.isFinite(size) || size <= 0 || size > MAX_CACHE_FILE_BYTES) {
+      if (!Number.isFinite(size) || size <= 0 || size > limit) {
         reject(new Error(`invalid content-range: ${stdout.slice(0, 160)}`));
         return;
       }
@@ -353,6 +447,8 @@ async function downloadFromSource(
   target: ProxyTarget,
   tmpPath: string,
   context: CurlContext,
+  /** Bytes already on disk in `tmpPath` that this attempt should continue from. */
+  resumeFrom = 0,
 ): Promise<void> {
   const url = source.url(target);
   if (source.name === 'modelscope') {
@@ -364,7 +460,14 @@ async function downloadFromSource(
     await downloadSingle(url, tmpPath, context);
     return;
   }
-  const size = await probeRemoteSize(url, context.expectedBytes, context.signal);
+  // A resume continues one byte stream, so it cannot use split ranges: the
+  // parallel path writes its own part files and merges them over tmpPath, which
+  // would throw the resumed prefix away.
+  if (resumeFrom > 0) {
+    await downloadSingle(url, tmpPath, context);
+    return;
+  }
+  const size = await probeRemoteSize(url, context.expectedBytes, context.limit, context.signal);
   if (size < PARALLEL_MIN_BYTES) {
     await downloadSingle(url, tmpPath, context);
     return;
@@ -374,31 +477,56 @@ async function downloadFromSource(
 
 interface DownloadExpectation { readonly bytes?: number; readonly sha256?: string }
 
+/**
+ * What this download must produce, and how big it is allowed to be.
+ *
+ * The catalog wins over the caller wherever it has an opinion: a tuple the app
+ * pins is downloaded at the pinned size and digest whatever an argument says.
+ * The limit is derived from the same lookup, so a caller cannot talk its way
+ * past MAX_CACHE_FILE_BYTES by passing a large `expectedBytes` for a file no
+ * catalog pins.
+ */
 function downloadExpectation(
   target: ProxyTarget,
   options: DownloadModelFileOptions,
-): DownloadExpectation {
-  const fixed = fixedModelFile(target);
-  const bytes = fixed?.sizeBytes ?? options.expectedBytes;
-  const sha256 = fixed?.sha256 ?? options.expectedSha256;
+): DownloadExpectation & { readonly limit: number } {
+  const pinned = pinnedModelFile(target);
+  const limit = cacheFileLimit(target);
+  const bytes = pinned?.sizeBytes ?? options.expectedBytes;
+  const sha256 = pinned?.sha256 ?? options.expectedSha256;
   if (bytes !== undefined
-    && (!Number.isSafeInteger(bytes) || bytes <= 0 || bytes > MAX_CACHE_FILE_BYTES)) {
+    && (!Number.isSafeInteger(bytes) || bytes <= 0 || bytes > limit)) {
     throw new Error(`invalid expected model size: ${bytes}`);
   }
   if (sha256 !== undefined && (!bytes || !/^[a-f0-9]{64}$/.test(sha256))) {
     throw new Error('expected model SHA-256 requires a valid size and lowercase digest');
   }
-  return { bytes, sha256 };
+  return { bytes, sha256, limit };
 }
 
-async function reusableDownload(path: string, expected: DownloadExpectation): Promise<boolean> {
+async function reusableDownload(
+  path: string,
+  expected: DownloadExpectation,
+  limit: number,
+): Promise<boolean> {
   if (expected.sha256 && expected.bytes) {
     return fileMatchesIntegrity(path, { sizeBytes: expected.bytes, sha256: expected.sha256 });
   }
   const size = (await stat(path)).size;
   return expected.bytes !== undefined
     ? size === expected.bytes
-    : size > 0 && size <= MAX_CACHE_FILE_BYTES;
+    : size > 0 && size <= limit;
+}
+
+/**
+ * Bytes of a leftover `.part` that may be continued. Only a partial shorter than
+ * the expected length qualifies: an over-long or exactly-sized leftover is junk
+ * from an interrupted merge, and continuing it would append to garbage.
+ */
+async function resumableBytes(tmpPath: string, expectedBytes: number | undefined): Promise<number> {
+  if (expectedBytes === undefined) return 0;
+  const size = await stat(tmpPath).then((info) => (info.isFile() ? info.size : 0)).catch(() => 0);
+  return size > 0 && size < expectedBytes ? size : 0;
 }
 
 /** Download one model file into the disk cache (multi-source, verified). */
@@ -411,13 +539,18 @@ export async function downloadModelFile(
   const expected = downloadExpectation(target, options);
   const expectedBytes = expected.bytes;
   const expectedSha256 = expected.sha256;
+  const limit = expected.limit;
   if (existsSync(finalPath)) {
-    if (await reusableDownload(finalPath, expected)) return finalPath;
+    if (await reusableDownload(finalPath, expected, limit)) return finalPath;
     await unlink(finalPath).catch(() => undefined);
   }
   await mkdir(dirname(finalPath), { recursive: true });
   const tmpPath = `${finalPath}.part`;
-  const context: CurlContext = { ...options, expectedBytes, expectedSha256, progress: new Map() };
+  const context: CurlContext = { ...options, expectedBytes, expectedSha256, limit, progress: new Map() };
+  // Only the FIRST source attempt may continue a leftover partial. Once an
+  // attempt has failed the partial is discarded, so every later attempt starts
+  // from zero and can never append one mirror's bytes onto another's mistake.
+  let resumeFrom = options.resume ? await resumableBytes(tmpPath, expectedBytes) : 0;
   let completed = false;
   try {
     let lastError: unknown;
@@ -425,13 +558,13 @@ export async function downloadModelFile(
       throwIfDownloadAborted(options.signal);
       if (isSourceAbsent(target.modelId, source.name)) continue;
       try {
-        await unlink(tmpPath).catch(() => undefined);
+        if (resumeFrom === 0) await unlink(tmpPath).catch(() => undefined);
         context.progress.clear();
-        await downloadFromSource(source, target, tmpPath, context);
+        await downloadFromSource(source, target, tmpPath, context, resumeFrom);
         // Verify inside the loop so a mirror drift (sha mismatch) falls
         // through to the next source instead of failing the whole download.
         const size = (await stat(tmpPath)).size;
-        if (expectedBytes !== undefined ? size !== expectedBytes : size <= 0 || size > MAX_CACHE_FILE_BYTES) {
+        if (expectedBytes !== undefined ? size !== expectedBytes : size <= 0 || size > limit) {
           throw new Error(`model download produced an invalid file (${size} bytes)`);
         }
         if (expectedSha256 && expectedBytes
@@ -443,7 +576,14 @@ export async function downloadModelFile(
       } catch (error) {
         if (sourceMissingOnError(error)) markSourceAbsent(target.modelId, source.name);
         lastError = error;
+        // On a resumable download an abort is a pause, not a failure: leave the
+        // partial where it is so the next launch can continue it. Everything
+        // else — a truncated transfer, a mirror serving different bytes, a
+        // digest mismatch — is thrown away, which is what keeps a resume from
+        // ever building on junk.
+        if (options.resume && options.signal?.aborted) throw error;
         await unlink(tmpPath).catch(() => undefined);
+        resumeFrom = 0;
       }
     }
     if (lastError) throw lastError;
@@ -453,7 +593,10 @@ export async function downloadModelFile(
     options.onProgress?.(size);
     return finalPath;
   } finally {
-    if (!completed) await unlink(tmpPath).catch(() => undefined);
+    // A paused resumable download keeps its partial; anything else cleans up
+    // after itself so a half file is never mistaken for a cached one.
+    const paused = completed ? false : options.resume === true && options.signal?.aborted === true;
+    if (!completed && !paused) await unlink(tmpPath).catch(() => undefined);
   }
 }
 

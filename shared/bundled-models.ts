@@ -52,17 +52,19 @@ export const BUNDLED_MODEL_PACK_IDS: readonly ModelPackId[] = [
  * not host either. There is no packaging trick that makes a 2.33 GiB addition
  * fit; the payload itself has to come down.
  *
- * So the weights no longer ship. `server/builtin-llm/model-file.ts` already
- * reports a missing file as `model-missing`, and the HyperFrames tab already
- * falls back to its provider card, so nothing here fails — generation simply
- * needs a provider again, exactly as it did in v0.5.0.
+ * So the weights are not in the installer, and the app fetches them itself
+ * instead: `server/builtin-llm/download.ts` downloads the same catalog-pinned
+ * file, verified the same way, in the background on first launch. The model host
+ * has no 2 GiB limit, which is the whole reason that channel works where this
+ * one cannot. Installers stay at their v0.5.0 size and HyperFrames still ends up
+ * needing no setup — it just gets there a few minutes after the first launch
+ * rather than at install time.
  *
  * Re-adding an id here is a release-blocking decision, not a preference. The
  * budget is in `desktop/bundled-models-catalog.verify.ts`: the whole bundled
  * payload has to leave every installer comfortably under
- * MAX_RELEASE_ASSET_BYTES. Getting the built-in model back means either a
- * materially smaller model/quantization that fits that budget, or fetching the
- * weights on first use instead of bundling them.
+ * MAX_RELEASE_ASSET_BYTES. A model only comes back here if it is small enough to
+ * fit that budget — the runtime download exists precisely so nothing has to.
  */
 export const BUNDLED_LLM_MODEL_IDS: readonly string[] = [];
 

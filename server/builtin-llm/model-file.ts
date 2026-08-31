@@ -55,11 +55,25 @@ export function builtinLlmModelState(
 /**
  * Why the built-in model is unusable, as a code rather than a sentence: the
  * copy is UI and belongs in the browser where `t()` can translate it. The
- * server's job is to say which of the three situations this is.
+ * server's job is to say which of these situations this is.
+ *
+ * `model-downloading` is the one that is not a fault. The weights are on their
+ * way — the app fetches them itself on first launch, because they are too large
+ * to ship inside an installer GitHub will host — and a generation attempted
+ * during that window gets told to wait rather than being handed a setup form it
+ * does not need.
  */
-export type BuiltinLlmProblem = 'model-missing' | 'model-corrupt' | 'runtime-unavailable';
+export type BuiltinLlmProblem =
+  | 'model-missing'
+  | 'model-downloading'
+  | 'model-corrupt'
+  | 'runtime-unavailable';
 
-export function builtinLlmModelProblem(state: BuiltinLlmModelState): BuiltinLlmProblem | null {
+export function builtinLlmModelProblem(
+  state: BuiltinLlmModelState,
+  downloading = false,
+): BuiltinLlmProblem | null {
   if (state.status === 'ready') return null;
-  return state.status === 'corrupt' ? 'model-corrupt' : 'model-missing';
+  if (state.status === 'corrupt') return 'model-corrupt';
+  return downloading ? 'model-downloading' : 'model-missing';
 }

@@ -141,6 +141,19 @@ assert.equal(
 );
 assert.match(builtinFile.cachePath, /^llm\//,
   'GGUF weights live in their own tree under the model cache');
+// …and because it does not ship, something has to fetch it, or HyperFrames
+// silently regresses to "connect a provider" forever. That is the runtime
+// download, and it must exist and be wired into the served plugin list.
+assert.match(
+  readFileSync(join(REPO_ROOT, 'server', 'builtin-llm', 'download.ts'), 'utf8'),
+  /from '\.\.\/\.\.\/shared\/llm-model-catalog\.ts'/,
+  'the runtime download must take the model it fetches from the pinned catalog',
+);
+assert.match(
+  readFileSync(join(REPO_ROOT, 'server', 'plugins', 'index.ts'), 'utf8'),
+  /builtinLlmPlugin\(\)/,
+  'the built-in model download routes must be mounted by both server hosts',
+);
 // Kept as a standing guarantee for whenever a model does ship again: anything
 // staged under bundled-models/ is inert data and must fall inside signIgnore,
 // or macOS packaging spends a codesign spawn per 150 MiB file for nothing.

@@ -103,6 +103,26 @@ export function llmModel(id: string): LlmModelEntry | undefined {
   return LLM_MODELS.find((entry) => entry.id === id);
 }
 
+/**
+ * The pinned file for an exact (modelId, revision, filePath) tuple, or undefined.
+ *
+ * This is what lets the shared model downloader treat an LLM weight file the
+ * same way it treats an ASR tier or a model pack: one lookup that returns the
+ * catalog's own `sizeBytes` and `sha256`, so nothing downstream ever holds a
+ * second copy of a size, a digest or a URL. It is also the gate the downloader's
+ * raised per-file ceiling hangs off — a file that does not resolve here is not
+ * first-party-pinned and keeps the ordinary 2 GiB limit.
+ */
+export function llmModelFile(
+  modelId: string,
+  revision: string,
+  filePath: string,
+): LlmModelFile | undefined {
+  return LLM_MODELS.find((entry) => entry.file.modelId === modelId
+    && entry.file.revision === revision
+    && entry.file.filePath === filePath)?.file;
+}
+
 /** The built-in model entry. Present by construction; throws if the catalog is edited wrong. */
 export function builtinLlmModel(): LlmModelEntry {
   const entry = llmModel(BUILTIN_LLM_MODEL_ID);

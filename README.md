@@ -35,36 +35,50 @@ clip: previewable, scrubbable, exportable, and draggable onto the timeline. You 
 right-click an empty spot on the timeline, choose **Hyperframes…**, and the finished clip
 drops itself in at exactly that point.
 
-### Connecting a model
+### The model sets itself up
 
-Generation needs a language model, and you choose which one. The first time you open the
-Hyperframes tab it shows a small card with two kinds of option:
+Generation needs a language model. **You do not have to find one.** The first time you open
+the app with nothing configured, it downloads its own — a 2.3 GB
+[Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) file, Apache
+licensed — in the background, and the Hyperframes tab shows you how far along it is:
+
+> Setting up the built-in graphics model (2.5 GB) — 43%
+
+You can keep working the whole time; nothing waits on it. When it finishes, graphics
+generate with no account, no API key and no internet, entirely on your machine, through
+[llama.cpp](https://github.com/ggerganov/llama.cpp) — using your GPU where it can (Metal on
+Mac, CUDA or Vulkan on Linux and Windows) and your CPU where it can't.
+
+Two buttons are on that card at all times: **Pause**, which stops the download and keeps
+everything already fetched, and **Use your own model instead**, which swaps it for the
+provider card described below. If you press **Not now**, the app remembers and never starts
+the download by itself again — the button stays if you change your mind.
+
+Why a download and not something already inside the installer? The file is 2.3 GB, and
+GitHub will not host a release file of 2 GB or more, so an installer carrying it could
+never be published. Downloading it separately has no such limit, and it keeps the installer
+itself at about 1.5 GB.
+
+### Connecting your own model instead
+
+If you would rather use a model you already pay for, or one you run yourself, the card
+offers two kinds of option:
 
 - a **cloud provider** (Anthropic, OpenAI, Google, and others), which needs an API key, or
 - a **local runtime** you already run yourself ([Ollama](https://ollama.com) or
   [LM Studio](https://lmstudio.ai)), which needs no key, no account and no internet.
 
 Your API key is stored on this machine and is never sent anywhere except to the provider
-you chose. You can change or clear it later in Settings.
-
-**No model ships inside the app yet.** The intention was to bundle a small one — a 2.3 GB
-[Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) file — so that
-graphics worked with nothing configured at all. It could not be released: GitHub does not
-accept a release file of 2 GB or more, and an installer carrying that model is about 4 GB
-on every platform. Nothing about the installer format gets around that, so the model waits
-until it can be a smaller one or until the app can download it for you on first use.
-
-The machinery to run a local model is finished and shipped, through
-[llama.cpp](https://github.com/ggerganov/llama.cpp) — it uses your GPU where it can (Metal
-on Mac, CUDA or Vulkan on Linux and Windows) and your CPU where it can't. If you put a
-supported model file in place yourself, the app will use it and the card becomes an
-optional *"use a stronger one"* upgrade instead of a requirement.
+you chose. You can change or clear it later in Settings. A provider you connect always
+wins: the built-in model is the floor, never a ceiling, and connecting a larger model
+usually follows a complicated brief more closely.
 
 ### If graphics stop working
 
-If the model you connected stops answering, or a local model file is damaged, the tab says
-so in plain words and offers you the provider card as a way out. It never silently does
-nothing.
+If the download fails, the tab says why and offers to try again — nothing is kept from a
+failed attempt, so retrying is always safe. If the model you connected stops answering, or
+a local model file is damaged, the tab says so in plain words and offers you the provider
+card as a way out. It never silently does nothing.
 
 ## Where it came from, and what that means
 

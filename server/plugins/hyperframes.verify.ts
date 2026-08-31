@@ -165,12 +165,30 @@ function scriptedAuthor(replies: string[]): { author: HyperframesAuthor; calls: 
 
 // ── Configuration detection: keys, local runtimes, and the bundled model ─────
 {
-  // Nothing configured and no bundled weights: the setup card, with a reason.
+  // Nothing configured and no weights yet: the setup card, with a reason.
   const none = resolveHyperframesLlm(() => '', () => BUILTIN_MISSING, () => true);
   assert.equal(none.configured, false, 'an install with no vendor and no weights has nothing to generate with');
   assert.equal(none.builtin, false);
   assert.equal(none.problem, 'model-missing',
     'a missing model must explain itself in a code the UI can translate, never fail silently');
+
+  // The same missing file WHILE the app is fetching it is a different sentence.
+  // The weights are too large to ship inside a release asset, so a fresh install
+  // downloads them itself; a generation attempted during that window must be
+  // told to wait rather than handed a setup form it does not need.
+  const fetching = resolveHyperframesLlm(() => '', () => BUILTIN_MISSING, () => true, () => true);
+  assert.equal(fetching.configured, false);
+  assert.equal(fetching.problem, 'model-downloading',
+    'a download in flight must not read as a missing model');
+  // A damaged file is still a fault even mid-download: re-fetching is not what
+  // fixes a wrong-sized file someone already has.
+  const corruptWhileFetching = resolveHyperframesLlm(
+    () => '',
+    () => ({ status: 'corrupt', path: '/models/builtin.gguf', model: BUILTIN_MODEL, sizeBytes: 12 }),
+    () => true,
+    () => true,
+  );
+  assert.equal(corruptWhileFetching.problem, 'model-corrupt');
 
   // Nothing configured, weights present: zero-setup generation.
   const builtin = resolveHyperframesLlm(() => '', () => BUILTIN_READY, () => true);

@@ -9,6 +9,7 @@ import {
   LLM_MODELS,
   builtinLlmModel,
   llmModel,
+  llmModelFile,
 } from './llm-model-catalog.ts';
 import { modelDownloadUrls } from './model-download-sources.ts';
 import {
@@ -71,6 +72,19 @@ for (const entry of LLM_MODELS) {
       assert.ok(source.url.includes(file.revision), `${source.name} URL must carry the pinned revision`);
     }
   }
+}
+
+// ── The exact-tuple lookup the downloader gates its byte ceiling on ──────────
+// The weights are fetched at runtime rather than bundled, so this lookup is what
+// stands between "a file this project published" and "whatever a mirror served".
+// It must match on all three parts and nothing less.
+for (const entry of LLM_MODELS) {
+  const file = entry.file;
+  assert.deepEqual(llmModelFile(file.modelId, file.revision, file.filePath), file);
+  assert.equal(llmModelFile(file.modelId, '0'.repeat(40), file.filePath), undefined,
+    'a different revision of the same repository is a different, unpinned file');
+  assert.equal(llmModelFile(file.modelId, file.revision, `other-${file.filePath}`), undefined);
+  assert.equal(llmModelFile(`fork/${file.modelId}`, file.revision, file.filePath), undefined);
 }
 
 // ── The built-in provider identity ───────────────────────────────────────────

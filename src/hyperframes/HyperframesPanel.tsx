@@ -11,7 +11,9 @@ import { Icon } from '../components/icons';
 import { MgThumb } from '../media/MgThumb';
 import { setLibraryDrag } from '../library/drag';
 import { useHyperframes } from './HyperframesContext';
+import { hyperframesAcceptsPrompts } from './api';
 import { HyperframesSetupCard } from './HyperframesSetupCard';
+import { HyperframesSetup } from './HyperframesSetup';
 import {
   formatHyperframeTimestamp, hyperframeTemplate,
   type HyperframeRecord, type PendingHyperframe,
@@ -25,13 +27,17 @@ export function HyperframesPanel() {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const config = hyperframes.config;
   const unconfigured = config !== null && !config.configured;
+  // The setup card still shows while the built-in model downloads, but the
+  // prompt bar stays live: pressing Generate then answers "still downloading"
+  // instead of refusing to accept a keystroke for several minutes.
+  const canPrompt = hyperframesAcceptsPrompts(config);
   // The bundled model already generates, so the setup card is an offer, not a
   // gate: it stays folded away behind a link until someone asks for it.
   const builtin = config?.builtin === true;
 
   const submit = () => {
     const trimmed = prompt.trim();
-    if (!trimmed || unconfigured) return;
+    if (!trimmed || !canPrompt) return;
     hyperframes.generate(trimmed);
     setPrompt('');
   };
@@ -45,7 +51,7 @@ export function HyperframesPanel() {
           <input
             type="text"
             value={prompt}
-            disabled={unconfigured}
+            disabled={!canPrompt}
             placeholder={t('Describe the graphic you want…')}
             aria-label={t('Describe the graphic you want…')}
             onChange={(event) => setPrompt(event.target.value)}
@@ -68,14 +74,14 @@ export function HyperframesPanel() {
           <button
             type="button"
             onClick={submit}
-            disabled={unconfigured || !prompt.trim()}
+            disabled={!canPrompt || !prompt.trim()}
             style={{
               flex: '0 0 auto',
               border: 'none',
               borderRadius: 5,
-              background: prompt.trim() && !unconfigured ? theme.accent : theme.inset,
-              color: prompt.trim() && !unconfigured ? theme.onAccent : theme.textDim,
-              cursor: prompt.trim() && !unconfigured ? 'pointer' : 'default',
+              background: prompt.trim() && canPrompt ? theme.accent : theme.inset,
+              color: prompt.trim() && canPrompt ? theme.onAccent : theme.textDim,
+              cursor: prompt.trim() && canPrompt ? 'pointer' : 'default',
               fontSize: 11.5,
               fontWeight: 600,
               padding: '0 13px',
@@ -85,10 +91,10 @@ export function HyperframesPanel() {
           </button>
         </div>
         {unconfigured && (
-          <HyperframesSetupCard
+          <HyperframesSetup
             compact
             problem={config?.problem}
-            onSaved={hyperframes.refreshConfig}
+            onConfigured={hyperframes.refreshConfig}
           />
         )}
         {builtin && !showUpgrade && (

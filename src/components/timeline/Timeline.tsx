@@ -19,6 +19,7 @@ import { TransitionContextMenu } from './TransitionContextMenu';
 import { closeCaptionTrackGaps, trackClearPlan } from './trackContextOperations';
 import { fmt, HEADER_W, RULER_H } from './timelineUtil';
 import { HyperframesPromptPopup } from '../../hyperframes/HyperframesPromptPopup';
+import { hyperframesAcceptsPrompts } from '../../hyperframes/api';
 import { useOptionalHyperframes } from '../../hyperframes/HyperframesContext';
 import { showAppToast } from '../../ui/appToast';
 import { trimRipplePreviewShifts } from './trimRipple';
@@ -428,7 +429,7 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
           x={hyperframesPrompt.x}
           y={hyperframesPrompt.y}
           atLabel={`${trackAlias(state, hyperframesPrompt.trackId)} · ${fmt(hyperframesPrompt.frame, state.fps)}`}
-          configured={hyperframes.config?.configured !== false}
+          configured={hyperframesAcceptsPrompts(hyperframes.config ?? null)}
           problem={hyperframes.config?.problem}
           onSubmit={(prompt) => {
             hyperframes.generate(prompt, {

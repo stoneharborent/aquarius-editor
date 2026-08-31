@@ -125,7 +125,18 @@ export function HyperframesProvider({ host, children }: { host: HyperframesHost;
           builtin: false,
           ...(result.problem ? { problem: result.problem } : {}),
         });
-        failHyperframeRun(projectId, runId, 'No language model is configured yet.');
+        // A generation asked for during the first-launch download is not an
+        // error the user caused, and it is not worth queueing either — the
+        // transfer takes minutes, and a prompt held that long is a prompt they
+        // have moved on from. Say where it is instead, and let them press
+        // Generate again when the card says it is ready.
+        failHyperframeRun(
+          projectId,
+          runId,
+          result.problem === 'model-downloading'
+            ? 'The built-in graphics model is still downloading. Try again once it is ready.'
+            : 'No language model is configured yet.',
+        );
         return;
       }
       if (!result.ok || !result.code) {

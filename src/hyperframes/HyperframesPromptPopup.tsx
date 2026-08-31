@@ -6,7 +6,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { theme, themeAlpha } from '../theme';
 import { useT } from '../i18n/locale';
-import { HyperframesSetupCard } from './HyperframesSetupCard';
+import { HyperframesSetup } from './HyperframesSetup';
 import type { HyperframesProblem } from './api';
 
 export interface HyperframesPromptPopupProps {
@@ -118,7 +118,7 @@ export function HyperframesPromptPopup({
           </div>
         </>
       ) : (
-        <HyperframesSetupCard compact problem={problem} onSaved={onConfigured} />
+        <HyperframesSetup compact problem={problem} onConfigured={onConfigured} />
       )}
     </div>
   );

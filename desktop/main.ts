@@ -45,6 +45,7 @@ import type { DesktopPageUrlDecision, DesktopPageUrlSurface } from './page-origi
 import { preparePackagedRuntime } from './packaged-runtime.ts';
 import { seedBundledModels } from './seed-bundled-models.ts';
 import { disposeBuiltinHyperframesModel } from '../server/plugins/hyperframes.ts';
+import { BUILTIN_LLM_AUTO_DOWNLOAD_ENV } from '../server/builtin-llm/download.ts';
 import { BUNDLED_MODELS_DIR_NAME } from '../shared/bundled-models.ts';
 import { focusExistingWindow } from './single-instance.ts';
 import { requestProfileScopedSingleInstanceLock } from './runtime-profile.ts';
@@ -314,6 +315,13 @@ async function boot(): Promise<void> {
       version: app.getVersion(),
     });
   }
+  // HyperFrames' built-in model is too large to ship inside an installer GitHub
+  // will host (2.33 GiB against a 2 GiB per-asset limit), so the installed app
+  // fetches it once, in the background, the first time it opens with no provider
+  // configured. Set BEFORE the embedded server starts, because that is where the
+  // download lives; a dev run opts in by exporting the same flag by hand. Never
+  // during a smoke run — that boots and quits, and would leave a partial behind.
+  if (app.isPackaged && !SMOKE) process.env[BUILTIN_LLM_AUTO_DOWNLOAD_ENV] = '1';
   const devOrigin = resolveDesktopDevOrigin({
     configuredDevUrl: process.env.CC_DESKTOP_DEV_URL,
     packaged: app.isPackaged,

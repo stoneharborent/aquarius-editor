@@ -3,14 +3,25 @@
 ## v0.6.0 — 2026-08-30
 
 ### Added
-- **The app can now run a language model itself, for whenever one is installed.** Graphic
-  generation gained a full local-model runtime: llama.cpp (via node-llama-cpp) in its own
-  worker process, using your GPU where it can — Metal on Mac, CUDA or Vulkan on Linux and
-  Windows, CPU anywhere else. It loads on the first generation, is reused across a burst,
-  and unloads a few minutes after you stop, so an editing session that never makes a
-  graphic never pays for one. **The weights themselves are not in this installer** — see
-  *Known limitations* below — so graphic generation still asks you to connect a provider,
-  a cloud one with an API key or a local runtime (Ollama / LM Studio) with no key at all.
+- **HyperFrames sets itself up on first launch.** Graphic generation needs a language
+  model, and the app now brings its own: the first time you open it with nothing
+  configured, it downloads a 2.3 GB Apache-licensed
+  [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) in the
+  background — once, ever — and the Hyperframes tab shows the progress ("Setting up the
+  built-in graphics model (2.5 GB) — 43%") with **Pause** and a *use your own model
+  instead* link beside it. Nothing waits on it; you can edit the whole time. When it lands,
+  graphics generate with no account, no API key and no internet, entirely on your machine.
+  Say **Not now** and it is remembered — the app never starts the download again by itself,
+  and the button stays if you change your mind. **Installers stay at about 1.5 GB**: the
+  weights are fetched separately precisely because an installer carrying them could not be
+  published (see *Fixed*).
+- **The app can now run a language model itself.** Behind that: a full local-model runtime —
+  llama.cpp (via node-llama-cpp) in its own worker process, using your GPU where it can —
+  Metal on Mac, CUDA or Vulkan on Linux and Windows, CPU anywhere else. It loads on the
+  first generation, is reused across a burst, and unloads a few minutes after you stop, so
+  an editing session that never makes a graphic never pays for one. Connecting a provider
+  of your own still wins over it, and still turns the card into an optional *"use a
+  stronger one"* upgrade.
 - **Generated graphics are compiled and rendered before you ever see them.** The generator
   already checked each composition against the host contract; it now also compiles it with
   Babel and renders it at the first, middle and last frame in the same restricted scope the
@@ -35,24 +46,27 @@
   3.8–4.05 GiB. Windows failed outright — a plain NSIS installer addresses its payload with
   32-bit offsets and silently truncates past 2 GiB — and the macOS and Linux artifacts,
   which built cleanly, would have been rejected on upload: GitHub does not accept a release
-  asset of 2 GiB or more. The model no longer ships (see *Known limitations*), which returns
-  every installer to roughly its v0.5.0 size. The release workflow now measures each
+  asset of 2 GiB or more. No installer format works around that; a web installer just moves
+  the same oversized payload into a second file GitHub also refuses. The model therefore
+  does not ship inside the installer at all — the app downloads it instead (see *Added*),
+  which returns every installer to roughly its v0.5.0 size and still leaves graphic
+  generation working with nothing configured. The release workflow now measures each
   artifact and fails immediately if one crosses the limit, instead of discovering it during
-  publication.
+  publication, and a second check refuses to let anything back into the installer payload
+  that would push it there again.
 - The built-in model worker could not be started from an install path containing a space —
   the path was being derived with `URL.pathname`, which percent-encodes it. It now uses
   `fileURLToPath`.
 
-### Known limitations
-- **Graphic generation still needs a model you connect yourself.** The plan for this release
-  was to ship [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507)
-  (GGUF Q4_K_M, **Apache 2.0**) inside the installer so Hyperframes would work with nothing
-  configured. At 2.33 GiB it does not fit: no installer carrying it can be published under
-  GitHub's 2 GiB per-file release limit, and no installer format works around that — a web
-  installer just moves the same oversized payload into a second file GitHub also refuses.
-  The runtime that would run it is finished and shipped; only the weights are missing.
-  Bundling a model returns when it can be a smaller one, or when the app can fetch the
-  weights on first use.
+### Security
+- **The model downloader's 2 GB per-file limit can now be exceeded, but only for bytes this
+  project pins itself.** The ceiling that stops a drifting or hostile mirror filling your
+  disk stays at 2 GiB for everything unpinned. A file listed in one of the app's own
+  catalogs with an exact length *and* an exact SHA-256 may spend up to that exact length,
+  and never more than a 3 GiB hard cap — so the raise applies to one known file, at one
+  known size, still verified byte for byte before it is kept. A checksum mismatch discards
+  the download rather than caching it. The built-in model is also downloadable without
+  becoming *servable*: the local model proxy's whitelist is unchanged.
 
 ## v0.5.0 — 2026-08-30
 
