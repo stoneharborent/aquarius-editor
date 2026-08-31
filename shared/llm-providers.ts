@@ -141,6 +141,28 @@ export type LlmProvider = (typeof LLM_PROVIDER_PRESETS)[number]['id'];
 
 export const DEFAULT_LLM_PROVIDER: LlmProvider = 'anthropic';
 
+/**
+ * The model that ships inside the installer and runs in-process through
+ * llama.cpp. HyperFrames falls back to it when no vendor is configured, so a
+ * fresh install can generate a graphic with nothing set up.
+ *
+ * It is deliberately NOT a member of LLM_PROVIDER_PRESETS. That list describes
+ * network vendors reached through the `/llm` proxy: everything in it gets a
+ * keystore Base URL + model pair, a `llm/<id>` connectivity probe that GETs
+ * `<baseUrl>/models`, an AI SDK factory in `server/agent-runs/model.ts`, and an
+ * entry in the browser Agent's model picker. The built-in model has no base
+ * URL, no key, no SDK and cannot be driven from the browser — adding it there
+ * would manufacture four broken surfaces to gain one label. HyperFrames
+ * resolves it in `server/plugins/hyperframes.ts` instead, which is the one
+ * place that can actually run it.
+ */
+export const BUILTIN_LLM_PROVIDER = 'builtin';
+export const BUILTIN_LLM_PROVIDER_LABEL = 'Built-in (HyperFrames)';
+
+export function isBuiltinLlmProvider(value: unknown): boolean {
+  return typeof value === 'string' && value.trim().toLowerCase() === BUILTIN_LLM_PROVIDER;
+}
+
 export interface LlmProviderConfigNames {
   readonly apiKey: string;
   readonly baseUrl: string;

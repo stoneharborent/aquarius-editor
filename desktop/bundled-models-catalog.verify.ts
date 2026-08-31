@@ -6,13 +6,16 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ASR_MODELS } from '../shared/asr-models.ts';
 import { MODEL_PACKS } from '../shared/model-packs/catalog.ts';
+import { BUILTIN_LLM_MODEL_ID, LLM_MODELS, builtinLlmModel } from '../shared/llm-model-catalog.ts';
 import {
   BUNDLED_ASR_MODEL_IDS,
+  BUNDLED_LLM_MODEL_IDS,
   BUNDLED_MODELS_DIR_NAME,
   BUNDLED_MODEL_PACK_IDS,
   bundledModelFiles,
   bundledModelTotalBytes,
   isBundledAsrModel,
+  isBundledLlmModel,
   isBundledModelPack,
 } from '../shared/bundled-models.ts';
 import { modelDownloadUrls } from '../shared/model-download-sources.ts';
@@ -29,6 +32,11 @@ assert.equal(isBundledAsrModel('small'), true);
 assert.equal(isBundledAsrModel('medium'), false);
 assert.equal(isBundledModelPack('rhythm-lite'), true);
 assert.equal(isBundledModelPack('nope'), false);
+// The language model that makes HyperFrames work with nothing configured.
+assert.deepEqual([...BUNDLED_LLM_MODEL_IDS], [BUILTIN_LLM_MODEL_ID],
+  'the built-in HyperFrames model ships');
+assert.equal(isBundledLlmModel(BUILTIN_LLM_MODEL_ID), true);
+assert.equal(isBundledLlmModel('nope'), false);
 
 const files = bundledModelFiles();
 const small = ASR_MODELS.find((entry) => entry.id === 'small');
@@ -38,7 +46,8 @@ assert.ok(small);
 const expectedCount = small.files.length
   + (small.ggmlFile ? 1 : 0)
   + MODEL_PACKS.filter((pack) => isBundledModelPack(pack.id))
-    .reduce((total, pack) => total + pack.files.length, 0);
+    .reduce((total, pack) => total + pack.files.length, 0)
+  + LLM_MODELS.filter((entry) => isBundledLlmModel(entry.id)).length;
 assert.equal(files.length, expectedCount,
   'the bundle ships every file the catalog pins for the bundled models');
 
@@ -54,7 +63,12 @@ for (const file of files) {
   const ggml: PinnedFile | undefined = small.ggmlFile?.fileName === file.filePath
     ? small.ggmlFile
     : undefined;
-  const catalog: PinnedFile | undefined = packFile ?? asrFile ?? ggml;
+  const llmFile: PinnedFile | undefined = LLM_MODELS
+    .find((entry) => entry.file.modelId === file.modelId
+      && entry.file.revision === file.revision
+      && entry.file.filePath === file.filePath)
+    ?.file;
+  const catalog: PinnedFile | undefined = packFile ?? asrFile ?? ggml ?? llmFile;
   assert.ok(catalog, `${file.cachePath} must come from a pinned catalog entry`);
   assert.equal(file.sizeBytes, catalog.sizeBytes, `${file.cachePath} size must match the catalog`);
   assert.equal(file.sha256, catalog.sha256, `${file.cachePath} digest must match the catalog`);
@@ -114,12 +128,42 @@ assert.ok(
   builderConfig.mac?.signIgnore?.some((pattern) => pattern.includes(BUNDLED_MODELS_DIR_NAME)),
   'macOS signing must skip the bundled models at the directory name they are staged under',
 );
+// The GGUF is staged under bundled-models/llm/…, which is what puts it inside
+// the signIgnore pattern above rather than beside it.
+const builtinFile = builtinLlmModel().file;
+assert.ok(
+  files.some((file) => file.cachePath === builtinFile.cachePath),
+  'the staged bundle must include the built-in language model',
+);
+assert.match(builtinFile.cachePath, /^llm\//,
+  'GGUF weights live in their own tree under the model cache');
+assert.match(
+  `/Contents/Resources/${BUNDLED_MODELS_DIR_NAME}/${builtinFile.cachePath}`,
+  new RegExp(builderConfig.mac!.signIgnore!.join('|')),
+  'the bundled GGUF must fall inside the macOS signIgnore pattern',
+);
+
 const packageJson = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as {
   scripts: Record<string, string>;
 };
 assert.match(packageJson.scripts['fetch:bundled-models'] ?? '', /fetch-bundled-models\.mts/);
 assert.match(packageJson.scripts['desktop:prebundle'] ?? '', /fetch:bundled-models/,
   'every desktop build must stage the bundled models');
+
+// CI caches the build download directory. Its key has to hash every catalog the
+// payload is derived from, or repinning a model would silently reuse stale bytes.
+const workflow = readFileSync(join(REPO_ROOT, '.github', 'workflows', 'desktop.yml'), 'utf8');
+for (const catalog of [
+  'shared/asr-models.ts',
+  'shared/model-packs/catalog.ts',
+  'shared/llm-model-catalog.ts',
+  'shared/bundled-models.ts',
+]) {
+  assert.ok(
+    workflow.includes(catalog),
+    `the bundled-model cache key must hash ${catalog}`,
+  );
+}
 
 const total = bundledModelTotalBytes();
 console.log(

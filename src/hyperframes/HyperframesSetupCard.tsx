@@ -1,21 +1,37 @@
-// The only model-configuration UI left in the app: a small inline card shown
-// where a generation would otherwise be attempted with nothing behind it. It
+// The only model-configuration UI left in the app: a small inline card that
 // writes through the existing /api/keys endpoint, so the key value goes
 // browser → server once and never comes back.
+//
+// It now has two jobs. When the app is generating with the model in the
+// installer, the card is an OPTIONAL upgrade — "this works; here is how to make
+// it better" — and the tab never blocks on it. It goes back to being required
+// only when there is genuinely nothing to generate with, which since the model
+// ships means a missing or damaged weight file; `problem` says which.
 import { useState } from 'react';
 import { theme } from '../theme';
 import { useT } from '../i18n/locale';
 import { isLocalLlmProvider, type LlmProvider } from '../../shared/llm-providers';
-import { HYPERFRAMES_PROVIDER_OPTIONS, saveHyperframesProvider } from './api';
+import { HYPERFRAMES_PROVIDER_OPTIONS, saveHyperframesProvider, type HyperframesProblem } from './api';
 
 interface HyperframesSetupCardProps {
   /** Re-reads the server's view of the configuration after a successful save. */
   onSaved: () => void;
   compact?: boolean;
+  /** True when the bundled model is already generating and this is an upgrade. */
+  upgrade?: boolean;
+  /** Server code for why the bundled model is unusable. */
+  problem?: HyperframesProblem;
 }
 
-export function HyperframesSetupCard({ onSaved, compact }: HyperframesSetupCardProps) {
+export function HyperframesSetupCard({ onSaved, compact, upgrade, problem }: HyperframesSetupCardProps) {
   const t = useT();
+  const problemText = problem === 'model-corrupt'
+    ? t('The built-in model file is the wrong size, so it was not loaded. Reinstalling the app restores it — until then, connect a provider here.')
+    : problem === 'runtime-unavailable'
+      ? t('This build has no local model runtime, so the built-in model cannot run. Connect a provider here.')
+      : problem === 'model-missing'
+        ? t('The built-in model file is not installed on this machine. Reinstalling the app restores it — until then, connect a provider here.')
+        : null;
   const [provider, setProvider] = useState<LlmProvider>(HYPERFRAMES_PROVIDER_OPTIONS[0]!.id);
   const [apiKey, setApiKey] = useState('');
   const [saving, setSaving] = useState(false);
@@ -40,7 +56,7 @@ export function HyperframesSetupCard({ onSaved, compact }: HyperframesSetupCardP
   return (
     <section
       className="cc-hyperframes-setup"
-      aria-label={t('Set up graphic generation')}
+      aria-label={upgrade ? t('Use a stronger model for graphics') : t('Set up graphic generation')}
       style={{
         border: `0.5px solid ${theme.border}`,
         borderRadius: 6,
@@ -52,11 +68,16 @@ export function HyperframesSetupCard({ onSaved, compact }: HyperframesSetupCardP
       }}
     >
       <div style={{ fontSize: 12.5, fontWeight: 600, color: theme.text }}>
-        {t('Connect a model to generate graphics')}
+        {upgrade ? t('Use a stronger model') : t('Connect a model to generate graphics')}
       </div>
       <div style={{ fontSize: 11, lineHeight: 1.45, color: theme.textDim }}>
-        {t('Hyperframes writes each graphic with a language model. Pick a provider and paste its API key — the key is stored on this machine and never leaves it. Local runtimes need no key.')}
+        {upgrade
+          ? t('Graphics are being written by the model built into this app, which runs entirely on your machine. Connecting a larger model usually follows a complicated brief more closely. The key is stored on this machine and never leaves it.')
+          : t('Hyperframes writes each graphic with a language model. Pick a provider and paste its API key — the key is stored on this machine and never leaves it. Local runtimes need no key.')}
       </div>
+      {problemText && (
+        <div style={{ fontSize: 11, lineHeight: 1.45, color: theme.danger }}>{problemText}</div>
+      )}
       <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11, color: theme.textDim }}>
         {t('Provider')}
         <select

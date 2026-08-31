@@ -100,7 +100,13 @@ function api(overrides: Partial<HyperframesApi> = {}): HyperframesApi {
   return {
     records,
     pending: [],
-    config: { configured: true, provider: 'anthropic', providerLabel: 'Anthropic · Claude', model: 'claude-fable-5' },
+    config: {
+      configured: true,
+      provider: 'anthropic',
+      providerLabel: 'Anthropic · Claude',
+      model: 'claude-fable-5',
+      builtin: false,
+    },
     fps: 30,
     generate: () => undefined,
     regenerate: () => undefined,
@@ -142,12 +148,72 @@ assert.match(empty, /right-click a timeline track/, 'including the timeline rout
 
 const unconfigured = render(api({
   records: [],
-  config: { configured: false, provider: '', providerLabel: '', model: '' },
+  config: { configured: false, provider: '', providerLabel: '', model: '', builtin: false },
 }));
 assert.match(unconfigured, /Connect a model to generate graphics/,
   'with no model configured the tab offers the inline setup card');
 assert.match(unconfigured, /name="LLM"|<select/, 'the setup card offers a provider picker');
 assert.match(unconfigured, /type="password"/, 'and an API key field');
+
+// ── The bundled model: zero setup, with the upgrade folded away ──────────────
+const builtin = render(api({
+  records: [],
+  config: {
+    configured: true,
+    provider: 'builtin',
+    providerLabel: 'Built-in (HyperFrames)',
+    model: 'Qwen3 4B Instruct (built in)',
+    builtin: true,
+  },
+}));
+assert.doesNotMatch(builtin, /Connect a model to generate graphics/,
+  'the model ships inside the app; a fresh install must never be asked to configure one');
+assert.doesNotMatch(builtin, /type="password"/,
+  'the key field must not be in the way of someone who does not need it');
+assert.match(builtin, /use a stronger one/,
+  'the upgrade path stays available, one click away');
+// The Generate button is still disabled while the field is empty — that is the
+// empty-prompt rule, not a configuration gate. The field itself must be live.
+assert.doesNotMatch(
+  /<input[^>]*>/.exec(builtin)![0],
+  /disabled/,
+  'the prompt field must be typeable with the built-in model, with nothing configured',
+);
+assert.match(
+  /<input[^>]*>/.exec(unconfigured)![0],
+  /disabled/,
+  'and it stays disabled when there is genuinely no model to generate with',
+);
+
+// ── Missing weights say so rather than failing silently ──────────────────────
+const missingWeights = render(api({
+  records: [],
+  config: {
+    configured: false,
+    provider: 'anthropic',
+    providerLabel: 'Anthropic · Claude',
+    model: 'claude-fable-5',
+    builtin: false,
+    problem: 'model-missing',
+  },
+}));
+assert.match(missingWeights, /built-in model file is not installed/,
+  'a deleted weight file must be explained, never presented as an unconfigured app');
+assert.match(missingWeights, /Connect a model to generate graphics/,
+  'and the setup card must come back as the way out');
+
+const corruptWeights = render(api({
+  records: [],
+  config: {
+    configured: false,
+    provider: 'anthropic',
+    providerLabel: 'Anthropic · Claude',
+    model: 'claude-fable-5',
+    builtin: false,
+    problem: 'model-corrupt',
+  },
+}));
+assert.match(corruptWeights, /wrong size/, 'a half-copied weight file names its own symptom');
 assert.match(unconfigured, /disabled=""/, 'the prompt input is disabled until a model exists');
 
 // Loading state (config not yet known) must not flash the setup card.

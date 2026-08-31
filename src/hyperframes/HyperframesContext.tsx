@@ -113,7 +113,18 @@ export function HyperframesProvider({ host, children }: { host: HyperframesHost;
       durationInFrames,
     }).then((result) => {
       if (!result.configured) {
-        setConfig({ configured: false, provider: '', providerLabel: '', model: '' });
+        // Carry the server's reason through so the setup card that reappears
+        // can say WHY — a deleted weight file is not the same as a fresh
+        // install, and neither should look like a button that silently did
+        // nothing.
+        setConfig({
+          configured: false,
+          provider: '',
+          providerLabel: '',
+          model: '',
+          builtin: false,
+          ...(result.problem ? { problem: result.problem } : {}),
+        });
         failHyperframeRun(projectId, runId, 'No language model is configured yet.');
         return;
       }

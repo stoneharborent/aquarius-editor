@@ -7,6 +7,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { theme, themeAlpha } from '../theme';
 import { useT } from '../i18n/locale';
 import { HyperframesSetupCard } from './HyperframesSetupCard';
+import type { HyperframesProblem } from './api';
 
 export interface HyperframesPromptPopupProps {
   x: number;
@@ -14,6 +15,8 @@ export interface HyperframesPromptPopupProps {
   /** Timecode label for the frame that was right-clicked. */
   atLabel: string;
   configured: boolean;
+  /** Why the bundled model is unusable, when it is. */
+  problem?: HyperframesProblem;
   onSubmit: (prompt: string) => void;
   onClose: () => void;
   onConfigured: () => void;
@@ -22,7 +25,7 @@ export interface HyperframesPromptPopupProps {
 const WIDTH = 296;
 
 export function HyperframesPromptPopup({
-  x, y, atLabel, configured, onSubmit, onClose, onConfigured,
+  x, y, atLabel, configured, problem, onSubmit, onClose, onConfigured,
 }: HyperframesPromptPopupProps) {
   const t = useT();
   const ref = useRef<HTMLDivElement>(null);
@@ -115,7 +118,7 @@ export function HyperframesPromptPopup({
           </div>
         </>
       ) : (
-        <HyperframesSetupCard compact onSaved={onConfigured} />
+        <HyperframesSetupCard compact problem={problem} onSaved={onConfigured} />
       )}
     </div>
   );

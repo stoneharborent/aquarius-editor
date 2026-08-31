@@ -37,8 +37,34 @@ const nativeInferenceWorkers = nativeInferenceSupported
       'desktop-dist/native-semantic-worker.mjs',
       'desktop-dist/native-clap-worker.mjs',
       'desktop-dist/native-rhythm-worker.mjs',
+      // Hosts the bundled language model (llama.cpp) for HyperFrames.
+      'desktop-dist/builtin-llm-worker.mjs',
     ]
   : [];
+// node-llama-cpp publishes one prebuilt llama.cpp binary per platform/backend
+// as a separate @node-llama-cpp/* package, the same way onnxruntime-node and
+// @remotion/compositor do. Each is 30-90 MB, so ship only the ones this
+// artifact can actually load. macOS gets Metal; Windows and Linux get the plain
+// CPU build plus the GPU builds for that platform, because which one loads is
+// decided at runtime from the machine's hardware, not at packaging time.
+const LLAMA_PACKAGES = [
+  'mac-arm64-metal', 'mac-x64',
+  'win-x64', 'win-arm64', 'win-x64-cuda', 'win-x64-cuda-ext', 'win-x64-vulkan',
+  'linux-x64', 'linux-arm64', 'linux-armv7l', 'linux-riscv64',
+  'linux-x64-cuda', 'linux-x64-cuda-ext', 'linux-x64-vulkan',
+];
+const TARGET_LLAMA_PACKAGES = {
+  'darwin-arm64': ['mac-arm64-metal'],
+  'darwin-x64': ['mac-x64'],
+  'win32-x64': ['win-x64', 'win-x64-cuda', 'win-x64-cuda-ext', 'win-x64-vulkan'],
+  'win32-arm64': ['win-arm64'],
+  'linux-x64': ['linux-x64', 'linux-x64-cuda', 'linux-x64-cuda-ext', 'linux-x64-vulkan'],
+  'linux-arm64': ['linux-arm64'],
+};
+const keepLlamaPackages = TARGET_LLAMA_PACKAGES[target] ?? [];
+const llamaFilters = LLAMA_PACKAGES
+  .filter((packageName) => !keepLlamaPackages.includes(packageName))
+  .map((packageName) => `!node_modules/@node-llama-cpp/${packageName}/**`);
 const onnxRuntimeFilters = keepOnnxRuntime
   ? ONNX_RUNTIME_TARGETS
       .filter((runtimeTarget) => runtimeTarget !== keepOnnxRuntime)
@@ -108,6 +134,8 @@ export default {
     ...onnxRuntimeFilters,
     // sqlite-vec (semantic vectors): ship only the target platform's vec0 extension.
     ...sqliteVecFilters,
+    // node-llama-cpp (the bundled HyperFrames model): only this platform's builds.
+    ...llamaFilters,
   ],
   asar: false,
   extraResources: [
@@ -117,11 +145,13 @@ export default {
     { from: 'dist', to: 'dist', filter: ['**/*', '!media/uploads/**'] },
     { from: 'desktop-dist/remotion-bundle', to: 'remotion-bundle' },
     { from: 'desktop-dist/chrome-headless-shell', to: 'chrome-headless-shell' },
-    // Pre-installed local models (Whisper Small + the three intelligence packs),
-    // staged by desktop/fetch-bundled-models.mts during desktop:prebundle.
-    // main.ts copies whatever is missing into ~/.openchatcut/asr-models on the
-    // first launch, so a fresh install never waits for a model download.
-    // Adds roughly 1.3 GiB uncompressed to each installer payload.
+    // Pre-installed local models (Whisper Small, the three intelligence packs,
+    // and the HyperFrames language model), staged by
+    // desktop/fetch-bundled-models.mts during desktop:prebundle. main.ts copies
+    // whatever is missing into ~/.openchatcut/asr-models on the first launch, so
+    // a fresh install never waits for a model download — and HyperFrames
+    // generates a graphic with nothing configured.
+    // Adds roughly 3.6 GiB uncompressed to each installer payload.
     { from: `desktop-dist/${BUNDLED_MODELS_RESOURCE_DIR}`, to: BUNDLED_MODELS_RESOURCE_DIR },
   ],
   npmRebuild: false,

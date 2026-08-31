@@ -1,5 +1,44 @@
 # Aquarius Editor changelog
 
+## Unreleased (v0.6.0)
+
+### Added
+- **Hyperframes works out of the box — no setup, no API key, no internet.** A 4-billion
+  parameter language model now ships inside the installer and runs on your own machine, so
+  a fresh install can describe a graphic and get one back straight away. The model is
+  [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) quantized to
+  4 bits (GGUF Q4_K_M, **Apache 2.0**), running through llama.cpp — Metal on Mac, CUDA or
+  Vulkan on Linux and Windows, CPU anywhere else. It is loaded the first time you generate
+  something and unloaded again a few minutes after you stop, in a separate process, so an
+  editing session that never makes a graphic never pays for one. Adds about 2.3 GiB to each
+  installer.
+- **The Hyperframes setup card is now an upgrade, not a gate.** Connecting a cloud provider
+  or a local runtime (Ollama / LM Studio) still works exactly as before and always takes
+  priority over the built-in model — it is just no longer something you have to do before
+  the tab does anything. A line under the input bar opens the card when you want it.
+- **Generated graphics are compiled and rendered before you ever see them.** The generator
+  already checked each composition against the host contract; it now also compiles it with
+  Babel and renders it at the first, middle and last frame in the same restricted scope the
+  editor uses. A composition that would have thrown on the timeline — reading a value
+  before it exists, a typo'd name, assuming a property is filled in — goes back to the model
+  with the exact error instead of reaching you broken.
+
+### Changed
+- **The Hyperframes authoring prompt was rewritten for small models.** It now carries two
+  worked examples instead of one (a text graphic and a moving shape, so the model does not
+  answer every brief with a lower third), an explicit instruction not to reuse the examples'
+  content, and a short checklist that pins the parts small models drop: a named direction
+  fixes the sign of the offset, a named colour is the colour, a named count actually counts,
+  a bounce reverses and a slide does not.
+- **The built-in model gets three repair attempts instead of two.** A local repair costs no
+  tokens and no request, and measurably converts drafts that the new compile stage rejected.
+  Configured providers keep the existing two.
+
+### Fixed
+- The built-in model worker could not be started from an install path containing a space —
+  the path was being derived with `URL.pathname`, which percent-encodes it. It now uses
+  `fileURLToPath`.
+
 ## v0.5.0 — 2026-08-30
 
 ### Added

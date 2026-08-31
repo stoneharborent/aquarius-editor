@@ -5,15 +5,24 @@
 // local `/llm` proxy that injects the real key server-side. Nothing about the
 // removed chat UI is resurrected; this is one stateless POST.
 //
-// The generated source is linted against `shared/hyperframes-contract.ts` before
-// it is returned, and a failing draft is sent back to the model with its own
-// errors up to MAX_REPAIRS times. A composition that leaves this route is one the
-// browser's template host can compile.
+// It also has somewhere to go when nothing is configured. The installer ships a
+// quantized 4B model (`shared/llm-model-catalog.ts`) that runs locally through
+// llama.cpp, and this route falls back to it, so a fresh install generates a
+// graphic with no setup at all. Anything the user has explicitly configured wins
+// — the built-in model is the floor, never a ceiling.
+//
+// The generated source is linted against `shared/hyperframes-contract.ts` AND
+// compiled and rendered through `server/hyperframes-compile.ts` before it is
+// returned, and a failing draft is sent back to the model with its own errors up
+// to the repair ceiling. A composition that leaves this route is one the
+// browser's template host can compile and run.
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin } from 'vite';
 import { generateText } from 'ai';
 import { getKey, type KeyName } from '../keystore.ts';
 import {
+  BUILTIN_LLM_PROVIDER,
+  BUILTIN_LLM_PROVIDER_LABEL,
   defaultModelForProvider,
   isLocalLlmProvider,
   llmProviderPreset,
@@ -33,9 +42,30 @@ import {
   hyperframesSystemPrompt,
   hyperframesUserPrompt,
 } from '../../shared/hyperframes-prompt.ts';
+import { compileHyperframesComposition } from '../hyperframes-compile.ts';
+import { stripReasoningBlocks } from '../../shared/builtin-llm.ts';
+import {
+  BuiltinLlmService,
+  builtinLlmRuntimeAvailable,
+} from '../builtin-llm/service.ts';
+import {
+  builtinLlmModelProblem,
+  builtinLlmModelState,
+  type BuiltinLlmModelState,
+  type BuiltinLlmProblem,
+} from '../builtin-llm/model-file.ts';
 
 /** Two repairs after the first attempt — three model calls at the very worst. */
 export const MAX_HYPERFRAMES_REPAIRS = 2;
+/**
+ * The built-in model gets one more. A frontier model that fails twice is not
+ * going to succeed on a third identical nudge, but the 4B one measurably does:
+ * across the benchmark runs behind this feature, every draft it failed on was a
+ * render-time throw that the compile stage described precisely, and the extra
+ * turn converts those instead of throwing the work away. A local repair also
+ * costs the user nothing but a few seconds — no tokens, no request.
+ */
+export const MAX_BUILTIN_HYPERFRAMES_REPAIRS = 3;
 const MAX_PROMPT_CHARS = 4000;
 const MAX_BODY_BYTES = 64 * 1024;
 const GENERATION_TIMEOUT_MS = 180_000;
@@ -69,8 +99,28 @@ export type HyperframesAuthor = (input: {
 }) => Promise<string>;
 
 /**
+ * Contract lint first (cheap, and it is what rejects unsafe constructs), then a
+ * real compile and render (which is what catches a draft that reads a `const`
+ * before its initializer). Only a draft that passes both is a composition.
+ */
+async function inspectComposition(
+  code: string,
+  request: HyperframesRequest,
+): Promise<{ readonly name: string; readonly errors: readonly string[] }> {
+  const lint = lintHyperframesComposition(code);
+  if (!lint.ok) return { name: lint.name, errors: lint.errors };
+  const compiled = await compileHyperframesComposition(code, {
+    width: request.width,
+    height: request.height,
+    fps: request.fps,
+    durationInFrames: request.durationInFrames,
+  });
+  return { name: lint.name, errors: compiled.errors };
+}
+
+/**
  * The generation loop, with the model call injected so it can be exercised
- * without a network. Draft → lint → (repair with the lint errors) → accept.
+ * without a network. Draft → lint → compile → (repair with the errors) → accept.
  */
 export async function runHyperframesGeneration(
   request: HyperframesRequest,
@@ -95,14 +145,14 @@ export async function runHyperframesGeneration(
       };
     }
     const code = stripCodeFences(raw);
-    const lint = lintHyperframesComposition(code);
-    if (lint.ok) {
+    const inspected = await inspectComposition(code, request);
+    if (inspected.errors.length === 0) {
       return {
         ok: true,
         attempts: attempt,
         composition: {
           code,
-          componentName: lint.name,
+          componentName: inspected.name,
           width: request.width,
           height: request.height,
           fps: request.fps,
@@ -110,9 +160,9 @@ export async function runHyperframesGeneration(
         },
       };
     }
-    lastErrors = lint.errors;
+    lastErrors = inspected.errors;
     messages.push({ role: 'assistant', content: code || '(empty response)' });
-    messages.push({ role: 'user', content: hyperframesRepairPrompt(lint.errors) });
+    messages.push({ role: 'user', content: hyperframesRepairPrompt(inspected.errors) });
   }
   return {
     ok: false,
@@ -124,25 +174,85 @@ export async function runHyperframesGeneration(
 
 export interface HyperframesLlmSelection {
   readonly configured: boolean;
+  /** 'builtin' when the bundled local model is what will run. */
   readonly provider: string;
   readonly model: string;
   readonly providerLabel: string;
+  /** True when generation needs no API key and no setup at all. */
+  readonly builtin: boolean;
+  /** Absolute path of the bundled weights; only set when `builtin` is true. */
+  readonly modelPath?: string;
+  /**
+   * Why nothing is available, when the built-in weights should have been. A
+   * code, not a sentence — the copy is UI and lives in the browser so `t()` can
+   * translate it.
+   */
+  readonly problem?: BuiltinLlmProblem;
+  readonly maxRepairs: number;
+}
+
+/** A vendor is usable when it has a key, is a local runtime, or is OAuth-backed. */
+function vendorConfigured(provider: string, apiKey: string): boolean {
+  return !!apiKey || isLocalLlmProvider(provider) || provider === 'xai-oauth';
 }
 
 /**
- * Which LLM this route would use. A local provider (Ollama / LM Studio) counts
- * as configured without a key — that is the whole point of running one.
+ * Which LLM this route would use, in precedence order:
+ *
+ *   1. Whatever the user configured. An explicit choice always wins — that is
+ *      what the setup card is for, and what "use a stronger model" means.
+ *   2. The model that ships inside the installer, when its weights are present.
+ *   3. Nothing, with a reason the setup card can show.
+ *
+ * The built-in model is resolved here rather than inside `resolveLlmProviderConfig`
+ * on purpose: that function serves every vendor caller in the app, including the
+ * browser Agent, which reaches its model through the `/llm` proxy and cannot
+ * reach a local llama.cpp process at all. This route is the one place that can
+ * actually run the bundled weights, so it is the one place that selects them.
  */
 export function resolveHyperframesLlm(
   read: (name: string) => string = (name) => getKey(name as KeyName),
+  builtinState: () => BuiltinLlmModelState = () => builtinLlmModelState(),
+  runtimeAvailable: () => boolean = builtinLlmRuntimeAvailable,
 ): HyperframesLlmSelection {
   const provider = normalizeLlmProvider(read('LLM_PROVIDER'));
   const config = resolveLlmProviderConfig(provider, read);
-  return {
-    configured: !!config.apiKey || isLocalLlmProvider(provider) || provider === 'xai-oauth',
+  if (vendorConfigured(provider, config.apiKey)) {
+    return {
+      configured: true,
+      provider,
+      model: config.model || defaultModelForProvider(provider),
+      providerLabel: llmProviderPreset(provider).label,
+      builtin: false,
+      maxRepairs: MAX_HYPERFRAMES_REPAIRS,
+    };
+  }
+  const state = builtinState();
+  const unconfigured = {
+    configured: false as const,
     provider,
     model: config.model || defaultModelForProvider(provider),
     providerLabel: llmProviderPreset(provider).label,
+    builtin: false as const,
+    maxRepairs: MAX_HYPERFRAMES_REPAIRS,
+  };
+  if (state.status !== 'ready') {
+    return { ...unconfigured, problem: builtinLlmModelProblem(state) ?? undefined };
+  }
+  if (!runtimeAvailable()) {
+    return {
+      ...unconfigured,
+      problem: 'runtime-unavailable',
+    };
+  }
+  return {
+    configured: true,
+    provider: BUILTIN_LLM_PROVIDER,
+    model: state.model.label,
+    providerLabel: BUILTIN_LLM_PROVIDER_LABEL,
+    builtin: true,
+    modelPath: state.path,
+    maxRepairs: MAX_BUILTIN_HYPERFRAMES_REPAIRS,
   };
 }
 
@@ -205,6 +315,37 @@ function serverAuthor(selection: HyperframesLlmSelection, origin: string): Hyper
   };
 }
 
+// One service per server process, created on the first built-in generation and
+// keeping the model loaded across a burst of them. It retires itself after
+// idling, so this holding a reference costs nothing between sessions.
+let builtinService: BuiltinLlmService | null = null;
+let builtinServicePath = '';
+
+function builtinAuthor(selection: HyperframesLlmSelection): HyperframesAuthor {
+  const modelPath = selection.modelPath!;
+  if (!builtinService || builtinServicePath !== modelPath) {
+    builtinService?.dispose();
+    const model = builtinLlmModelState().model;
+    builtinService = new BuiltinLlmService({
+      modelPath,
+      contextSize: model.contextSize,
+      maxOutputTokens: model.maxOutputTokens,
+    });
+    builtinServicePath = modelPath;
+  }
+  const service = builtinService;
+  return async ({ system, messages }) => stripReasoningBlocks(
+    await service.generate({ system, messages }),
+  );
+}
+
+/** Release the built-in model. Called when the embedded server shuts down. */
+export function disposeBuiltinHyperframesModel(): void {
+  builtinService?.dispose();
+  builtinService = null;
+  builtinServicePath = '';
+}
+
 export function hyperframesPlugin(): Plugin {
   return {
     name: 'openchatcut-hyperframes',
@@ -219,6 +360,8 @@ export function hyperframesPlugin(): Plugin {
               provider: selection.provider,
               providerLabel: selection.providerLabel,
               model: selection.model,
+              builtin: selection.builtin,
+              ...(selection.problem ? { problem: selection.problem } : {}),
             });
             return;
           }
@@ -228,12 +371,11 @@ export function hyperframesPlugin(): Plugin {
           }
           const selection = resolveHyperframesLlm();
           if (!selection.configured) {
-            sendJson(res, 200, { configured: false, ok: false });
-            return;
-          }
-          const origin = requestOrigin(req);
-          if (!origin) {
-            sendJson(res, 400, { error: 'valid request host is required' });
+            sendJson(res, 200, {
+              configured: false,
+              ok: false,
+              ...(selection.problem ? { problem: selection.problem } : {}),
+            });
             return;
           }
           const parsed = parseHyperframesRequest(await readJsonBody(req));
@@ -241,11 +383,25 @@ export function hyperframesPlugin(): Plugin {
             sendJson(res, 400, { error: parsed });
             return;
           }
-          const outcome = await runHyperframesGeneration(parsed, serverAuthor(selection, origin));
+          // The built-in model runs in this process's own worker, so it needs no
+          // proxy origin; a vendor is reached through /llm and does.
+          let author: HyperframesAuthor;
+          if (selection.builtin) {
+            author = builtinAuthor(selection);
+          } else {
+            const origin = requestOrigin(req);
+            if (!origin) {
+              sendJson(res, 400, { error: 'valid request host is required' });
+              return;
+            }
+            author = serverAuthor(selection, origin);
+          }
+          const outcome = await runHyperframesGeneration(parsed, author, selection.maxRepairs);
           sendJson(res, 200, {
             configured: true,
             provider: selection.provider,
             model: selection.model,
+            builtin: selection.builtin,
             ...outcome,
           });
         } catch (error) {

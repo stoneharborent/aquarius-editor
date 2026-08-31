@@ -22,7 +22,12 @@ export function HyperframesPanel() {
   const hyperframes = useHyperframes();
   const [prompt, setPrompt] = useState('');
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const unconfigured = hyperframes.config !== null && !hyperframes.config.configured;
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const config = hyperframes.config;
+  const unconfigured = config !== null && !config.configured;
+  // The bundled model already generates, so the setup card is an offer, not a
+  // gate: it stays folded away behind a link until someone asks for it.
+  const builtin = config?.builtin === true;
 
   const submit = () => {
     const trimmed = prompt.trim();
@@ -79,7 +84,41 @@ export function HyperframesPanel() {
             {t('Generate')}
           </button>
         </div>
-        {unconfigured && <HyperframesSetupCard compact onSaved={hyperframes.refreshConfig} />}
+        {unconfigured && (
+          <HyperframesSetupCard
+            compact
+            problem={config?.problem}
+            onSaved={hyperframes.refreshConfig}
+          />
+        )}
+        {builtin && !showUpgrade && (
+          <button
+            type="button"
+            onClick={() => setShowUpgrade(true)}
+            style={{
+              alignSelf: 'flex-start',
+              border: 'none',
+              background: 'none',
+              color: theme.textDim,
+              cursor: 'pointer',
+              fontSize: 10.5,
+              padding: 0,
+              textAlign: 'left',
+            }}
+          >
+            {t('Generating with the built-in model · use a stronger one')}
+          </button>
+        )}
+        {builtin && showUpgrade && (
+          <HyperframesSetupCard
+            compact
+            upgrade
+            onSaved={() => {
+              setShowUpgrade(false);
+              hyperframes.refreshConfig();
+            }}
+          />
+        )}
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '10px 10px 14px' }}>

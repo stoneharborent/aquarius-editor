@@ -17,6 +17,7 @@
 
 import { ASR_MODELS, type AsrModelEntry } from './asr-models.ts';
 import { MODEL_PACKS, type ModelPackDefinition, type ModelPackId } from './model-packs/catalog.ts';
+import { BUILTIN_LLM_MODEL_ID, LLM_MODELS, type LlmModelEntry } from './llm-model-catalog.ts';
 
 /** Directory name under the packaged app's resources that holds the bundled files. */
 export const BUNDLED_MODELS_DIR_NAME = 'bundled-models';
@@ -31,12 +32,22 @@ export const BUNDLED_MODEL_PACK_IDS: readonly ModelPackId[] = [
   'visual-semantics-lite',
 ];
 
+/**
+ * Language models shipped in the installer. Shipping this one is what makes
+ * HyperFrames generation work on a fresh install with nothing configured.
+ */
+export const BUNDLED_LLM_MODEL_IDS: readonly string[] = [BUILTIN_LLM_MODEL_ID];
+
 export function isBundledAsrModel(id: string): boolean {
   return (BUNDLED_ASR_MODEL_IDS as readonly string[]).includes(id);
 }
 
 export function isBundledModelPack(id: string): boolean {
   return (BUNDLED_MODEL_PACK_IDS as readonly string[]).includes(id);
+}
+
+export function isBundledLlmModel(id: string): boolean {
+  return BUNDLED_LLM_MODEL_IDS.includes(id);
 }
 
 /**
@@ -93,6 +104,12 @@ function modelPackFiles(pack: ModelPackDefinition): BundledModelFile[] {
   }));
 }
 
+function llmModelFiles(entry: LlmModelEntry): BundledModelFile[] {
+  // The LLM catalog already speaks the BundledModelFile shape, cachePath
+  // included, so there is nothing to translate here.
+  return [{ ...entry.file }];
+}
+
 /** Every file the installer ships, derived from the pinned catalogs. */
 export function bundledModelFiles(): readonly BundledModelFile[] {
   const asr = ASR_MODELS
@@ -101,7 +118,10 @@ export function bundledModelFiles(): readonly BundledModelFile[] {
   const packs = MODEL_PACKS
     .filter((pack) => isBundledModelPack(pack.id))
     .flatMap(modelPackFiles);
-  return [...asr, ...packs];
+  const llm = LLM_MODELS
+    .filter((entry) => isBundledLlmModel(entry.id))
+    .flatMap(llmModelFiles);
+  return [...asr, ...packs, ...llm];
 }
 
 /** Uncompressed size the bundle adds to an installer's payload. */

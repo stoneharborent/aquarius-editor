@@ -20,7 +20,7 @@ export interface HyperframesRequestContext {
   readonly durationInFrames: number;
 }
 
-const EXAMPLE = `const LowerThirdSweep = ({ item }) => {
+const EXAMPLE_TEXT = `const LowerThirdSweep = ({ item }) => {
   const frame = ${HYPERFRAMES_TIME_HOOK}();
   const { fps, durationInFrames } = ${HYPERFRAMES_CONFIG_HOOK}();
   const p = item.props || {};
@@ -49,6 +49,52 @@ const EXAMPLE = `const LowerThirdSweep = ({ item }) => {
           <div style={{ fontSize: 34, fontWeight: 500, color: accent }}>{subtitle}</div>
         </div>
       </div>
+    </AbsoluteFill>
+  );
+};`;
+
+// A deliberately different second example. The first one is all text in a
+// corner, and a small model shown only that will answer every brief with a
+// lower third. This one is a moving shape with no text at all, and it
+// demonstrates the two things briefs ask for most often and small models get
+// wrong: a keyframe list whose values REVERSE (a real bounce, not a slide) and
+// a colour that comes from the brief rather than from the example.
+const EXAMPLE_SHAPE = `const PulseDot = ({ item }) => {
+  const frame = ${HYPERFRAMES_TIME_HOOK}();
+  const { fps, height, durationInFrames } = ${HYPERFRAMES_CONFIG_HOOK}();
+  const p = item.props || {};
+  const color = p.color || '#ff3b30';
+  const size = p.size || 160;
+
+  // Beat 1 — drop in from above the frame and settle.
+  const drop = spring({ frame, fps, config: { damping: 9, stiffness: 180 } });
+  // Beat 2 — two bounces. The offsets go down, back up, down again: a bounce is
+  // a list of frames whose values REVERSE direction, not one straight ramp.
+  const bounce = interpolate(
+    frame,
+    [14, 30, 46, 60, 74],
+    [0, -140, 0, -56, 0],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  );
+  // Beat 3 — shrink away before the clip ends.
+  const out = interpolate(
+    frame,
+    [durationInFrames - 12, durationInFrames],
+    [1, 0],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  );
+
+  return (
+    <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          background: color,
+          transform: \`translateY(\${(1 - drop) * -height + bounce}px) scale(\${out})\`,
+        }}
+      />
     </AbsoluteFill>
   );
 };`;
@@ -103,12 +149,35 @@ ${forbidden}
 1. Read props with fallbacks.
 2. Name each beat (entrance, hold, exit) as its own frame-derived value, with a
    comment saying which beat it is.
-3. Compose the beats into the layout. Always fade or move the graphic out before
-   \`durationInFrames\` so it does not cut hard.
+3. Compose the beats into the layout. A graphic starts from nothing and leaves to
+   nothing: at frame 0 and at \`durationInFrames\` it must not already be sitting
+   in its settled state, and it must always fade or move out before the clip ends
+   so it does not cut hard.
 
-# Example of the exact expected output shape
+# Build what the brief actually says
 
-${EXAMPLE}
+The brief is literal. Read it back before you answer and make each of these true:
+
+- A named DIRECTION fixes the sign of the offset. "From the right" starts at a
+  POSITIVE \`translateX\` and settles to 0; "from the left" starts negative.
+- A named COLOUR is the colour you paint. "A red circle" is red — never the
+  accent colour from an example.
+- A named COUNT or SEQUENCE has to change value across the clip, and in the
+  stated order. Derive it from the frame, e.g. counting 5 down to 1 is
+  \`const n = 5 - Math.floor(frame / (durationInFrames / 5));\` clamped to 1.
+- A named MOTION has to be that motion. A bounce reverses direction (see the
+  second example); a slide does not.
+- Anything the brief does not mention, leave out. Do not add a title to a
+  graphic that is only a shape.
+
+# Two examples of the exact expected output shape
+
+They show the SHAPE of an answer, never its content. Never reuse their names,
+copy, colours or layout — build the brief you were given.
+
+${EXAMPLE_TEXT}
+
+${EXAMPLE_SHAPE}
 
 Reply with the composition source only. No explanation, no markdown fences.`;
 }

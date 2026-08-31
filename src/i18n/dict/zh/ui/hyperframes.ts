@@ -27,4 +27,17 @@ export default {
   'Paste the API key': '粘贴 API 密钥',
   'Save and continue': '保存并继续',
   'Saving…': '保存中…',
+  // The bundled model: generation works out of the box, and connecting a
+  // provider becomes an upgrade rather than a prerequisite.
+  'Generating with the built-in model · use a stronger one': '正在使用内置模型生成 · 换用更强的模型',
+  'Use a stronger model': '换用更强的模型',
+  'Use a stronger model for graphics': '为图形换用更强的模型',
+  'Graphics are being written by the model built into this app, which runs entirely on your machine. Connecting a larger model usually follows a complicated brief more closely. The key is stored on this machine and never leaves it.':
+    '图形由内置于本应用的模型编写，全部在你的机器上运行。连接更大的模型通常能更准确地实现复杂的描述。密钥只保存在本机，不会外传。',
+  'The built-in model file is not installed on this machine. Reinstalling the app restores it — until then, connect a provider here.':
+    '本机未安装内置模型文件。重新安装应用即可恢复 — 在此之前，请在这里连接服务商。',
+  'The built-in model file is the wrong size, so it was not loaded. Reinstalling the app restores it — until then, connect a provider here.':
+    '内置模型文件大小不正确，未能加载。重新安装应用即可恢复 — 在此之前，请在这里连接服务商。',
+  'This build has no local model runtime, so the built-in model cannot run. Connect a provider here.':
+    '此版本不含本地模型运行时，内置模型无法运行。请在这里连接服务商。',
 };

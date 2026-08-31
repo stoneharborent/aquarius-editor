@@ -27,6 +27,47 @@ the internet if you specifically ask it to use a cloud AI provider and give it a
 Linux is its home; the Mac is where it gets built and tested day to day. Same code, both
 places.
 
+## Making graphics by describing them (Hyperframes)
+
+Open the **Hyperframes** tab in the Library, type something like *"a lower third with a
+name and title"*, and press Enter. A few seconds later you have a real motion-graphics
+clip: previewable, scrubbable, exportable, and draggable onto the timeline. You can also
+right-click an empty spot on the timeline, choose **Hyperframes…**, and the finished clip
+drops itself in at exactly that point.
+
+**There is nothing to set up.** A language model ships inside the app and runs entirely on
+your own machine — no API key, no account, no internet connection, no first-use download.
+It is a 2.3 GB file that the installer puts in place on first launch, and it is only loaded
+into memory when you actually generate something. A few minutes after you stop, it is
+unloaded again and the memory comes back.
+
+The model is
+**[Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507)**, quantized
+to 4 bits (GGUF Q4_K_M), under the **Apache 2.0** licence — a permissive licence that
+allows redistribution inside a product like this one. It runs through
+[llama.cpp](https://github.com/ggerganov/llama.cpp), which uses your GPU where it can
+(Metal on Mac, CUDA or Vulkan on Linux and Windows) and your CPU where it can't.
+
+### Using a bigger model instead
+
+The built-in model is small. It handles ordinary briefs well and occasionally misses a
+detail in a complicated one. If you want something stronger, the Hyperframes tab has a
+line under the input bar — *"Generating with the built-in model · use a stronger one"* —
+that opens a small card where you can connect a provider:
+
+- a **cloud provider** (Anthropic, OpenAI, Google, and others), which needs an API key, or
+- a **local runtime** you already run yourself (Ollama or LM Studio), which needs no key.
+
+Whatever you connect takes over, and the built-in model steps aside. Your API key is stored
+on this machine and is never sent anywhere except to the provider you chose. If you ever
+want the built-in model back, clear the provider in Settings.
+
+### If graphics stop working
+
+The only way this breaks is if the model file goes missing — you deleted it, or an install
+went wrong. When that happens the tab says so in plain words and offers you the provider
+card as a way out. It never silently does nothing. Reinstalling the app puts the file back.
+
 ## Where it came from, and what that means
 
 Aquarius Editor is a **fork** of an open-source project called

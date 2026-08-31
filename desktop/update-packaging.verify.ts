@@ -5,6 +5,7 @@ import {
   RELEASE_DOWNLOAD_BASE,
   overlayReleaseAssets,
 } from './overlay-update';
+import { builtinLlmModel } from '../shared/llm-model-catalog';
 
 interface PublishConfig {
   provider?: string;
@@ -54,6 +55,23 @@ assert.ok(arm64.files?.includes('desktop-dist/native-asr-worker.mjs'));
 assert.ok(arm64.files?.includes('desktop-dist/native-semantic-worker.mjs'));
 assert.ok(arm64.files?.includes('desktop-dist/native-clap-worker.mjs'));
 assert.ok(arm64.files?.includes('desktop-dist/native-rhythm-worker.mjs'));
+assert.ok(
+  arm64.files?.includes('desktop-dist/builtin-llm-worker.mjs'),
+  'the installer must ship the worker that hosts the bundled HyperFrames model',
+);
+// node-llama-cpp ships one prebuilt llama.cpp package per platform/backend and
+// they are tens of megabytes each. Keep this artifact's, drop the rest.
+assert.equal(
+  arm64.files?.includes('!node_modules/@node-llama-cpp/mac-arm64-metal/**'),
+  false,
+  'the arm64 macOS package must retain the Metal llama.cpp binary',
+);
+for (const foreign of ['mac-x64', 'win-x64-cuda', 'linux-x64-vulkan', 'linux-arm64']) {
+  assert.ok(
+    arm64.files?.includes(`!node_modules/@node-llama-cpp/${foreign}/**`),
+    `foreign llama.cpp binaries (${foreign}) must be excluded`,
+  );
+}
 assert.equal(
   arm64.files?.includes('!node_modules/onnxruntime-node/bin/napi-v6/darwin/arm64/**'),
   false,
@@ -82,15 +100,31 @@ assert.deepEqual(
 );
 // electron-builder compiles each entry to a RegExp and tests it against the absolute path,
 // so assert against a path shaped exactly like the one the packaged app ends up with.
-const packagedModelPath = `/tmp/Aquarius Editor.app/Contents/Resources/${bundledModelsResource!.to}`
-  + '/Xenova/whisper-small/onnx/decoder_model_merged_quantized.onnx';
-for (const pattern of arm64.mac?.signIgnore ?? []) {
-  assert.match(
-    packagedModelPath,
-    new RegExp(pattern),
-    'signIgnore must match the path extraResources actually writes the models to',
-  );
+const packagedModelPaths = [
+  `/tmp/Aquarius Editor.app/Contents/Resources/${bundledModelsResource!.to}`
+    + '/Xenova/whisper-small/onnx/decoder_model_merged_quantized.onnx',
+  // The bundled language model is inert data on the same footing as the ONNX
+  // weights: 2.3 GiB nothing dlopen()s. It has to be covered by the same rule,
+  // and it is only covered because its cachePath starts under bundled-models/.
+  `/tmp/Aquarius Editor.app/Contents/Resources/${bundledModelsResource!.to}`
+    + `/${builtinLlmModel().file.cachePath}`,
+];
+for (const packagedModelPath of packagedModelPaths) {
+  for (const pattern of arm64.mac?.signIgnore ?? []) {
+    assert.match(
+      packagedModelPath,
+      new RegExp(pattern),
+      'signIgnore must match the path extraResources actually writes the models to',
+    );
+  }
 }
+// The llama.cpp binary itself is loadable Mach-O and MUST still be signed —
+// signIgnore covers the weights, never the code that reads them.
+assert.doesNotMatch(
+  '/tmp/Aquarius Editor.app/Contents/Resources/app/node_modules/@node-llama-cpp/mac-arm64-metal/llama-addon.node',
+  new RegExp(arm64.mac!.signIgnore!.join('|')),
+  'signIgnore must never swallow the native llama.cpp addon',
+);
 assert.doesNotMatch(
   '/tmp/Aquarius Editor.app/Contents/MacOS/Aquarius Editor',
   new RegExp(arm64.mac!.signIgnore!.join('|')),
@@ -121,6 +155,26 @@ for (const worker of ['asr', 'semantic', 'clap', 'rhythm']) {
   assert.ok(
     linux.files?.includes(`desktop-dist/native-${worker}-worker.mjs`),
     `Linux packages must ship the native ${worker} worker`,
+  );
+}
+assert.ok(
+  linux.files?.includes('desktop-dist/builtin-llm-worker.mjs'),
+  'Linux packages must ship the built-in LLM worker — AquariusOS is the primary target',
+);
+// Which llama.cpp backend loads is decided at runtime from the machine's
+// hardware, so a Linux x64 build carries the CPU, CUDA and Vulkan packages and
+// drops every other platform's.
+for (const kept of ['linux-x64', 'linux-x64-cuda', 'linux-x64-vulkan']) {
+  assert.equal(
+    linux.files?.includes(`!node_modules/@node-llama-cpp/${kept}/**`),
+    false,
+    `Linux x64 packages must retain the ${kept} llama.cpp binary`,
+  );
+}
+for (const foreign of ['mac-arm64-metal', 'win-x64', 'linux-arm64']) {
+  assert.ok(
+    linux.files?.includes(`!node_modules/@node-llama-cpp/${foreign}/**`),
+    `Linux x64 packages must exclude the ${foreign} llama.cpp binary`,
   );
 }
 assert.equal(
@@ -218,6 +272,26 @@ assert.match(
   /native-rhythm-worker\.ts.*native-rhythm-worker\.mjs/,
   'desktop build must bundle the native rhythm utility process',
 );
+assert.match(
+  packageJson.scripts['build:builtin-llm-worker'],
+  /builtin-llm-worker\.ts.*desktop-dist\/builtin-llm-worker\.mjs/,
+  'the built-in LLM worker must have its own esbuild step',
+);
+assert.match(
+  packageJson.scripts['desktop:build:main'],
+  /build:builtin-llm-worker/,
+  'desktop builds must produce the built-in LLM worker they package',
+);
+// The HyperFrames route runs in the Vite dev server too, and it forks the same
+// built worker file — so `npm run dev` has to have built one, or the built-in
+// model would only work in a packaged app.
+for (const script of ['predev', 'predev:isolated', 'predev:shared']) {
+  assert.match(
+    packageJson.scripts[script] ?? '',
+    /build:builtin-llm-worker/,
+    `${script} must build the worker so the built-in model works in dev too`,
+  );
+}
 assert.match(packageJson.scripts['desktop:dist'], /--mac --arm64/, 'arm64 packaging must build every configured mac target');
 assert.match(packageJson.scripts['desktop:dist:mac-x64'], /--mac --x64/, 'x64 packaging must build every configured mac target');
 assert.doesNotMatch(packageJson.scripts['desktop:dist'], /--mac dmg/, 'mac packaging must not suppress update zip metadata');

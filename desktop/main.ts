@@ -44,6 +44,7 @@ import {
 import type { DesktopPageUrlDecision, DesktopPageUrlSurface } from './page-origin.ts';
 import { preparePackagedRuntime } from './packaged-runtime.ts';
 import { seedBundledModels } from './seed-bundled-models.ts';
+import { disposeBuiltinHyperframesModel } from '../server/plugins/hyperframes.ts';
 import { BUNDLED_MODELS_DIR_NAME } from '../shared/bundled-models.ts';
 import { focusExistingWindow } from './single-instance.ts';
 import { requestProfileScopedSingleInstanceLock } from './runtime-profile.ts';
@@ -364,7 +365,12 @@ async function boot(): Promise<void> {
   const hardware = await detectDesktopHardwareProfile(app);
   const modelCacheDir = modelCachePath(app.getPath('home'));
   const desktopInference = installDesktopInferenceIpc(origin, modelCacheDir, hardware);
-  app.once('before-quit', () => desktopInference.dispose());
+  app.once('before-quit', () => {
+    desktopInference.dispose();
+    // The HyperFrames model lives in the embedded server's own worker rather
+    // than behind the inference IPC, so it needs its own retirement here.
+    disposeBuiltinHyperframesModel();
+  });
   // The installer ships Whisper Small and the three local intelligence packs.
   // Copy anything missing into the model cache in the background so the window
   // opens immediately and the Local models tab shows them already installed.

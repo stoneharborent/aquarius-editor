@@ -3,11 +3,28 @@
 // and generation itself only ever sees composition source.
 import { LLM_PROVIDER_PRESETS, llmProviderConfigNames, type LlmProvider } from '../../shared/llm-providers';
 
+/** Codes `server/builtin-llm/model-file.ts` reports for unusable bundled weights. */
+export type HyperframesProblem = 'model-missing' | 'model-corrupt' | 'runtime-unavailable';
+
+const PROBLEMS: readonly string[] = ['model-missing', 'model-corrupt', 'runtime-unavailable'];
+
+function problemOf(value: unknown): HyperframesProblem | undefined {
+  return typeof value === 'string' && PROBLEMS.includes(value) ? value as HyperframesProblem : undefined;
+}
+
 export interface HyperframesConfigStatus {
   configured: boolean;
   provider: string;
   providerLabel: string;
   model: string;
+  /** True when generation is running on the model that ships inside the app. */
+  builtin: boolean;
+  /**
+   * Why nothing is available, when the bundled weights should have been. Set
+   * only alongside `configured: false` — a user who deleted the model file, or
+   * a build without the local runtime, gets told, never left with a dead button.
+   */
+  problem?: HyperframesProblem;
 }
 
 export interface HyperframesGenerationRequest {
@@ -26,6 +43,8 @@ export interface HyperframesGenerationResult {
   width?: number;
   height?: number;
   error?: string;
+  /** Set when the server refused because the bundled weights went missing. */
+  problem?: HyperframesProblem;
 }
 
 export async function fetchHyperframesConfig(): Promise<HyperframesConfigStatus> {
@@ -38,9 +57,11 @@ export async function fetchHyperframesConfig(): Promise<HyperframesConfigStatus>
       provider: typeof body.provider === 'string' ? body.provider : '',
       providerLabel: typeof body.providerLabel === 'string' ? body.providerLabel : '',
       model: typeof body.model === 'string' ? body.model : '',
+      builtin: body.builtin === true,
+      ...(problemOf(body.problem) ? { problem: problemOf(body.problem) } : {}),
     };
   } catch {
-    return { configured: false, provider: '', providerLabel: '', model: '' };
+    return { configured: false, provider: '', providerLabel: '', model: '', builtin: false };
   }
 }
 
@@ -61,7 +82,13 @@ export async function generateHyperframe(
   } catch (error) {
     return { ok: false, configured: true, error: error instanceof Error ? error.message : String(error) };
   }
-  if (body.configured === false) return { ok: false, configured: false };
+  if (body.configured === false) {
+    return {
+      ok: false,
+      configured: false,
+      ...(problemOf(body.problem) ? { problem: problemOf(body.problem) } : {}),
+    };
+  }
   const composition = body.composition as Record<string, unknown> | undefined;
   if (body.ok === true && composition && typeof composition.code === 'string') {
     return {
@@ -80,7 +107,12 @@ export async function generateHyperframe(
   };
 }
 
-/** Providers offered by the inline setup card, local runtimes included. */
+/**
+ * Providers offered by the inline setup card, local runtimes included. The
+ * built-in model is deliberately absent: it is the state you are already in
+ * when the card offers itself as an upgrade, so listing it would be an option
+ * that changes nothing.
+ */
 export const HYPERFRAMES_PROVIDER_OPTIONS = LLM_PROVIDER_PRESETS
   .filter((preset) => preset.id !== 'xai-oauth')
   .map((preset) => ({ id: preset.id as LlmProvider, label: preset.label }));

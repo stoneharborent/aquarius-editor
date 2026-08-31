@@ -429,6 +429,7 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
           y={hyperframesPrompt.y}
           atLabel={`${trackAlias(state, hyperframesPrompt.trackId)} · ${fmt(hyperframesPrompt.frame, state.fps)}`}
           configured={hyperframes.config?.configured !== false}
+          problem={hyperframes.config?.problem}
           onSubmit={(prompt) => {
             hyperframes.generate(prompt, {
               track: hyperframesPrompt.trackId,
