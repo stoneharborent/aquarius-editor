@@ -386,8 +386,10 @@ export const PreviewPanel = memo(function PreviewPanel({
             {offlineNames.length > 0 && (
               <div role="status" style={{
                 position: 'absolute', top: 8, left: 8, right: 8, zIndex: 12,
+                // Painted ON the picture, over a near-black scrim: the ink is the
+                // viewer surround's ink, not the skin's (which is dark on Ice).
                 padding: '6px 10px', borderRadius: 6, background: themeAlpha.shadow(0.88),
-                border: `1px solid ${theme.accent}`, color: theme.text, fontSize: 11,
+                border: `1px solid ${theme.accent}`, color: theme.onViewerSurround, fontSize: 11,
               }}>
                 {t('Offline media: {list}', { list: offlineNames.join('、') })}
               </div>
@@ -396,7 +398,10 @@ export const PreviewPanel = memo(function PreviewPanel({
               <div role="status" style={{
                 position: 'absolute', bottom: 8, left: 8, zIndex: 12,
                 maxWidth: 'calc(100% - 16px)', padding: '5px 8px', borderRadius: 5,
-                background: themeAlpha.shadow(0.84), color: failedProxies.length ? theme.accent : theme.textMuted,
+                // On the picture — see the offline notice above. The failed state keeps
+                // the accent (attention), the working state uses the surround's ink.
+                background: themeAlpha.shadow(0.84),
+                color: failedProxies.length ? theme.accent : theme.onViewerSurround,
                 fontSize: 10,
               }}>
                 {failedProxies.length
@@ -409,7 +414,7 @@ export const PreviewPanel = memo(function PreviewPanel({
                 position: 'absolute', bottom: 8, right: 8, zIndex: 12,
                 maxWidth: 'calc(100% - 16px)', padding: '5px 8px', borderRadius: 4,
                 border: `0.5px solid ${theme.accent}`, background: themeAlpha.shadow(0.88),
-                color: theme.text, fontSize: 10,
+                color: theme.onViewerSurround, fontSize: 10, // on the picture — see above
               }}>
                 {visibleShaderFallback.fallbackReason === 'media-loading'
                   ? t('Loading effect preview; showing fallback temporarily')

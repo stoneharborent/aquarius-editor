@@ -653,8 +653,10 @@ button, input, select { font: inherit; }
 .cc-media-empty svg { margin-bottom:3px; color:var(--cc-text-dim); }
 .cc-media-empty strong { color:var(--cc-text-muted); font-size:14px; font-weight:400; line-height:20px; }
 .cc-media-empty span { line-height:16px; }
-.cc-preview-empty { width:182px; height:146px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:48px; border:0.5px dashed rgba(var(--cc-ink-rgb), 0.12); border-radius:4px; background:transparent; color:var(--cc-text-dim); cursor:pointer; font-size:12px; white-space:nowrap; }
-.cc-preview-empty:hover { border-color:rgba(var(--cc-ink-rgb), 0.21); color:var(--cc-text-muted); }
+/* Sits directly on the viewer surround, so its ink is the surround's ink, not the
+   skin's (on a light skin the skin ink would be invisible on the dark surround). */
+.cc-preview-empty { width:182px; height:146px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:48px; border:0.5px dashed color-mix(in srgb, var(--cc-on-viewer-surround) 12%, transparent); border-radius:4px; background:transparent; color:color-mix(in srgb, var(--cc-on-viewer-surround) 62%, transparent); cursor:pointer; font-size:12px; white-space:nowrap; }
+.cc-preview-empty:hover { border-color:color-mix(in srgb, var(--cc-on-viewer-surround) 21%, transparent); color:color-mix(in srgb, var(--cc-on-viewer-surround) 82%, transparent); }
 .cc-preview-empty:disabled { cursor:wait; opacity:.7; }
 .cc-preview-header { min-width:0; }
 .cc-preview-header > span { flex-shrink:0; }
@@ -662,7 +664,11 @@ button, input, select { font: inherit; }
 .cc-preview-stage {
   flex:1; min-width:0; min-height:0;
   display:flex; align-items:center; justify-content:center;
-  overflow:hidden; padding:12px 20px; background:var(--cc-bg);
+  overflow:hidden; padding:12px 20px;
+  /* Dark on every skin, light ones included — the surround must not tint the
+     picture the way a lit room tints a grade (Final Cut keeps its viewer dark in
+     light mode for the same reason). See --cc-viewer-surround in skins.ts. */
+  background:var(--cc-viewer-surround);
 }
 /* Remotion Player root — allow shrink, keep letterbox */
 .cc-preview-stage > div { flex:0 1 auto; max-width:100%; max-height:100%; }

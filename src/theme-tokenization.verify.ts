@@ -128,4 +128,23 @@ for (const selector of ['.cc-mic-group', '.cc-timeline-timecode', '.cc-ruler-hea
   assert.deepEqual(rawColors(body), [], `${selector}: fixed color found`);
 }
 
+// The viewer surround is its own token because it stays dark on light skins (Ice is
+// the default and is light). Anything drawn straight onto it must take its ink from
+// --cc-on-viewer-surround, never from the skin's --cc-text*/--cc-ink-rgb, which are
+// dark ink on a light skin and would vanish against the surround.
+for (const [selector, token] of [
+  ['.cc-preview-stage', '--cc-viewer-surround'],
+  ['.cc-preview-empty', '--cc-on-viewer-surround'],
+  ['.cc-preview-empty:hover', '--cc-on-viewer-surround'],
+] as [string, string][]) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const body = css.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`))?.[1] ?? '';
+  assert.ok(body.includes(`var(${token})`), `${selector}: must paint with var(${token})`);
+  assert.ok(
+    !/var\(--cc-(text|ink-rgb|bg)\b/.test(body),
+    `${selector}: sits on the viewer surround, so it must not use the skin's own ground/ink`,
+  );
+  assert.deepEqual(rawColors(body), [], `${selector}: fixed color found`);
+}
+
 process.stdout.write('theme-tokenization.verify: ok\n');

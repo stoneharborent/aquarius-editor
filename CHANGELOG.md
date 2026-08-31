@@ -30,6 +30,21 @@
   with the exact error instead of reaching you broken.
 
 ### Changed
+- **The editor wears AquariusOS's colour identity: Ice, with Midnight as its dark twin.**
+  Ice is a light theme — soft azure papers, deep-ocean navy ink, Aquarius Blue accents —
+  and it is now the skin the app opens with, because AquariusOS is light-first on purpose.
+  Midnight is the same design after dark: navy grounds, ice-blue ink, electric accents that
+  read like light under water. Both come from the same palette Aquarius Writer uses, so the
+  two apps finally look like one product. Every older skin (AquariusOS, AquariusOS Light,
+  Graphite, Mocha, Nord, Tokyo Night, Latte) is still in the list and a skin you had already
+  chosen is never changed for you — only the *default* moved. The old near-black skin goes
+  back to its own name, **Jet Black**, so "Midnight" can mean the one the palette designed.
+- **The area around the picture stays dark on light skins.** A light surround shifts how you
+  judge colour, which is why Final Cut keeps its viewer dark even in light mode; the editor
+  now does the same, and the notices it paints over the picture (offline media, proxy status)
+  are inked to read on that dark ground instead of disappearing into it. Track chips and the
+  audio clip fill were also re-tuned so their labels clear WCAG AA — the timeline is legible
+  in Ice and Midnight in a way it was not on every earlier light skin.
 - **The Hyperframes authoring prompt was rewritten for small models.** It now carries two
   worked examples instead of one (a text graphic and a moving shape, so the model does not
   answer every brief with a lower third), an explicit instruction not to reuse the examples'

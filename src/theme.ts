@@ -6,6 +6,11 @@
 // Can't parse var() (all positions have been audited to zero, new code sets a precedent).
 export const theme = {
   bg: 'var(--cc-bg)', // editor void / timeline background
+  // The ground around the video canvas is dark on EVERY skin (a light surround
+  // distorts colour judgement), so the viewer and anything painted over the
+  // picture use these two instead of bg/text. See skins.ts.
+  viewerSurround: 'var(--cc-viewer-surround)',
+  onViewerSurround: 'var(--cc-on-viewer-surround)',
   inset: 'var(--cc-inset)', // Inner groove (input well)
   panel: 'var(--cc-panel)', // Base editor surface.
   panelAlt: 'var(--cc-panel-alt)', // --surface-raised (cards, chat bubbles, popovers, hover)

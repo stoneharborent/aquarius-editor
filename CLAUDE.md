@@ -38,8 +38,16 @@ dev/test bench.
 1. **The verify suite is the contract.** Any change must leave the relevant
    `verify:*` scripts green; full `npm test` before a stage is called done.
 2. **Never leave the repo dirty.** Commit with clear messages at the end of every task.
-3. **Design tokens come from `../os-image/branding/tokens.md`** — never pick colors by
-   eye. The AquariusOS skin in `src/skins.ts` must match it exactly.
+3. **Design tokens come from the OS, never from the app** — never pick colors by
+   eye. AquariusOS's color identity is **Ice** (light-first) with **Midnight** as its
+   dark mode, locked by Royce 2026-08-31. The spec is `docs/custom-de/ice-theme-tokens.md`
+   on the `research/custom-de` branch of `../os-image` — read it with
+   `git -C ../os-image show origin/research/custom-de:docs/custom-de/ice-theme-tokens.md`.
+   The `Ice` and `Midnight` skins in `src/skins.ts` must match it exactly; every value
+   that the spec does not name is *derived* from one that it does, by a rule written
+   next to the value, and `src/skins.verify.ts` re-derives them so a hand-tweak fails.
+   The older `../os-image/branding/tokens.md` (Starlight/void) is still the law for the
+   legacy `AquariusOS` / `AquariusOS Light` skins only — it is no longer the identity.
 4. **Shortcuts follow Final Cut Pro.** The mapping table `docs/fcp-shortcut-map.md`
    (in this repo) is the law once written; deviations only for actions with no FCP
    equivalent, and they must be documented there.
