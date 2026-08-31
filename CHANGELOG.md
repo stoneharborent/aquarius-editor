@@ -1,33 +1,6 @@
 # Aquarius Editor changelog
 
-## v0.6.0 — 2026-08-30
-
-### Added
-- **HyperFrames sets itself up on first launch.** Graphic generation needs a language
-  model, and the app now brings its own: the first time you open it with nothing
-  configured, it downloads a 2.3 GB Apache-licensed
-  [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) in the
-  background — once, ever — and the Hyperframes tab shows the progress ("Setting up the
-  built-in graphics model (2.5 GB) — 43%") with **Pause** and a *use your own model
-  instead* link beside it. Nothing waits on it; you can edit the whole time. When it lands,
-  graphics generate with no account, no API key and no internet, entirely on your machine.
-  Say **Not now** and it is remembered — the app never starts the download again by itself,
-  and the button stays if you change your mind. **Installers stay at about 1.5 GB**: the
-  weights are fetched separately precisely because an installer carrying them could not be
-  published (see *Fixed*).
-- **The app can now run a language model itself.** Behind that: a full local-model runtime —
-  llama.cpp (via node-llama-cpp) in its own worker process, using your GPU where it can —
-  Metal on Mac, CUDA or Vulkan on Linux and Windows, CPU anywhere else. It loads on the
-  first generation, is reused across a burst, and unloads a few minutes after you stop, so
-  an editing session that never makes a graphic never pays for one. Connecting a provider
-  of your own still wins over it, and still turns the card into an optional *"use a
-  stronger one"* upgrade.
-- **Generated graphics are compiled and rendered before you ever see them.** The generator
-  already checked each composition against the host contract; it now also compiles it with
-  Babel and renders it at the first, middle and last frame in the same restricted scope the
-  editor uses. A composition that would have thrown on the timeline — reading a value
-  before it exists, a typo'd name, assuming a property is filled in — goes back to the model
-  with the exact error instead of reaching you broken.
+## v0.7.0 — 2026-08-31
 
 ### Changed
 - **One window, one surface: the File/Edit menu bar is gone and the app draws its own
@@ -67,6 +40,37 @@
   content, and a short checklist that pins the parts small models drop: a named direction
   fixes the sign of the offset, a named colour is the colour, a named count actually counts,
   a bounce reverses and a slide does not.
+
+## v0.6.0 — 2026-08-30
+
+### Added
+- **HyperFrames sets itself up on first launch.** Graphic generation needs a language
+  model, and the app now brings its own: the first time you open it with nothing
+  configured, it downloads a 2.3 GB Apache-licensed
+  [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) in the
+  background — once, ever — and the Hyperframes tab shows the progress ("Setting up the
+  built-in graphics model (2.5 GB) — 43%") with **Pause** and a *use your own model
+  instead* link beside it. Nothing waits on it; you can edit the whole time. When it lands,
+  graphics generate with no account, no API key and no internet, entirely on your machine.
+  Say **Not now** and it is remembered — the app never starts the download again by itself,
+  and the button stays if you change your mind. **Installers stay at about 1.5 GB**: the
+  weights are fetched separately precisely because an installer carrying them could not be
+  published (see *Fixed*).
+- **The app can now run a language model itself.** Behind that: a full local-model runtime —
+  llama.cpp (via node-llama-cpp) in its own worker process, using your GPU where it can —
+  Metal on Mac, CUDA or Vulkan on Linux and Windows, CPU anywhere else. It loads on the
+  first generation, is reused across a burst, and unloads a few minutes after you stop, so
+  an editing session that never makes a graphic never pays for one. Connecting a provider
+  of your own still wins over it, and still turns the card into an optional *"use a
+  stronger one"* upgrade.
+- **Generated graphics are compiled and rendered before you ever see them.** The generator
+  already checked each composition against the host contract; it now also compiles it with
+  Babel and renders it at the first, middle and last frame in the same restricted scope the
+  editor uses. A composition that would have thrown on the timeline — reading a value
+  before it exists, a typo'd name, assuming a property is filled in — goes back to the model
+  with the exact error instead of reaching you broken.
+
+### Changed
 - **The built-in model gets three repair attempts instead of two.** A local repair costs no
   tokens and no request, and measurably converts drafts that the new compile stage rejected.
   Configured providers keep the existing two.
