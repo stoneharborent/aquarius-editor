@@ -1,6 +1,6 @@
 # Aquarius Editor changelog
 
-## Unreleased (v0.6.0)
+## v0.6.0 — 2026-08-30
 
 ### Added
 - **Hyperframes works out of the box — no setup, no API key, no internet.** A 4-billion
