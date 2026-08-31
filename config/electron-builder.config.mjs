@@ -145,13 +145,17 @@ export default {
     { from: 'dist', to: 'dist', filter: ['**/*', '!media/uploads/**'] },
     { from: 'desktop-dist/remotion-bundle', to: 'remotion-bundle' },
     { from: 'desktop-dist/chrome-headless-shell', to: 'chrome-headless-shell' },
-    // Pre-installed local models (Whisper Small, the three intelligence packs,
-    // and the HyperFrames language model), staged by
-    // desktop/fetch-bundled-models.mts during desktop:prebundle. main.ts copies
-    // whatever is missing into ~/.openchatcut/asr-models on the first launch, so
-    // a fresh install never waits for a model download — and HyperFrames
-    // generates a graphic with nothing configured.
-    // Adds roughly 3.6 GiB uncompressed to each installer payload.
+    // Pre-installed local models (Whisper Small and the three intelligence
+    // packs), staged by desktop/fetch-bundled-models.mts during
+    // desktop:prebundle. main.ts copies whatever is missing into
+    // ~/.openchatcut/asr-models on the first launch, so a fresh install never
+    // waits for a model download to transcribe or analyse.
+    // Adds roughly 1.3 GiB uncompressed to each installer payload.
+    //
+    // The HyperFrames language model is deliberately NOT in here: at 2.33 GiB
+    // it pushed every artifact past GitHub's 2 GiB release-asset limit and made
+    // v0.6.0 unpublishable. See shared/bundled-models.ts for the full reasoning
+    // and the budget any future bundled model has to fit.
     { from: `desktop-dist/${BUNDLED_MODELS_RESOURCE_DIR}`, to: BUNDLED_MODELS_RESOURCE_DIR },
   ],
   npmRebuild: false,

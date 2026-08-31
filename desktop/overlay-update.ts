@@ -42,6 +42,26 @@ export const OS_ENTRY_POINT = '/usr/bin/aquarius-editor';
 export const RELEASE_DOWNLOAD_BASE = 'https://github.com/stoneharborent/aquarius-editor/releases/download';
 export const CHECKSUM_ASSET_NAME = 'SHA256SUMS.txt';
 
+/**
+ * GitHub's hard ceiling for a single release asset: "Each file included in a
+ * release must be under 2 GiB."
+ * https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases
+ *
+ * This is the limit that made v0.6.0 unshippable — every installer built with
+ * the 2.33 GiB HyperFrames GGUF inside it landed at 3.8–4.05 GiB. It is not a
+ * guideline we chose and it cannot be raised, so it bounds what may ever be
+ * bundled into an installer (see shared/bundled-models.ts).
+ *
+ * Two places enforce it, and they must agree:
+ *   • desktop/bundled-models-catalog.verify.ts — at build-config time, against
+ *     the payload the catalogs describe, so an oversized model is caught before
+ *     anyone spends 40 minutes packaging it.
+ *   • .github/workflows/desktop.yml — on the real files, per platform, right
+ *     after Package, so the release job can never reach `gh release upload`
+ *     with an asset GitHub will reject.
+ */
+export const MAX_RELEASE_ASSET_BYTES = 2 * 1024 * 1024 * 1024;
+
 const SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 const CURRENT_LINK = 'current';
 const VERSIONS_DIR = 'versions';

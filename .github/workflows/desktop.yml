@@ -137,6 +137,34 @@ jobs:
       - name: Package
         run: npm run ${{ matrix.script }}
 
+      # GitHub refuses any release asset of 2 GiB or more, so an oversized
+      # installer is not a warning — it is a release that cannot be published.
+      # Fail here, on the runner that built it, rather than 40 minutes later in
+      # the release job (or worse, half-uploaded). v0.6.0's first attempt built
+      # 3.8-4.05 GiB artifacts on every platform; only Windows failed loudly,
+      # because plain NSIS truncates past 2 GiB of its own accord.
+      # The limit is mirrored as MAX_RELEASE_ASSET_BYTES in desktop/overlay-update.ts.
+      - name: Verify release asset sizes
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          limit=2147483648
+          oversized=0
+          for asset in release/*.dmg release/*.zip release/*.exe release/*.AppImage release/*.7z; do
+            size="$(wc -c < "$asset" | tr -d ' ')"
+            printf '%10s MiB  %s\n' "$((size / 1048576))" "${asset##*/}"
+            if [[ "$size" -ge "$limit" ]]; then
+              echo "::error::${asset##*/} is ${size} bytes; GitHub release assets must be under ${limit} bytes (2 GiB)"
+              oversized=1
+            fi
+          done
+          if [[ "$oversized" == 1 ]]; then
+            echo "One or more artifacts exceed GitHub's 2 GiB release-asset limit and cannot be published." >&2
+            echo "Reduce the installer payload — see shared/bundled-models.ts." >&2
+            exit 1
+          fi
+
       - name: Smoke test macOS distribution
         if: runner.os == 'macOS'
         shell: bash
@@ -311,6 +339,17 @@ jobs:
           test -f "release-files/AquariusEditor-${EXPECTED_VERSION}-arm64.zip.blockmap"
           test -f "release-files/AquariusEditor-${EXPECTED_VERSION}-x64.zip.blockmap"
           test -f "release-files/AquariusEditor-${EXPECTED_VERSION}-x64.exe.blockmap"
+          # Last line of defence before `gh release upload`: GitHub rejects any
+          # asset of 2 GiB or more. The Package jobs already check this per
+          # platform; repeat it here so a hand-added or re-run artifact cannot
+          # slip an oversized file into a half-uploaded draft release.
+          for asset in release-files/*; do
+            size="$(wc -c < "$asset" | tr -d ' ')"
+            if [[ "$size" -ge 2147483648 ]]; then
+              echo "${asset##*/} is ${size} bytes; GitHub release assets must be under 2 GiB" >&2
+              exit 1
+            fi
+          done
 
       - name: Generate checksums
         working-directory: release-files

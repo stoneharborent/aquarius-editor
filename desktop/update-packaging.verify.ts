@@ -20,7 +20,7 @@ interface BuilderConfig {
   artifactName?: string;
   publish?: PublishConfig[] | null;
   mac?: { target?: string[]; icon?: string; signIgnore?: string[] };
-  win?: { icon?: string };
+  win?: { icon?: string; target?: string[] };
   linux?: { icon?: string; executableName?: string; syncDesktopName?: boolean };
   files?: string[];
   extraResources?: { from: string; to: string; filter?: string[] }[];
@@ -103,9 +103,10 @@ assert.deepEqual(
 const packagedModelPaths = [
   `/tmp/Aquarius Editor.app/Contents/Resources/${bundledModelsResource!.to}`
     + '/Xenova/whisper-small/onnx/decoder_model_merged_quantized.onnx',
-  // The bundled language model is inert data on the same footing as the ONNX
-  // weights: 2.3 GiB nothing dlopen()s. It has to be covered by the same rule,
-  // and it is only covered because its cachePath starts under bundled-models/.
+  // The language model does not ship any more (it does not fit — see
+  // shared/bundled-models.ts), but the rule that covers it has to keep holding
+  // for whatever is staged under bundled-models/ next: inert weights nothing
+  // dlopen()s, covered only because the cachePath starts under that directory.
   `/tmp/Aquarius Editor.app/Contents/Resources/${bundledModelsResource!.to}`
     + `/${builtinLlmModel().file.cachePath}`,
 ];
@@ -212,6 +213,25 @@ assert.equal(
 
 const windows = await configFor('win32-x64');
 assert.equal(windows.win?.icon, 'assets/branding/aquarius-editor-icon.ico');
+// Windows stays on the plain, offline NSIS installer.
+//
+// `nsis-web` looks like the fix for the 2 GiB NSIS ceiling that broke v0.6.0 —
+// it emits a small web setup plus a separate .7z payload, so nothing is embedded
+// and the 32-bit offset limit never applies. It does not help here: the payload
+// simply becomes a ~4 GiB `.7z` release asset, and GitHub rejects any asset of
+// 2 GiB or more, so the release job would fail at upload and any installer that
+// escaped would 404 on its own payload. Keeping the installer offline also keeps
+// the update path unchanged for existing v0.4.0/v0.5.0 installs.
+//
+// The fix was to shrink the payload instead (shared/bundled-models.ts). Moving
+// to nsis-web only becomes worth revisiting if the payload has to grow past what
+// a single sub-2 GiB asset can carry — and that needs somewhere other than
+// GitHub Releases to host it.
+assert.deepEqual(
+  windows.win?.target,
+  ['nsis'],
+  'Windows ships one offline NSIS installer; nsis-web cannot be published under GitHub\'s 2 GiB asset limit',
+);
 assert.equal(
   windows.files?.includes('!node_modules/sqlite-vec-windows-x64/**'),
   false,
@@ -315,6 +335,14 @@ assert.match(
   windowsDistScript,
   /'--config','config\/electron-builder\.config\.mjs'/,
   'Windows packaging must pass the categorized electron-builder config path',
+);
+// The script names the target explicitly, so it has to name the same one the
+// config declares — otherwise a config change to win.target would be silently
+// ignored on every real build. See the nsis-web note above.
+assert.match(
+  windowsDistScript,
+  /'--win','nsis'/,
+  'the Windows dist script must build the offline NSIS target the config declares',
 );
 assert.match(
   packageJson.scripts['desktop:dist'],

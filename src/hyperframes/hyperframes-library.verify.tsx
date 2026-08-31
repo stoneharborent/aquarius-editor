@@ -185,7 +185,11 @@ assert.match(
   'and it stays disabled when there is genuinely no model to generate with',
 );
 
-// ── Missing weights say so rather than failing silently ──────────────────────
+// ── No local weights says so rather than failing silently ────────────────────
+// Since v0.6.0 the installer carries no model (it did not fit under GitHub's
+// 2 GiB release-asset limit — see shared/bundled-models.ts), so this is the
+// ordinary state on a fresh install rather than a damaged one. It still has to
+// be explained in the card instead of leaving a dead input behind.
 const missingWeights = render(api({
   records: [],
   config: {
@@ -197,8 +201,8 @@ const missingWeights = render(api({
     problem: 'model-missing',
   },
 }));
-assert.match(missingWeights, /built-in model file is not installed/,
-  'a deleted weight file must be explained, never presented as an unconfigured app');
+assert.match(missingWeights, /does not include a built-in model/,
+  'having no local weights must be explained, never presented as an unconfigured app');
 assert.match(missingWeights, /Connect a model to generate graphics/,
   'and the setup card must come back as the way out');
 

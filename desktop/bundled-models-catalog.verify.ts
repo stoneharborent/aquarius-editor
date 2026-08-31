@@ -19,6 +19,7 @@ import {
   isBundledModelPack,
 } from '../shared/bundled-models.ts';
 import { modelDownloadUrls } from '../shared/model-download-sources.ts';
+import { MAX_RELEASE_ASSET_BYTES } from './overlay-update.ts';
 
 const REPO_ROOT = join(import.meta.dirname, '..');
 
@@ -32,10 +33,13 @@ assert.equal(isBundledAsrModel('small'), true);
 assert.equal(isBundledAsrModel('medium'), false);
 assert.equal(isBundledModelPack('rhythm-lite'), true);
 assert.equal(isBundledModelPack('nope'), false);
-// The language model that makes HyperFrames work with nothing configured.
-assert.deepEqual([...BUNDLED_LLM_MODEL_IDS], [BUILTIN_LLM_MODEL_ID],
-  'the built-in HyperFrames model ships');
-assert.equal(isBundledLlmModel(BUILTIN_LLM_MODEL_ID), true);
+// No language model ships. The 2.33 GiB HyperFrames GGUF pushed every v0.6.0
+// artifact to 3.8-4.05 GiB, past GitHub's 2 GiB release-asset limit, so the
+// release could not be published on any platform. The budget assertion further
+// down is the real guard; this pins the decision itself.
+assert.deepEqual([...BUNDLED_LLM_MODEL_IDS], [],
+  'no language model ships in the installer — see shared/bundled-models.ts');
+assert.equal(isBundledLlmModel(BUILTIN_LLM_MODEL_ID), false);
 assert.equal(isBundledLlmModel('nope'), false);
 
 const files = bundledModelFiles();
@@ -128,19 +132,41 @@ assert.ok(
   builderConfig.mac?.signIgnore?.some((pattern) => pattern.includes(BUNDLED_MODELS_DIR_NAME)),
   'macOS signing must skip the bundled models at the directory name they are staged under',
 );
-// The GGUF is staged under bundled-models/llm/…, which is what puts it inside
-// the signIgnore pattern above rather than beside it.
+// The built-in language model must NOT be staged into the installer.
 const builtinFile = builtinLlmModel().file;
-assert.ok(
+assert.equal(
   files.some((file) => file.cachePath === builtinFile.cachePath),
-  'the staged bundle must include the built-in language model',
+  false,
+  'the built-in language model must not be staged into the installer — it does not fit',
 );
 assert.match(builtinFile.cachePath, /^llm\//,
   'GGUF weights live in their own tree under the model cache');
+// Kept as a standing guarantee for whenever a model does ship again: anything
+// staged under bundled-models/ is inert data and must fall inside signIgnore,
+// or macOS packaging spends a codesign spawn per 150 MiB file for nothing.
 assert.match(
   `/Contents/Resources/${BUNDLED_MODELS_DIR_NAME}/${builtinFile.cachePath}`,
   new RegExp(builderConfig.mac!.signIgnore!.join('|')),
-  'the bundled GGUF must fall inside the macOS signIgnore pattern',
+  'anything staged under bundled-models must fall inside the macOS signIgnore pattern',
+);
+
+// ── The payload has to leave room for an installer GitHub will accept ─────
+// This is the assertion that would have caught v0.6.0 before it was built.
+//
+// The bundled files are already-compressed model weights, so LZMA gives back
+// almost nothing on them — treat the payload as incompressible and require it
+// to fit inside the asset limit alongside the app itself. v0.5.0 is the
+// calibration point: a 1.29 GiB payload produced a 1.49 GiB Windows installer,
+// so the app and Electron runtime cost roughly 200 MiB compressed on top.
+// Reserving 512 MiB for that leaves real headroom before the 2 GiB wall.
+const APP_OVERHEAD_RESERVE_BYTES = 512 * 1024 * 1024;
+const payloadBudget = MAX_RELEASE_ASSET_BYTES - APP_OVERHEAD_RESERVE_BYTES;
+const total = bundledModelTotalBytes();
+assert.ok(
+  total <= payloadBudget,
+  `the bundled payload is ${(total / 1024 ** 3).toFixed(2)} GiB; it must stay under `
+  + `${(payloadBudget / 1024 ** 3).toFixed(2)} GiB so every installer clears GitHub's `
+  + '2 GiB release-asset limit (see shared/bundled-models.ts)',
 );
 
 const packageJson = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as {
@@ -165,8 +191,19 @@ for (const catalog of [
   );
 }
 
-const total = bundledModelTotalBytes();
+// The packaging job re-checks the real files; the step has to still be there.
+assert.match(
+  workflow,
+  /- name: Verify release asset sizes/,
+  'the packaging job must check built artifacts against the release-asset limit',
+);
+assert.ok(
+  workflow.includes(`limit=${MAX_RELEASE_ASSET_BYTES}`),
+  'the workflow asset-size guard must use the same limit as MAX_RELEASE_ASSET_BYTES',
+);
+
 console.log(
   `bundled-models-catalog.verify: ${files.length} pinned files, `
-  + `${(total / (1024 ** 3)).toFixed(2)} GiB uncompressed`,
+  + `${(total / (1024 ** 3)).toFixed(2)} GiB uncompressed `
+  + `(budget ${(payloadBudget / (1024 ** 3)).toFixed(2)} GiB)`,
 );

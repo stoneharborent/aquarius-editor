@@ -17,7 +17,7 @@
 
 import { ASR_MODELS, type AsrModelEntry } from './asr-models.ts';
 import { MODEL_PACKS, type ModelPackDefinition, type ModelPackId } from './model-packs/catalog.ts';
-import { BUILTIN_LLM_MODEL_ID, LLM_MODELS, type LlmModelEntry } from './llm-model-catalog.ts';
+import { LLM_MODELS, type LlmModelEntry } from './llm-model-catalog.ts';
 
 /** Directory name under the packaged app's resources that holds the bundled files. */
 export const BUNDLED_MODELS_DIR_NAME = 'bundled-models';
@@ -33,10 +33,38 @@ export const BUNDLED_MODEL_PACK_IDS: readonly ModelPackId[] = [
 ];
 
 /**
- * Language models shipped in the installer. Shipping this one is what makes
- * HyperFrames generation work on a fresh install with nothing configured.
+ * Language models shipped in the installer.
+ *
+ * EMPTY, AND IT HAS TO STAY EMPTY UNTIL THE MODEL IS SMALL ENOUGH TO FIT.
+ *
+ * v0.6.0 shipped the 2.33 GiB Qwen3-4B GGUF here so HyperFrames would generate
+ * with nothing configured. That release could not be published at all:
+ *
+ *   • GitHub Releases refuses any asset of 2 GiB or more, and every artifact
+ *     built with the GGUF inside it was 3.8–4.05 GiB — the Windows installer,
+ *     the Linux AppImage, and both macOS DMG/ZIP pairs alike.
+ *   • Windows failed even earlier: plain NSIS addresses its embedded payload
+ *     with 32-bit offsets, so an installer over 2 GiB truncates. That is the
+ *     "Generated installer is smaller than the embedded archive(s)" error.
+ *
+ * Switching Windows to `nsis-web` fixes the NSIS ceiling but not the release
+ * one — it just moves the 4 GiB into a separate `.7z` asset that GitHub will
+ * not host either. There is no packaging trick that makes a 2.33 GiB addition
+ * fit; the payload itself has to come down.
+ *
+ * So the weights no longer ship. `server/builtin-llm/model-file.ts` already
+ * reports a missing file as `model-missing`, and the HyperFrames tab already
+ * falls back to its provider card, so nothing here fails — generation simply
+ * needs a provider again, exactly as it did in v0.5.0.
+ *
+ * Re-adding an id here is a release-blocking decision, not a preference. The
+ * budget is in `desktop/bundled-models-catalog.verify.ts`: the whole bundled
+ * payload has to leave every installer comfortably under
+ * MAX_RELEASE_ASSET_BYTES. Getting the built-in model back means either a
+ * materially smaller model/quantization that fits that budget, or fetching the
+ * weights on first use instead of bundling them.
  */
-export const BUNDLED_LLM_MODEL_IDS: readonly string[] = [BUILTIN_LLM_MODEL_ID];
+export const BUNDLED_LLM_MODEL_IDS: readonly string[] = [];
 
 export function isBundledAsrModel(id: string): boolean {
   return (BUNDLED_ASR_MODEL_IDS as readonly string[]).includes(id);

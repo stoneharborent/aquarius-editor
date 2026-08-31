@@ -35,38 +35,36 @@ clip: previewable, scrubbable, exportable, and draggable onto the timeline. You 
 right-click an empty spot on the timeline, choose **Hyperframes…**, and the finished clip
 drops itself in at exactly that point.
 
-**There is nothing to set up.** A language model ships inside the app and runs entirely on
-your own machine — no API key, no account, no internet connection, no first-use download.
-It is a 2.3 GB file that the installer puts in place on first launch, and it is only loaded
-into memory when you actually generate something. A few minutes after you stop, it is
-unloaded again and the memory comes back.
+### Connecting a model
 
-The model is
-**[Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507)**, quantized
-to 4 bits (GGUF Q4_K_M), under the **Apache 2.0** licence — a permissive licence that
-allows redistribution inside a product like this one. It runs through
-[llama.cpp](https://github.com/ggerganov/llama.cpp), which uses your GPU where it can
-(Metal on Mac, CUDA or Vulkan on Linux and Windows) and your CPU where it can't.
-
-### Using a bigger model instead
-
-The built-in model is small. It handles ordinary briefs well and occasionally misses a
-detail in a complicated one. If you want something stronger, the Hyperframes tab has a
-line under the input bar — *"Generating with the built-in model · use a stronger one"* —
-that opens a small card where you can connect a provider:
+Generation needs a language model, and you choose which one. The first time you open the
+Hyperframes tab it shows a small card with two kinds of option:
 
 - a **cloud provider** (Anthropic, OpenAI, Google, and others), which needs an API key, or
-- a **local runtime** you already run yourself (Ollama or LM Studio), which needs no key.
+- a **local runtime** you already run yourself ([Ollama](https://ollama.com) or
+  [LM Studio](https://lmstudio.ai)), which needs no key, no account and no internet.
 
-Whatever you connect takes over, and the built-in model steps aside. Your API key is stored
-on this machine and is never sent anywhere except to the provider you chose. If you ever
-want the built-in model back, clear the provider in Settings.
+Your API key is stored on this machine and is never sent anywhere except to the provider
+you chose. You can change or clear it later in Settings.
+
+**No model ships inside the app yet.** The intention was to bundle a small one — a 2.3 GB
+[Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507) file — so that
+graphics worked with nothing configured at all. It could not be released: GitHub does not
+accept a release file of 2 GB or more, and an installer carrying that model is about 4 GB
+on every platform. Nothing about the installer format gets around that, so the model waits
+until it can be a smaller one or until the app can download it for you on first use.
+
+The machinery to run a local model is finished and shipped, through
+[llama.cpp](https://github.com/ggerganov/llama.cpp) — it uses your GPU where it can (Metal
+on Mac, CUDA or Vulkan on Linux and Windows) and your CPU where it can't. If you put a
+supported model file in place yourself, the app will use it and the card becomes an
+optional *"use a stronger one"* upgrade instead of a requirement.
 
 ### If graphics stop working
 
-The only way this breaks is if the model file goes missing — you deleted it, or an install
-went wrong. When that happens the tab says so in plain words and offers you the provider
-card as a way out. It never silently does nothing. Reinstalling the app puts the file back.
+If the model you connected stops answering, or a local model file is damaged, the tab says
+so in plain words and offers you the provider card as a way out. It never silently does
+nothing.
 
 ## Where it came from, and what that means
 
