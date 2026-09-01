@@ -99,6 +99,7 @@ a binding in `src/shortcuts/catalog.ts`, change the matching row here in the sam
 | Timeline zoom in (`zoom-in`) | Mod + = / Mod + + | **Mod + = / Mod + Shift + =** | ⌘+ | FCP | The old `Mod + +` alternative was dead: the binding parser splits chords on `+`, so it never produced a key. `Mod + Shift + =` is the same physical chord as ⌘+ and actually matches. |
 | Timeline zoom out (`zoom-out`) | Mod + - | **Mod + -** | ⌘- | FCP | |
 | Zoom timeline to fit (`zoom-fit`) | Shift + Z | **Shift + Z** | ⇧Z | FCP | Already correct. |
+| App UI scale (`useUiScaleShortcuts` — a hook, not a catalog action) | Mod + = / Mod + - / Mod + 0 | **Mod + Alt + = / Mod + Alt + - / Mod + Alt + 0** | — | Extension | Scales the whole interface in 5% steps (clamped 80–150% in the main process); Mod + Alt + 0 resets to 100%. Moved off the bare Mod chords on 2026-09-01 because they are Final Cut's timeline zoom and rule 4 makes Final Cut the law — see conflict 7. Not Mod + Shift + =, which IS ⌘+ on a US layout and is already `zoom-in`'s second binding. Matched on `event.code`, because Option + = prints "≠" on macOS. |
 | Fullscreen preview (`fullscreen`) | ` | **Mod + Shift + F / `** | ⇧⌘F ("Play Full Screen") | FCP | FCP's chord added as the primary; the backtick is kept as a one-key alias because it is genuinely convenient and collides with nothing. |
 | Keyboard shortcuts (`keyboard-shortcuts`) | Mod + Alt + K | **Mod + Alt + K** | ⌥⌘K (Command Editor) | FCP | Already correct. Works while typing, on purpose. |
 
@@ -142,6 +143,18 @@ decision point, shared by the commit path (`useTimelinePointer.ts`) and the live
    rather than staying on ⌘M.
 6. A machine check now enforces the result: `catalog.verify.ts` fails if any two actions in the
    default preset resolve to the same chord.
+7. **Timeline zoom was unreachable from the keyboard, and the check above could not see it.**
+   Found on the AquariusOS bench, 2026-09-01. `zoom-in` / `zoom-out` own Mod + = and Mod + -
+   here, but `useUiScaleShortcuts` — a global `window` listener that is *not* a catalog action —
+   also claimed them and called `preventDefault()` first, so the timeline never zoomed and the
+   timeline toolbar's own "Zoom in timeline (⌘＋)" tooltip was untrue. It had been invisible
+   since the fork: Electron's default File/Edit menu owned those chords as menu accelerators,
+   which are handled before the page sees a key, so *neither* behaviour fired on Linux or
+   Windows — removing that menu in v0.7.0 is what let the listener win. Resolved by moving the
+   UI-scale accelerators to **Mod + Alt + = / - / 0** (Royce's call: the timeline keeps the
+   Final Cut chords, and UI scale has no Final Cut equivalent, so it is the one that moves).
+   Note the lesson for conflict 6: `catalog.verify.ts` compares catalog actions against each
+   other, so a chord claimed by hand-rolled listener outside the catalog is invisible to it.
 
 ## Keys the remap freed
 

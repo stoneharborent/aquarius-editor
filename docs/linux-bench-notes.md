@@ -76,17 +76,47 @@ Checked live, against the real Electron window, with `dist/` freshly built at v0
   back. This is the half the unit tests could never prove.
 - **Ice renders as the default skin**: bar paper `#F0F6FC`, ink `#16273A`.
 
-## Still needs a person — a mouse and a keyboard
+## Checked by hand on the bench, 2026-09-01
 
-None of these can be honestly proven from a script, because they are handled by the
-compositor rather than the page:
+Royce drove all of these on the real machine. Everything below passed unless it says
+otherwise.
 
-- [ ] **Drag the top bar** — does the window actually move?
-- [ ] **Double-click the top bar** — does it maximize, and does double-clicking the project
-      title rename it instead?
-- [ ] **The minimize and close buttons** — do they do their jobs?
-- [ ] **F11** full screen, and **Ctrl+Q** quit.
-- [ ] **The three shortcuts the old menu used to eat**: Ctrl+R (move right to boundary),
-      Ctrl+M (delete marker at playhead), Ctrl +/-/0 (timeline zoom) — all three should now
-      reach the timeline.
-- [ ] **Switch skins with the window maximized** — the bar should repaint immediately.
+- ✅ **Drag the top bar** — the window moves.
+- ✅ **Double-click** — the bar maximizes, and double-clicking the *project title* renames
+  instead of maximizing. Both halves of the opt-out work.
+- ✅ **Minimize, maximize and close buttons** — all three do their jobs.
+- ✅ **F11** full screen and **Ctrl+Q** quit.
+- ✅ **Ctrl+R** (move right to boundary) and **Ctrl+M** (delete marker at playhead) — both
+  reach the timeline now that the menu is gone. These were genuinely dead before v0.7.0.
+- ❌ → ✅ **Ctrl +/−/0 zoomed the whole app instead of the timeline.** A real bug, found
+  here and fixed the same day — see below.
+- ✅ **Skin switching while maximized** — the title bar repaints immediately, on every skin.
+
+## The one real bug this bench pass found
+
+`zoom-in` / `zoom-out` own `Mod + =` and `Mod + -` in the shortcut catalog — Final Cut's
+timeline zoom, and the law per CLAUDE.md rule 4. But `useUiScaleShortcuts` was a global
+`window` listener that claimed the same chords for whole-app UI scale and called
+`preventDefault()` first. The timeline never zoomed from the keyboard, and the timeline
+toolbar's own tooltip — "Zoom in timeline (⌘＋)" — was untrue.
+
+It had been broken since the fork and nobody could see it. Electron's default File/Edit
+menu owned `Ctrl +/-/0` as *menu accelerators*, which are handled before the page sees a
+key, so **neither** behaviour fired on Linux or Windows. Removing that menu in v0.7.0 is
+what let the listener win, which is why v0.7.0's commit message claims those keys "finally
+reach the timeline" — they reached the UI-scale hook instead.
+
+Fixed by moving the UI-scale accelerators to **Mod + Alt + = / - / 0** (Royce's call: the
+timeline keeps the Final Cut chords; UI scale has no Final Cut equivalent, so it moves).
+Deliberately *not* `Mod + Shift + =`, which is the same physical chord as ⌘+ on a US
+layout and is already `zoom-in`'s second binding. Written up as conflict 7 in
+`docs/fcp-shortcut-map.md`.
+
+Both halves are verified on this bench. Royce confirmed the timeline zooms from the
+keyboard again. The UI-scale side was checked by dispatching the real chords into the
+running window over CDP: `Ctrl + =` left `devicePixelRatio` at 1.25 (it no longer steals the
+key), `Ctrl + Alt + =` moved it to 1.3125, and `Ctrl + Alt + 0` returned it to 1.25 exactly.
+
+**The lesson worth keeping.** `catalog.verify.ts` fails the build if two *catalog actions*
+resolve to the same chord — but UI scale was a hand-rolled listener outside the catalog, so
+the check was blind to it. A chord claimed anywhere other than the catalog is unguarded.
