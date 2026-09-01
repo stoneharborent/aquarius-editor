@@ -9,6 +9,7 @@ import {
 } from './upstreamUpdate';
 import {
   resolveUpstreamUpdateAction,
+  resolveUpstreamUpdateFallbackAction,
   runUpstreamUpdateCommand,
   upstreamUpdateMessage,
 } from './upstreamUpdateAction';
@@ -29,14 +30,20 @@ export function UpstreamUpdateNotice() {
   const desktopUpdate = hasDesktopUpdateSupport();
   const action = resolveUpstreamUpdateAction(update, desktopUpdate);
   const showAction = update.phase !== 'current';
+  // Present only on a failure, and never the same command as the retry beside it, so a
+  // broken updater always leaves one route to the release.
+  const fallback = resolveUpstreamUpdateFallbackAction(update);
+  const showFallback = fallback !== null && fallback.command !== action.command;
 
   return (
     <UpstreamUpdateNoticeView
       message={upstreamUpdateMessage(update, desktopUpdate)}
       actionLabel={showAction ? action.label : undefined}
       actionDisabled={action.disabled}
+      fallbackLabel={showFallback ? fallback.label : undefined}
       closeLabel={t('Close')}
       onAction={showAction ? () => { runUpstreamUpdateCommand(action.command); } : undefined}
+      onFallback={showFallback ? () => { runUpstreamUpdateCommand(fallback.command); } : undefined}
       onDismiss={dismissUpstreamUpdate}
     />
   );

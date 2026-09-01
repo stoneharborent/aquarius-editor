@@ -25,6 +25,11 @@ import {
 import { isAbsolute, join } from 'node:path';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import {
+  failureReasonForStatus,
+  parseReleaseVersion,
+  updateCheckError,
+} from '../shared/desktop-update.ts';
 
 /** Set to '1' by the AquariusOS launcher when this build lives in the read-only image. */
 export const OS_MANAGED_INSTALL_ENV = 'AQUARIUS_OS_MANAGED_INSTALL';
@@ -41,6 +46,28 @@ export const OS_ENTRY_POINT = '/usr/bin/aquarius-editor';
 // update-packaging.verify.ts pins these three to the packaging config so they cannot drift.
 export const RELEASE_DOWNLOAD_BASE = 'https://github.com/stoneharborent/aquarius-editor/releases/download';
 export const CHECKSUM_ASSET_NAME = 'SHA256SUMS.txt';
+
+/**
+ * Where the overlay asks "what is the newest release?".
+ *
+ * The overlay owns its whole update pipeline, and that now includes the version check.
+ * It used to borrow electron-updater's, and that is the bug this constant exists to fix:
+ * on AquariusOS the app is an *extracted* AppImage, so `process.env.APPIMAGE` is unset,
+ * and electron-updater's AppImageUpdater.isUpdaterActive() refuses outright —
+ * "APPIMAGE env is not defined, current application is not an AppImage" — making
+ * checkForUpdates() resolve null before it ever reaches the network. The overlay never
+ * needed APPIMAGE (it installs beside the read-only image copy rather than replacing a
+ * file in place), so it must not inherit a gate written for the path that does.
+ *
+ * This is the same feed the renderer uses (RELEASE_FEED in src/ui/upstreamUpdate.ts) and
+ * the same repository the downloads come from (RELEASE_DOWNLOAD_BASE above);
+ * update-packaging.verify.ts pins all three together so they cannot drift apart.
+ *
+ * The GitHub releases API is used rather than `latest-x64-linux.yml` because the overlay
+ * already addresses release assets by name and version, not through electron-updater's
+ * channel metadata — the yml describes an in-place AppImage swap the overlay never does.
+ */
+export const RELEASE_API_LATEST = 'https://api.github.com/repos/stoneharborent/aquarius-editor/releases/latest';
 
 /**
  * GitHub's hard ceiling for a single release asset: "Each file included in a
@@ -94,6 +121,8 @@ export interface OverlayUpdateIo {
 
 export interface OverlayUpdateInstaller {
   readonly overlayRoot: string;
+  /** The newest published release version, checked without electron-updater. */
+  readonly latestVersion: () => Promise<string>;
   readonly install: (version: string, hooks?: OverlayInstallHooks) => Promise<string>;
 }
 
@@ -247,7 +276,12 @@ async function downloadToFile(
 
 async function fetchText(url: string): Promise<string> {
   const response = await fetch(url, { redirect: 'follow' });
-  if (!response.ok) throw new Error(`Checksum download failed (${response.status}) for ${url}`);
+  if (!response.ok) {
+    throw updateCheckError(
+      `Release request failed (${response.status}) for ${url}`,
+      failureReasonForStatus(response.status),
+    );
+  }
   return response.text();
 }
 
@@ -338,12 +372,39 @@ export async function installOverlayUpdate(
   }
 }
 
+/**
+ * Reads the newest published release version straight from the releases API.
+ *
+ * Deliberately independent of electron-updater: on AquariusOS its AppImageUpdater declines
+ * to check at all (see RELEASE_API_LATEST above), and the overlay has no use for the
+ * channel metadata electron-updater would fetch. Every failure carries a reason so the UI
+ * can say *why* instead of "unable to check for updates".
+ */
+export async function fetchLatestReleaseVersion(
+  io: OverlayUpdateIo = defaultOverlayUpdateIo,
+  releaseApiUrl: string = RELEASE_API_LATEST,
+): Promise<string> {
+  const body = await io.fetchText(releaseApiUrl);
+  let payload: unknown;
+  try {
+    payload = JSON.parse(body);
+  } catch {
+    throw updateCheckError(`The release feed at ${releaseApiUrl} was not readable`, 'unreadable');
+  }
+  const tag = (payload as { tag_name?: unknown } | null)?.tag_name;
+  if (typeof tag !== 'string' || !parseReleaseVersion(tag)) {
+    throw updateCheckError('The release feed did not name a valid version', 'unreadable');
+  }
+  return normalizeOverlayVersion(tag);
+}
+
 export function createOverlayUpdateInstaller(
   overlayRoot: string,
   io: OverlayUpdateIo = defaultOverlayUpdateIo,
 ): OverlayUpdateInstaller {
   return {
     overlayRoot,
+    latestVersion: () => fetchLatestReleaseVersion(io),
     install: (version, hooks) => installOverlayUpdate(overlayRoot, version, hooks, io),
   };
 }

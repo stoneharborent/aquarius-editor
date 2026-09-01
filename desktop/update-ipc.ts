@@ -50,6 +50,7 @@ function resolveOverlayDriver(): OverlayUpdateDriver | null {
   if (!overlayRoot) return null;
   const installer = createOverlayUpdateInstaller(overlayRoot);
   return {
+    latestVersion: () => installer.latestVersion(),
     install: (version, hooks) => installer.install(version, hooks),
     restart: restartThroughOsEntryPoint,
   };

@@ -24,6 +24,7 @@ import {
 } from '../../ui/upstreamUpdate';
 import {
   resolveUpstreamUpdateAction,
+  resolveUpstreamUpdateFallbackAction,
   runUpstreamUpdateCommand,
 } from '../../ui/upstreamUpdateAction';
 import {
@@ -197,6 +198,12 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
   useEscape(requestClose);
 
   const updateAction = resolveUpstreamUpdateAction(updateState, hasDesktopUpdateSupport());
+  // A failed update keeps a route to the releases page here too — this header is where the
+  // check is started from, so it is where a dead end would strand the user.
+  const updateFallback = resolveUpstreamUpdateFallbackAction(updateState);
+  const showUpdateFallback = UPDATE_CHECKS_ENABLED
+    && updateFallback !== null
+    && updateFallback.command !== updateAction.command;
 
   const shownError = error ?? loadError;
   const message = shownError ? { text: shownError, color: WARN }
@@ -216,7 +223,11 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
               versionLabel={t('Current version: {version}', { version: formatDisplayVersion(CURRENT_APP_VERSION) })}
               actionLabel={UPDATE_CHECKS_ENABLED ? updateAction.label : undefined}
               disabled={updateAction.disabled}
+              fallbackLabel={showUpdateFallback ? updateFallback.label : undefined}
               onAction={() => { runUpstreamUpdateCommand(updateAction.command); }}
+              onFallback={showUpdateFallback
+                ? () => { runUpstreamUpdateCommand(updateFallback.command); }
+                : undefined}
             />
             <button type="button" onClick={requestClose} title={t('Close')} style={iconBtn}><Icon name="x" size={15} /></button>
           </div>

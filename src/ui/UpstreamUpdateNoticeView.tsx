@@ -49,20 +49,34 @@ export function UpstreamUpdateNoticeView({
   message,
   actionLabel,
   actionDisabled = false,
+  fallbackLabel,
   closeLabel,
   onAction,
+  onFallback,
   onDismiss,
 }: {
   message: string;
   actionLabel?: string;
   actionDisabled?: boolean;
+  /** The always-available way out when the updater itself failed. */
+  fallbackLabel?: string;
   closeLabel: string;
   onAction?: () => void;
+  onFallback?: () => void;
   onDismiss: () => void;
 }) {
   return (
     <div role="status" aria-live="polite" style={noticeStyle}>
       <span style={{ flex: 1 }}>{message}</span>
+      {fallbackLabel && onFallback && (
+        <button
+          type="button"
+          onClick={onFallback}
+          style={{ ...actionStyle, background: 'transparent', cursor: 'pointer' }}
+        >
+          {fallbackLabel}
+        </button>
+      )}
       {actionLabel && onAction && (
         <button
           type="button"

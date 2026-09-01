@@ -37,4 +37,24 @@ assert.match(markup, /aria-label="Window controls"/, 'desktop window controls mu
 assert.equal((markup.match(/class="cc-window-control /g) ?? []).length, 3, 'the app-drawn title bar keeps all three window control buttons');
 
 
-console.log('upstream-update-notice.verify: dashboard-only centered upstream update notice OK');
+// A failed check must state what went wrong and keep a route to the release. v0.6.0 on
+// AquariusOS showed "Unable to check for updates. Please try again later." beside a single
+// Check again button that could only fail the same way — a dead end at the exact moment the
+// user most needs to reach a download.
+const failure = renderToStaticMarkup(
+  <UpstreamUpdateNoticeView
+    message="Could not reach the update server. Check your internet connection, or open the releases page in a browser."
+    actionLabel="Check again"
+    fallbackLabel="Open releases page"
+    closeLabel="Close"
+    onAction={() => undefined}
+    onFallback={() => undefined}
+    onDismiss={() => undefined}
+  />,
+);
+assert.match(failure, /Check your internet connection/, 'a failed check must say what went wrong');
+assert.match(failure, />Check again<\/button>/, 'a failed check stays retryable');
+assert.match(failure, />Open releases page<\/button>/, 'a failed check must always offer a way out');
+assert.doesNotMatch(failure, /<a\b/, 'the escape hatch still goes through controlled desktop IPC, not a raw link');
+
+console.log('upstream-update-notice.verify: dashboard-only centered upstream update notice and failure escape hatch OK');

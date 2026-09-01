@@ -40,8 +40,42 @@ const element = SettingsVersionControl({
   disabled: false,
   onAction: () => { requested = true; },
 });
-const button = element.props.children[1];
+const buttons = element.props.children.filter((child: unknown) => child !== null);
+const button = buttons.at(-1);
 button.props.onClick();
 assert.equal(requested, true, 'clicking Download update must trigger the controlled update action');
+assert.equal(
+  buttons.length,
+  2,
+  'with no failure to escape, the header shows the version and one update control',
+);
 
-console.log('settings-version.verify: current version and manual check control OK');
+// When the updater itself fails, the header must offer a way out that does not depend on it.
+// v0.6.0 on AquariusOS could not check for updates at all and offered only "Check again",
+// which failed identically every time — nothing pointed at the release that fixed it.
+let openedReleases = false;
+const stranded = renderToStaticMarkup(
+  <SettingsVersionControl
+    versionLabel="Current version: V0.6.0"
+    actionLabel="Check again"
+    disabled={false}
+    fallbackLabel="Open releases page"
+    onAction={() => undefined}
+    onFallback={() => { openedReleases = true; }}
+  />,
+);
+assert.match(stranded, />Check again<\/button>/, 'a failed check stays retryable');
+assert.match(stranded, />Open releases page<\/button>/, 'a failed check must never be a dead end');
+
+const strandedElement = SettingsVersionControl({
+  versionLabel: 'Current version: V0.6.0',
+  actionLabel: 'Check again',
+  disabled: false,
+  fallbackLabel: 'Open releases page',
+  onAction: () => undefined,
+  onFallback: () => { openedReleases = true; },
+});
+strandedElement.props.children.filter((child: unknown) => child !== null)[1].props.onClick();
+assert.equal(openedReleases, true, 'the escape hatch must run the releases-page command');
+
+console.log('settings-version.verify: current version, manual check control, and failure escape hatch OK');

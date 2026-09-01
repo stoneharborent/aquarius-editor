@@ -180,13 +180,19 @@ assert.equal(currentService.install().phase, 'current', 'install is forbidden be
 assert.equal(currentFake.installCalls, 0);
 
 // --- AquariusOS overlay mode -------------------------------------------------------------
-// The overlay reuses the whole state machine: the same feed check, the same phases, the same
-// renderer. Only the download and the restart are replaced.
-function overlayDriver(options: { fail?: boolean } = {}) {
-  const record = { versions: [] as string[], restarts: 0 };
+// The overlay reuses the whole state machine: the same phases, the same renderer. The check,
+// the download and the restart are all its own — see the isUpdaterActive regression below for
+// why the check cannot be electron-updater's.
+function overlayDriver(options: { fail?: boolean; latest?: string; checkError?: unknown } = {}) {
+  const record = { versions: [] as string[], restarts: 0, checks: 0 };
   return {
     record,
     driver: {
+      latestVersion: async () => {
+        record.checks += 1;
+        if (options.checkError !== undefined) throw options.checkError;
+        return options.latest ?? '0.2.0';
+      },
       install: async (
         version: string,
         hooks: { onProgress: (percent: number) => void; onExtractStart: () => void },
@@ -212,7 +218,12 @@ const overlayService = new DesktopUpdateService(overlayFake as unknown as AppUpd
 const overlayPhases: string[] = [];
 overlayService.subscribe((next) => { overlayPhases.push(next.phase); });
 assert.equal((await overlayService.check('manual')).phase, 'available');
-assert.equal(overlayFake.checkCalls, 1, 'the overlay path checks the same release feed as every other build');
+assert.equal(overlay.record.checks, 1, 'the overlay asks its own driver what the newest release is');
+assert.equal(
+  overlayFake.checkCalls,
+  0,
+  'electron-updater must never perform the check in overlay mode — it refuses to without APPIMAGE',
+);
 
 const overlayDownloaded = await overlayService.download();
 assert.equal(overlayFake.downloadCalls, 0, 'electron-updater must never download in overlay mode');
@@ -245,4 +256,72 @@ assert.equal(failedOverlay.failedOperation, 'download', 'a failed overlay instal
 assert.equal(failingService.install().phase, 'error', 'a failed download must not offer a restart');
 assert.equal(failing.record.restarts, 0);
 
-console.log('update-service.verify: explicit check, download, retry, progress, install, and overlay lifecycle OK');
+// --- regression: AquariusOS could not check for updates at all (v0.6.0) --------------------
+// On AquariusOS the app is an EXTRACTED AppImage started by /usr/bin/aquarius-editor, so
+// process.env.APPIMAGE is unset. electron-updater's AppImageUpdater.isUpdaterActive() answers
+// false for exactly that reason ("APPIMAGE env is not defined, current application is not an
+// AppImage") and checkForUpdates() then resolves NULL without any network call. v0.6.0 routed
+// the overlay check through it anyway and turned that null into a permanent
+// "Unable to check for updates" that no amount of retrying could clear.
+//
+// This updater reproduces that exact behaviour. The overlay check must not care.
+class InactiveAppImageUpdater extends FakeUpdater {
+  override async checkForUpdates(): Promise<unknown> {
+    this.checkCalls += 1;
+    return null; // isUpdaterActive() === false
+  }
+}
+
+const inactive = new InactiveAppImageUpdater();
+const strandedService = new DesktopUpdateService(inactive as unknown as AppUpdater, {
+  enabled: true,
+  currentVersion: '0.6.0',
+});
+assert.equal(
+  (await strandedService.check('manual')).phase,
+  'error',
+  'without an overlay a null check result is still a failure, as electron-updater intends',
+);
+
+const rescued = overlayDriver({ latest: '0.7.0' });
+const rescuedService = new DesktopUpdateService(new InactiveAppImageUpdater() as unknown as AppUpdater, {
+  enabled: true,
+  currentVersion: '0.6.0',
+  overlay: rescued.driver,
+});
+const rescuedState = await rescuedService.check('manual');
+assert.equal(
+  rescuedState.phase,
+  'available',
+  'the overlay check must find the release even though electron-updater refuses to look',
+);
+assert.equal(rescuedState.latestVersion, '0.7.0');
+
+// The same comparison must also settle "already current" without electron-updater.
+const currentOverlay = overlayDriver({ latest: '0.7.0' });
+const currentOverlayService = new DesktopUpdateService(
+  new InactiveAppImageUpdater() as unknown as AppUpdater,
+  { enabled: true, currentVersion: '0.7.0', overlay: currentOverlay.driver },
+);
+assert.equal((await currentOverlayService.check('manual')).phase, 'current');
+
+// A real check failure must still be reported — and must say why, so the message can be
+// something better than "please try again later".
+for (const [thrown, reason] of [
+  [Object.assign(new Error('rate limited'), { reason: 'rate-limited' }), 'rate-limited'],
+  [new TypeError('fetch failed'), 'offline'],
+  [new Error('something else'), 'unknown'],
+] as const) {
+  const brokenFeed = overlayDriver({ checkError: thrown });
+  const brokenService = new DesktopUpdateService(new FakeUpdater() as unknown as AppUpdater, {
+    enabled: true,
+    currentVersion: '0.6.0',
+    overlay: brokenFeed.driver,
+  });
+  const failed = await brokenService.check('manual');
+  assert.equal(failed.phase, 'error');
+  assert.equal(failed.failedOperation, 'check');
+  assert.equal(failed.failureReason, reason, `a ${reason} check failure must be reported as such`);
+}
+
+console.log('update-service.verify: explicit check, download, retry, progress, install, overlay lifecycle, and the APPIMAGE-free overlay check OK');

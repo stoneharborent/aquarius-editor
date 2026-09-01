@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
-import { resolveUpstreamUpdateAction } from './upstreamUpdateAction';
+import {
+  resolveUpstreamUpdateAction,
+  resolveUpstreamUpdateFallbackAction,
+  upstreamUpdateMessage,
+} from './upstreamUpdateAction';
 import {
   RELEASE_FEED,
   UPDATE_CHECKS_ENABLED,
@@ -112,6 +116,57 @@ const failedInstallState = mapDesktopUpdateState({
 });
 assert.equal(failedInstallState.phase, 'error');
 assert.equal(resolveUpstreamUpdateAction(failedInstallState, true).command, 'install');
+
+// --- a failed check must explain itself and offer a way out --------------------------------
+// "Unable to check for updates. Please try again later." was all v0.6.0 said while its
+// AquariusOS build was permanently unable to check, and the only button retried the same
+// broken call. Every failure now names a reason and keeps a route to the releases page.
+for (const reason of ['offline', 'rate-limited', 'unavailable', 'unreadable', 'unknown'] as const) {
+  const failed = mapDesktopUpdateState({
+    phase: 'error',
+    currentVersion: '0.6.0',
+    source: 'manual',
+    failedOperation: 'check',
+    failureReason: reason,
+  });
+  assert.equal(failed.phase === 'error' ? failed.failureReason : null, reason);
+  const message = upstreamUpdateMessage(failed, true);
+  assert.notEqual(
+    message,
+    'Unable to check for updates. Please try again later.',
+    `a ${reason} failure must say more than the old catch-all`,
+  );
+  assert.match(message, /releases page|internet connection/i, `a ${reason} failure must point somewhere`);
+  assert.equal(resolveUpstreamUpdateAction(failed, true).command, 'check', 'a failed check stays retryable');
+  assert.equal(
+    resolveUpstreamUpdateFallbackAction(failed)?.command,
+    'view-release',
+    'a failed check must always offer the releases page as well',
+  );
+}
+assert.match(
+  upstreamUpdateMessage(mapDesktopUpdateState({
+    phase: 'error', currentVersion: '0.6.0', source: 'manual', failedOperation: 'check', failureReason: 'offline',
+  }), true),
+  /internet connection/i,
+  'an unreachable server must mention the connection, since that is what the user can act on',
+);
+assert.match(
+  upstreamUpdateMessage(mapDesktopUpdateState({
+    phase: 'error', currentVersion: '0.6.0', source: 'manual', failedOperation: 'check', failureReason: 'rate-limited',
+  }), true),
+  /rate-limit/i,
+  'a rate-limited check must say waiting is the answer, not retrying now',
+);
+// A state that is not a failure has nothing to escape from.
+assert.equal(resolveUpstreamUpdateFallbackAction(availableState), null);
+assert.equal(resolveUpstreamUpdateFallbackAction({ phase: 'idle', visible: false }), null);
+
+// A missing reason from an older main process must not crash the renderer.
+const legacyFailure = mapDesktopUpdateState({
+  phase: 'error', currentVersion: '0.6.0', source: 'manual', failedOperation: 'check',
+});
+assert.equal(legacyFailure.phase === 'error' ? legacyFailure.failureReason : null, 'unknown');
 
 assert.deepEqual(mapDesktopUpdateState({
   phase: 'unsupported',

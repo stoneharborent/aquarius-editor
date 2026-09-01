@@ -1,6 +1,14 @@
 import type {
+  DesktopUpdateFailureReason,
   DesktopUpdateOperation,
   DesktopUpdateState,
+} from '../../shared/desktop-update';
+import {
+  failureReasonForError,
+  failureReasonForStatus,
+  isNewerReleaseVersion,
+  parseReleaseVersion,
+  updateCheckError,
 } from '../../shared/desktop-update';
 
 /**
@@ -52,14 +60,9 @@ export type UpstreamUpdateState =
     currentVersion: string;
     latestVersion?: string;
     failedOperation: DesktopUpdateOperation;
+    failureReason: DesktopUpdateFailureReason;
   };
 
-interface ParsedVersion {
-  core: readonly [number, number, number];
-  prerelease: readonly string[];
-}
-
-const SEMVER = /^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/i;
 const listeners = new Set<() => void>();
 let state: UpstreamUpdateState = { phase: 'idle', visible: false };
 let requestSequence = 0;
@@ -68,47 +71,6 @@ let activeController: AbortController | null = null;
 let unsubscribeDesktopUpdates: (() => void) | null = null;
 let desktopStateRevision = 0;
 let desktopUpdateSupported: boolean | null = null;
-
-function parseVersion(version: string): ParsedVersion | null {
-  const match = version.trim().match(SEMVER);
-  if (!match) return null;
-  return {
-    core: [Number(match[1]), Number(match[2]), Number(match[3])],
-    prerelease: match[4]?.split('.') ?? [],
-  };
-}
-
-function comparePrerelease(candidate: readonly string[], current: readonly string[]): number {
-  if (candidate.length === 0 || current.length === 0) {
-    return candidate.length === current.length ? 0 : candidate.length === 0 ? 1 : -1;
-  }
-  const length = Math.max(candidate.length, current.length);
-  for (let index = 0; index < length; index += 1) {
-    const next = candidate[index];
-    const installed = current[index];
-    if (next === undefined || installed === undefined) return next === installed ? 0 : next === undefined ? -1 : 1;
-    if (next === installed) continue;
-    const nextNumber = /^\d+$/.test(next) ? Number(next) : null;
-    const installedNumber = /^\d+$/.test(installed) ? Number(installed) : null;
-    if (nextNumber !== null || installedNumber !== null) {
-      if (nextNumber === null) return 1;
-      if (installedNumber === null) return -1;
-      return nextNumber > installedNumber ? 1 : -1;
-    }
-    return next > installed ? 1 : -1;
-  }
-  return 0;
-}
-
-function isNewerVersion(candidate: string, current: string): boolean {
-  const next = parseVersion(candidate);
-  const installed = parseVersion(current);
-  if (!next || !installed) throw new Error('Upstream did not return a valid release version');
-  for (let index = 0; index < next.core.length; index += 1) {
-    if (next.core[index] !== installed.core[index]) return next.core[index]! > installed.core[index]!;
-  }
-  return comparePrerelease(next.prerelease, installed.prerelease) > 0;
-}
 
 export function formatDisplayVersion(version: string): string {
   return `V${version.trim().replace(/^v/i, '')}`;
@@ -122,14 +84,21 @@ export async function queryLatestUpstreamRelease(
 ): Promise<UpstreamReleaseResult> {
   if (!latestReleaseApiUrl) throw new Error('No release feed is configured');
   const response = await fetcher(latestReleaseApiUrl, { signal });
-  if (!response.ok) throw new Error(`Upstream release check failed (${response.status})`);
-  const payload = await response.json() as { tag_name?: unknown };
-  if (typeof payload.tag_name !== 'string' || !parseVersion(payload.tag_name)) {
-    throw new Error('Upstream did not return a valid release version');
+  if (!response.ok) {
+    throw updateCheckError(
+      `Upstream release check failed (${response.status})`,
+      failureReasonForStatus(response.status),
+    );
+  }
+  const payload = await response.json().catch(() => {
+    throw updateCheckError('The release feed was not readable', 'unreadable');
+  }) as { tag_name?: unknown };
+  if (typeof payload.tag_name !== 'string' || !parseReleaseVersion(payload.tag_name)) {
+    throw updateCheckError('Upstream did not return a valid release version', 'unreadable');
   }
   return {
     latestVersion: payload.tag_name,
-    updateAvailable: isNewerVersion(payload.tag_name, currentVersion),
+    updateAvailable: isNewerReleaseVersion(payload.tag_name, currentVersion),
   };
 }
 
@@ -154,6 +123,7 @@ export function mapDesktopUpdateState(update: DesktopUpdateState): UpstreamUpdat
       currentVersion: update.currentVersion,
       latestVersion: update.latestVersion,
       failedOperation: update.failedOperation ?? 'check',
+      failureReason: update.failureReason ?? 'unknown',
     };
   }
   const versioned = {
@@ -240,7 +210,7 @@ async function requestWebUpdateCheck(source: CheckSource): Promise<void> {
       currentVersion: CURRENT_APP_VERSION,
       latestVersion: result.latestVersion,
     });
-  } catch {
+  } catch (error) {
     if (sequence === requestSequence) {
       publish({
         phase: 'error',
@@ -248,6 +218,9 @@ async function requestWebUpdateCheck(source: CheckSource): Promise<void> {
         visible: source === 'manual',
         currentVersion: CURRENT_APP_VERSION,
         failedOperation: 'check',
+        // An abort here is this function's own 6s timeout firing, which is a slow or
+        // absent network from the user's point of view — the same story as offline.
+        failureReason: failureReasonForError(error),
       });
     }
   } finally {
@@ -270,13 +243,16 @@ export async function requestUpstreamUpdateCheck(source: CheckSource = 'manual')
     const update = await desktop.check(source);
     syncDesktopUpdate(update);
     if (update.phase === 'unsupported') await requestWebUpdateCheck(source);
-  } catch {
+  } catch (error) {
+    // The desktop check reports its own failures through the state it returns; reaching here
+    // means the IPC call itself broke, which is the app's fault rather than the network's.
     publish({
       phase: 'error',
       source,
       visible: source === 'manual',
       currentVersion: CURRENT_APP_VERSION,
       failedOperation: 'check',
+      failureReason: failureReasonForError(error),
     });
   }
 }
@@ -290,7 +266,7 @@ export async function requestUpstreamUpdateDownload(): Promise<void> {
   }
   try {
     syncDesktopUpdate(await desktop.download());
-  } catch {
+  } catch (error) {
     publish({
       phase: 'error',
       source: state.phase === 'idle' ? 'manual' : state.source,
@@ -298,6 +274,7 @@ export async function requestUpstreamUpdateDownload(): Promise<void> {
       currentVersion: CURRENT_APP_VERSION,
       latestVersion: state.phase === 'idle' || state.phase === 'checking' ? undefined : state.latestVersion,
       failedOperation: 'download',
+      failureReason: failureReasonForError(error),
     });
   }
 }
@@ -308,7 +285,7 @@ export async function requestUpstreamUpdateInstall(): Promise<void> {
   if (!desktop) return;
   try {
     syncDesktopUpdate(await desktop.install());
-  } catch {
+  } catch (error) {
     publish({
       phase: 'error',
       source: state.phase === 'idle' ? 'manual' : state.source,
@@ -316,6 +293,7 @@ export async function requestUpstreamUpdateInstall(): Promise<void> {
       currentVersion: CURRENT_APP_VERSION,
       latestVersion: state.phase === 'idle' || state.phase === 'checking' ? undefined : state.latestVersion,
       failedOperation: 'install',
+      failureReason: failureReasonForError(error),
     });
   }
 }

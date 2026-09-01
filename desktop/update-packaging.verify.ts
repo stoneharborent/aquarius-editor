@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import {
   CHECKSUM_ASSET_NAME,
+  RELEASE_API_LATEST,
   RELEASE_DOWNLOAD_BASE,
   overlayReleaseAssets,
 } from './overlay-update';
@@ -375,6 +376,58 @@ assert.equal(
 );
 assert.equal(overlayAssets.appImageUrl, `${RELEASE_DOWNLOAD_BASE}/v0.4.1/${overlayAssets.assetName}`);
 assert.equal(overlayAssets.checksumsUrl, `${RELEASE_DOWNLOAD_BASE}/v0.4.1/${CHECKSUM_ASSET_NAME}`);
+
+// The overlay does its own version check (electron-updater will not run one without APPIMAGE,
+// which AquariusOS does not set). It must ask the same feed the renderer does, or the two
+// halves of the app could disagree about whether an update exists. Read as source rather than
+// imported: src/ui/upstreamUpdate.ts is a renderer module and pulling it into this Node
+// project drags the Window augmentation with it.
+const rendererUpdateSource = await readFile(new URL('../src/ui/upstreamUpdate.ts', import.meta.url), 'utf8');
+const rendererFeedUrl = rendererUpdateSource.match(/latestReleaseApiUrl:\s*'([^']+)'/)?.[1];
+const rendererReleasesPageUrl = rendererUpdateSource.match(/releasesPageUrl:\s*'([^']+)'/)?.[1];
+assert.ok(rendererFeedUrl && rendererReleasesPageUrl, 'RELEASE_FEED must still declare both URLs as literals');
+assert.equal(
+  RELEASE_API_LATEST,
+  rendererFeedUrl,
+  'the overlay check and the renderer check must read one feed',
+);
+
+// --- network policy ---------------------------------------------------------------------
+// Everything the update path talks to, so a policy change can be checked against one list.
+const UPDATE_ORIGINS = ['https://api.github.com', 'https://github.com'];
+for (const url of [RELEASE_API_LATEST, rendererFeedUrl, rendererReleasesPageUrl, RELEASE_DOWNLOAD_BASE]) {
+  assert.ok(
+    UPDATE_ORIGINS.includes(new URL(String(url)).origin),
+    `${url} must live on a declared update origin`,
+  );
+}
+
+// The renderer has no Content-Security-Policy today: index.html declares none and the desktop
+// shell sets none on its embedded server, which is why the GitHub-API check reaches the network
+// from a packaged build. Adding one without these origins would break update checks in exactly
+// the silent way that is hard to diagnose from a bug report, so this test is the tripwire: add
+// a policy and it starts demanding that api.github.com and github.com are in it.
+const rendererHtml = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const desktopSources = await Promise.all(
+  ['embedded-server.ts', 'static-files.ts', 'main.ts'].map(
+    (name) => readFile(new URL(`./${name}`, import.meta.url), 'utf8'),
+  ),
+);
+for (const [label, source] of [
+  ['index.html', rendererHtml],
+  ['desktop/embedded-server.ts', desktopSources[0]!],
+  ['desktop/static-files.ts', desktopSources[1]!],
+  ['desktop/main.ts', desktopSources[2]!],
+] as const) {
+  if (!/content-security-policy/i.test(source)) continue;
+  for (const origin of UPDATE_ORIGINS) {
+    assert.ok(
+      source.includes(origin),
+      `${label} declares a Content-Security-Policy, so it must allow ${origin} — `
+      + 'the update check and the releases link both go there',
+    );
+  }
+}
 
 const workflow = await readFile(new URL('../.github/workflows/desktop.yml', import.meta.url), 'utf8');
 // electron-updater reads latest-*.yml at runtime and the blockmaps make differential

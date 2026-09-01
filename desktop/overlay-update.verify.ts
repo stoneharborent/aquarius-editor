@@ -10,6 +10,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   DEFAULT_OVERLAY_DIR,
+  RELEASE_API_LATEST,
+  fetchLatestReleaseVersion,
   installOverlayUpdate,
   isOsManagedInstall,
   normalizeOverlayVersion,
@@ -198,4 +200,51 @@ assert.deepEqual(
 
 await rm(root, { recursive: true, force: true });
 
-console.log('overlay-update.verify: env gating, checksum refusal, atomic swap, and version reclaim OK');
+// --- the overlay's own version check --------------------------------------------------------
+// AquariusOS runs an EXTRACTED AppImage, so process.env.APPIMAGE is unset and
+// electron-updater's AppImageUpdater.isUpdaterActive() refuses to check at all. The overlay
+// therefore reads the release feed itself; these are the answers it has to handle.
+function feedIo(respond: (url: string) => Promise<string> | string): OverlayUpdateIo {
+  return {
+    ...stubIo({ payload: 'unused' }).io,
+    fetchText: async (url) => respond(url),
+  };
+}
+
+let requestedFeedUrl = '';
+assert.equal(
+  await fetchLatestReleaseVersion(feedIo((url) => {
+    requestedFeedUrl = url;
+    return JSON.stringify({ tag_name: 'v0.7.0' });
+  })),
+  '0.7.0',
+  'the newest release is read straight from the feed, with the tag prefix stripped',
+);
+assert.equal(
+  requestedFeedUrl,
+  RELEASE_API_LATEST,
+  'the overlay check must use the fork\'s own release feed',
+);
+assert.match(RELEASE_API_LATEST, /^https:\/\//, 'release metadata must not travel in the clear');
+assert.doesNotMatch(RELEASE_API_LATEST, /openchatcut/i, 'the fork must not check another project\'s releases');
+
+for (const [body, description] of [
+  ['not json at all', 'a non-JSON body'],
+  ['{}', 'a response with no tag_name'],
+  ['{"tag_name":"latest"}', 'a tag that is not a version'],
+  ['{"tag_name":123}', 'a tag that is not a string'],
+] as const) {
+  await assert.rejects(
+    fetchLatestReleaseVersion(feedIo(() => body)),
+    (error: unknown) => (error as { reason?: string }).reason === 'unreadable',
+    `${description} must fail as unreadable rather than be guessed at`,
+  );
+}
+
+await assert.rejects(
+  fetchLatestReleaseVersion(feedIo(() => { throw new TypeError('fetch failed'); })),
+  /fetch failed/,
+  'a transport failure propagates so the service can classify it as offline',
+);
+
+console.log('overlay-update.verify: env gating, checksum refusal, atomic swap, version reclaim, and the APPIMAGE-free version check OK');
