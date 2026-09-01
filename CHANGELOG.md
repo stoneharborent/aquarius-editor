@@ -1,5 +1,18 @@
 # Aquarius Editor changelog
 
+## v0.7.1 — 2026-08-31
+
+### Fixed
+- **Checking for updates works on AquariusOS again.** The editor is installed on
+  AquariusOS as an unpacked app (deliberately — no FUSE needed), and the update library
+  refused to even *look* for new versions unless the app was running as a literal AppImage
+  file, so every check ended in "Unable to check for updates." The OS-managed update path
+  now performs its own version check against the releases feed — the same feed, the same
+  result, none of the library's assumptions. Found on real hardware on the first bench run.
+- When a check does fail, the message now says why — no connection, rate-limited, or the
+  server couldn't be reached — and an "Open releases page" button is always there as a way
+  out, on both the home screen notice and in Settings.
+
 ## v0.7.0 — 2026-08-31
 
 ### Changed
