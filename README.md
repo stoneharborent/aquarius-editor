@@ -103,21 +103,46 @@ Everything in this repo is free to build on and free to ship. It just has to sta
 
 ---
 
-## Running it on the Mac
+## Running it while you work
 
-The Mac is the day-to-day workbench. Nothing here installs anything or changes your system.
+There are two machines this app can run on.
 
-**Before every session, in every new Terminal window**, run this one line first. It points
-the terminal at Node 24, which this app needs and which isn't the Mac's default:
+**AquariusOS is the workbench now.** That is the whole point: AquariusOS is the operating
+system Aquarius Editor ships on, so what you see there is exactly what everybody else will
+see. The Mac still works and is a useful second opinion, but it is no longer the main one.
+
+### Setting up a machine for the first time
+
+Go into the project folder. On AquariusOS that is:
+
+```bash
+cd "/run/media/system/Internal Drive/Workflow/Branches/Apps/AquariusOS/aquarius-editor"
+```
+
+Then install the app's dependencies. This takes a few minutes and only has to be done once
+per machine:
+
+```bash
+npm install
+```
+
+That is all. Two awkward things used to make this fail, and the repo now handles both for
+you — you do not have to do anything, but here is what they were, so the fixes don't look
+mysterious:
+
+- A piece of Microsoft's machine-learning library ships a broken shopping list on Linux: it
+  asks for *Windows* files out of a *Linux* package, and the download gives up. A file
+  called `.npmrc` in this folder tells it to skip that download. Nothing is lost — that
+  part was never used in any version of the app we have released.
+- Electron — the thing that turns this from a web page into a real application window —
+  stopped fetching its own program file. `npm run desktop:dev` now fetches it for you the
+  first time, and skips it instantly afterwards.
+
+On the **Mac** there is one extra line, needed in every new Terminal window, because Node 24
+isn't the Mac's default:
 
 ```bash
 export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
-```
-
-Then go into the project folder:
-
-```bash
-cd "/Users/royceadkins/Library/Mobile Documents/com~apple~CloudDocs/Workflow/Branches/Apps/AquariusOS/aquarius-editor"
 ```
 
 Now pick one of these two.
@@ -138,14 +163,22 @@ its own within a second or two. Press `Ctrl+C` in the terminal to stop it.
 npm run desktop:dev
 ```
 
-This opens Aquarius Editor as an actual Mac application window, with its own icon in the dock.
-Use this when you're checking anything that only exists in the desktop app: the window
-title bar, the app icon, menus, or reading and writing files on disk. It takes a bit longer
-to start than the browser version. Close the window, or press `Ctrl+C`, to stop it.
+This opens Aquarius Editor as a real application window with its own icon. Use this when
+you are checking anything that only exists in the desktop app: the window's title bar and
+its minimize / maximize / close buttons, the app icon, or reading and writing files on
+disk. It takes a bit longer to start than the browser version. Close the window, or press
+`Ctrl+C`, to stop it.
 
-> **Never run `npm install` in this folder.** The `node_modules` folder is a symlink
-> pointing somewhere outside iCloud, on purpose, so iCloud doesn't try to sync a hundred
-> thousand dependency files. Everything is already installed.
+> **One catch worth knowing.** `npm run desktop:dev` only rebuilds the *outer* program, not
+> the app's screens. If you have changed anything you can see, run `npm run build` first,
+> or you will be looking at whatever the screens looked like the last time somebody built
+> them — which can be an old version, quietly.
+
+> **On the Mac only: never run `npm install` in this folder.** There, `node_modules` is a
+> symlink pointing outside iCloud on purpose, so iCloud doesn't try to sync a hundred
+> thousand dependency files, and `npm install` would replace that symlink with a real
+> folder. On AquariusOS there is no iCloud and no symlink, and `npm install` is exactly the
+> right thing to run.
 
 ### Checking that nothing broke
 

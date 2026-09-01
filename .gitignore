@@ -70,6 +70,9 @@ AGENTS.md
 docs/*
 # …except the shortcut map, which CLAUDE.md rule 4 makes the law for keyboard bindings.
 !docs/fcp-shortcut-map.md
+# …and except the Linux bench notes: how to run and inspect the app on AquariusOS,
+# which is now the machine it is developed on.
+!docs/linux-bench-notes.md
 # Local model-optimization plan / notes (was mistakenly committed; keep out of the public repo)
 MODEL-OPT-PLAN.md
 /MODEL-OPT-PLAN*/
