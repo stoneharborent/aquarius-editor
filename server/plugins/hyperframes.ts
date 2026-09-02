@@ -42,9 +42,12 @@ import {
   stripCodeFences,
 } from '../../shared/hyperframes-contract.ts';
 import {
+  HYPERFRAMES_REFERENCE_CODE_BUDGET,
   hyperframesRepairPrompt,
   hyperframesSystemPrompt,
   hyperframesUserPrompt,
+  truncateHyperframesReferenceCode,
+  type HyperframesRevisionContext,
 } from '../../shared/hyperframes-prompt.ts';
 import { compileHyperframesComposition } from '../hyperframes-compile.ts';
 import { stripReasoningBlocks } from '../../shared/builtin-llm.ts';
@@ -72,6 +75,7 @@ export const MAX_HYPERFRAMES_REPAIRS = 2;
  */
 export const MAX_BUILTIN_HYPERFRAMES_REPAIRS = 3;
 const MAX_PROMPT_CHARS = 4000;
+const MAX_NOTES_CHARS = 2000;
 const MAX_BODY_BYTES = 64 * 1024;
 const GENERATION_TIMEOUT_MS = 180_000;
 
@@ -81,6 +85,12 @@ export interface HyperframesRequest {
   readonly height: number;
   readonly fps: number;
   readonly durationInFrames: number;
+  /**
+   * Set when the browser asked for a revision of an earlier generation. The
+   * reference source arrives from the project's own media pool — it is source
+   * this app authored, never a file path and never anything read off disk.
+   */
+  readonly revision?: HyperframesRevisionContext;
 }
 
 export interface HyperframesComposition {
@@ -270,12 +280,36 @@ export function parseHyperframesRequest(body: Record<string, unknown>): Hyperfra
     typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.round(value) : fallback
   );
   const fps = Math.min(120, positive(body.fps, 30));
+  const revision = parseHyperframesRevision(body);
+  if (typeof revision === 'string') return revision;
   return {
     prompt,
     width: Math.min(7680, positive(body.width, 1920)),
     height: Math.min(7680, positive(body.height, 1080)),
     fps,
     durationInFrames: clampHyperframesDuration(body.durationInFrames, fps * 5),
+    ...(revision ? { revision } : {}),
+  };
+}
+
+/**
+ * A revision only exists when there is reference source to revise. The source
+ * is trimmed to the context budget HERE as well as in the prompt builder, so a
+ * huge reference can never grow the request the model finally sees, whichever
+ * caller assembled it.
+ */
+function parseHyperframesRevision(
+  body: Record<string, unknown>,
+): HyperframesRevisionContext | undefined | string {
+  const referenceCode = typeof body.referenceCode === 'string' ? body.referenceCode.trim() : '';
+  if (!referenceCode) return undefined;
+  const notes = typeof body.notes === 'string' ? body.notes.trim() : '';
+  if (notes.length > MAX_NOTES_CHARS) return `notes must be at most ${MAX_NOTES_CHARS} characters`;
+  const referencePrompt = typeof body.referencePrompt === 'string' ? body.referencePrompt.trim() : '';
+  return {
+    referencePrompt: referencePrompt.slice(0, MAX_PROMPT_CHARS),
+    referenceCode: truncateHyperframesReferenceCode(referenceCode, HYPERFRAMES_REFERENCE_CODE_BUDGET),
+    notes,
   };
 }
 

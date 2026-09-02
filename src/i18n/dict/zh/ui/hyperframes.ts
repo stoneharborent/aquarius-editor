@@ -63,4 +63,21 @@ export default {
   'Download built-in model ({size})': '下载内置模型（{size}）',
   'Not now': '暂不下载',
   'Use your own model instead': '改用你自己的模型',
+  // Regenerate with notes: the original graphic is sent as the reference so
+  // the model edits it, and the result is a new card that names its origin.
+  'Regenerate graphic': '重新生成图形',
+  'Based on {name}. The original is kept — this makes a new graphic.':
+    '基于「{name}」。原图形会保留 — 这里生成的是一个新图形。',
+  'What should change?': '需要修改什么？',
+  'The original graphic and its brief are sent as the reference, so the model edits it instead of starting over.':
+    '原图形及其描述会作为参考一并发送，模型会在此基础上修改，而不是从头重做。',
+  'Press Enter to generate. The graphic is saved to the Hyperframes tab when it is ready.':
+    '按回车开始生成。完成后图形会保存到 Hyperframes 标签页。',
+  'Revised from {name}': '修改自「{name}」',
+  'Revised from an earlier graphic': '修改自更早的图形',
+  // Deleting a generation: refused while a timeline clip is made from it.
+  // 'Confirm Delete' and 'Cancel' already live in the components/captions
+  // shards; the dictionary is merged, so they are not repeated here.
+  'This graphic is used by a clip on the timeline. Delete the clip first.':
+    '时间线上有片段正在使用这个图形。请先删除该片段。',
 };

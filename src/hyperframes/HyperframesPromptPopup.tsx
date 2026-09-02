@@ -1,8 +1,14 @@
-// The floating prompt the timeline opens at the click point.
+// The floating prompt the timeline opens at the click point, and the same
+// popup the Library tab opens when a finished graphic is revised.
 //
-// Presentational on purpose: the timeline owns where it sits and what submitting
+// Presentational on purpose: the caller owns where it sits and what submitting
 // means, this owns the typing. Enter submits and closes; the notice tells the
 // user the clip will drop itself in when the model is done.
+//
+// In revise mode the brief arrives pre-filled and editable, and a second field
+// asks what should change. The two are separate on purpose: the brief is what
+// the graphic is, the notes are what is wrong with the one that exists — a
+// model given both edits, while a model given one merged paragraph rewrites.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { theme, themeAlpha } from '../theme';
 import { useT } from '../i18n/locale';
@@ -12,12 +18,19 @@ import type { HyperframesProblem } from './api';
 export interface HyperframesPromptPopupProps {
   x: number;
   y: number;
-  /** Timecode label for the frame that was right-clicked. */
-  atLabel: string;
+  /**
+   * Timecode label for the frame that was right-clicked. Absent when the popup
+   * was opened from the Library tab, where there is no spot to drop into.
+   */
+  atLabel?: string;
   configured: boolean;
   /** Why the bundled model is unusable, when it is. */
   problem?: HyperframesProblem;
-  onSubmit: (prompt: string) => void;
+  /** Pre-fills the brief. Revising starts from the original, editable. */
+  initialPrompt?: string;
+  /** Name of the graphic being revised; switches the popup into revise mode. */
+  reviseFrom?: string;
+  onSubmit: (prompt: string, notes: string) => void;
   onClose: () => void;
   onConfigured: () => void;
 }
@@ -25,13 +38,16 @@ export interface HyperframesPromptPopupProps {
 const WIDTH = 296;
 
 export function HyperframesPromptPopup({
-  x, y, atLabel, configured, problem, onSubmit, onClose, onConfigured,
+  x, y, atLabel, configured, problem, initialPrompt, reviseFrom,
+  onSubmit, onClose, onConfigured,
 }: HyperframesPromptPopupProps) {
   const t = useT();
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState(initialPrompt ?? '');
+  const [notes, setNotes] = useState('');
   const [pos, setPos] = useState({ left: x, top: y });
+  const revising = typeof reviseFrom === 'string';
 
   useLayoutEffect(() => {
     const node = ref.current;
@@ -60,7 +76,7 @@ export function HyperframesPromptPopup({
   const submit = () => {
     const trimmed = prompt.trim();
     if (!trimmed) return;
-    onSubmit(trimmed);
+    onSubmit(trimmed, notes.trim());
     onClose();
   };
 
@@ -87,7 +103,14 @@ export function HyperframesPromptPopup({
         boxShadow: `0 12px 32px ${themeAlpha.shadow(0.5)}`,
       }}
     >
-      <div style={{ fontSize: 11.5, fontWeight: 600, color: theme.text }}>{t('Hyperframes')}</div>
+      <div style={{ fontSize: 11.5, fontWeight: 600, color: theme.text }}>
+        {revising ? t('Regenerate graphic') : t('Hyperframes')}
+      </div>
+      {configured && revising && (
+        <div style={{ fontSize: 10.5, color: theme.textDim, lineHeight: 1.4 }}>
+          {t('Based on {name}. The original is kept — this makes a new graphic.', { name: reviseFrom })}
+        </div>
+      )}
       {configured ? (
         <>
           <input
@@ -113,9 +136,59 @@ export function HyperframesPromptPopup({
               boxSizing: 'border-box',
             }}
           />
+          {revising && (
+            <textarea
+              value={notes}
+              rows={3}
+              placeholder={t('What should change?')}
+              aria-label={t('What should change?')}
+              onChange={(event) => setNotes(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter' || !(event.metaKey || event.ctrlKey)) return;
+                event.preventDefault();
+                submit();
+              }}
+              style={{
+                border: `0.5px solid ${theme.border}`,
+                borderRadius: 4,
+                background: theme.inset,
+                color: theme.text,
+                fontSize: 12,
+                padding: '7px 9px',
+                width: '100%',
+                boxSizing: 'border-box',
+                resize: 'vertical',
+                fontFamily: 'inherit',
+              }}
+            />
+          )}
           <div style={{ fontSize: 10.5, color: theme.textDim, lineHeight: 1.4 }}>
-            {t('Press Enter to generate. The clip drops in at {at} when it is ready, and is saved to the Hyperframes tab.', { at: atLabel })}
+            {revising
+              ? t('The original graphic and its brief are sent as the reference, so the model edits it instead of starting over.')
+              : atLabel
+                ? t('Press Enter to generate. The clip drops in at {at} when it is ready, and is saved to the Hyperframes tab.', { at: atLabel })
+                : t('Press Enter to generate. The graphic is saved to the Hyperframes tab when it is ready.')}
           </div>
+          {revising && (
+            <button
+              type="button"
+              onClick={submit}
+              disabled={!prompt.trim()}
+              style={{
+                alignSelf: 'flex-start',
+                border: 'none',
+                borderRadius: 4,
+                background: prompt.trim() ? theme.accent : theme.inset,
+                color: prompt.trim() ? theme.onAccent : theme.textDim,
+                cursor: prompt.trim() ? 'pointer' : 'default',
+                fontSize: 11,
+                fontWeight: 600,
+                padding: '5px 12px',
+              }}
+            >
+              {t('Generate')}
+            </button>
+          )}
         </>
       ) : (
         <HyperframesSetup compact problem={problem} onConfigured={onConfigured} />

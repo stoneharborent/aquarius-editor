@@ -141,6 +141,9 @@ function buildEditorWorkspaceViewProps(
       placeAsset: (asset, at) => { commands.addMediaItem(asset, at); },
       renameAsset: commands.renameMediaAsset,
       removeAsset: commands.removeMediaAsset,
+      // Deleting a generation that a clip is made from is refused, not silently
+      // applied: removing the pool asset would take the clips with it.
+      usedAssetIds,
       getPlayhead,
     },
     timelineTabs: { doc, commands },

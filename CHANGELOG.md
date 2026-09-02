@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Added
+- **Ask for a change instead of starting over.** Regenerate on a finished graphic in the
+  Hyperframes tab now opens the prompt with the original description already filled in, plus
+  a second box asking what should change. The original graphic and its own code are sent to
+  the model as a reference, so it edits what you already have rather than inventing something
+  new from scratch. The result arrives as a *new* card — the original is never touched — and
+  the new card says which graphic it came from and what you asked to change.
+- **Delete a graphic you no longer want.** Each card's Delete now asks once before it does
+  anything: the first click turns it into "Confirm Delete", and Cancel backs out. If a clip
+  on your timeline was made from that graphic, Delete is switched off and the card tells you
+  to remove the clip first — deleting it would have quietly taken the clip out of your edit,
+  and that is not something you would get back.
+
 ### Fixed
 - **HyperFrames generation with the built-in model works in installed builds again.**
   Every attempt used to stop at "the built-in model process exited with code 1". The app

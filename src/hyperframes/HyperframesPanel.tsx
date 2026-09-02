@@ -14,10 +14,18 @@ import { useHyperframes } from './HyperframesContext';
 import { hyperframesAcceptsPrompts } from './api';
 import { HyperframesSetupCard } from './HyperframesSetupCard';
 import { HyperframesSetup } from './HyperframesSetup';
+import { HyperframesPromptPopup } from './HyperframesPromptPopup';
 import {
   formatHyperframeTimestamp, hyperframeTemplate,
   type HyperframeRecord, type PendingHyperframe,
 } from './records';
+
+/** The card whose Regenerate button opened the revise popup, and where it sits. */
+interface RevisingTarget {
+  readonly record: HyperframeRecord;
+  readonly x: number;
+  readonly y: number;
+}
 
 export function HyperframesPanel() {
   const t = useT();
@@ -25,6 +33,10 @@ export function HyperframesPanel() {
   const [prompt, setPrompt] = useState('');
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [revising, setRevising] = useState<RevisingTarget | null>(null);
+  // Two-step delete, the same shape the media pool and the template browser
+  // use: the first click arms the card, the second one does it.
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const config = hyperframes.config;
   const unconfigured = config !== null && !config.configured;
   // The setup card still shows while the built-in model downloads, but the
@@ -148,16 +160,46 @@ export function HyperframesPanel() {
                 record={record}
                 fps={hyperframes.fps}
                 hovered={hoveredId === record.id}
+                originName={record.referenceId
+                  ? hyperframes.records.find((other) => other.id === record.referenceId)?.name
+                  : undefined}
+                placed={hyperframes.placed.has(record.id)}
+                confirmingDelete={confirmDeleteId === record.id}
                 onHover={setHoveredId}
                 onInsert={() => hyperframes.insertAtPlayhead(record)}
-                onRegenerate={() => hyperframes.regenerate(record)}
+                onRegenerate={(at) => {
+                  setConfirmDeleteId(null);
+                  setRevising({ record, x: at.x, y: at.y });
+                }}
                 onRename={(name) => hyperframes.rename(record, name)}
-                onRemove={() => hyperframes.remove(record)}
+                onRemove={() => {
+                  if (confirmDeleteId !== record.id) {
+                    setConfirmDeleteId(record.id);
+                    return;
+                  }
+                  setConfirmDeleteId(null);
+                  hyperframes.remove(record);
+                }}
+                onCancelRemove={() => setConfirmDeleteId(null)}
               />
             ))}
           </div>
         )}
       </div>
+
+      {revising && (
+        <HyperframesPromptPopup
+          x={revising.x}
+          y={revising.y}
+          configured={canPrompt}
+          problem={config?.problem}
+          initialPrompt={revising.record.prompt}
+          reviseFrom={revising.record.name}
+          onSubmit={(nextPrompt, notes) => hyperframes.revise(revising.record, nextPrompt, notes)}
+          onClose={() => setRevising(null)}
+          onConfigured={hyperframes.refreshConfig}
+        />
+      )}
     </div>
   );
 }
@@ -181,6 +223,12 @@ function PendingCard({ run, onRetry, onDismiss }: {
       </div>
       <div style={cardMeta}>
         <span style={cardName} title={run.prompt}>{run.prompt}</span>
+        {run.reference && (
+          <span style={originLine} title={run.reference.name}>
+            {t('Revised from {name}', { name: run.reference.name })}
+          </span>
+        )}
+        {run.notes && <span style={notesLine} title={run.notes}>{run.notes}</span>}
         {failed && run.error && (
           <span style={{ fontSize: 10, color: theme.danger, lineHeight: 1.35, overflowWrap: 'anywhere' }}>{run.error}</span>
         )}
@@ -195,15 +243,24 @@ function PendingCard({ run, onRetry, onDismiss }: {
   );
 }
 
-function HyperframeCard({ record, fps, hovered, onHover, onInsert, onRegenerate, onRename, onRemove }: {
+function HyperframeCard({
+  record, fps, hovered, originName, placed, confirmingDelete,
+  onHover, onInsert, onRegenerate, onRename, onRemove, onCancelRemove,
+}: {
   record: HyperframeRecord;
   fps: number;
   hovered: boolean;
+  /** Name of the generation this one was revised from, when it is still around. */
+  originName?: string;
+  /** A timeline clip is made from this generation, so it cannot be deleted. */
+  placed: boolean;
+  confirmingDelete: boolean;
   onHover: (id: string | null) => void;
   onInsert: () => void;
-  onRegenerate: () => void;
+  onRegenerate: (at: { x: number; y: number }) => void;
   onRename: (name: string) => void;
   onRemove: () => void;
+  onCancelRemove: () => void;
 }) {
   const t = useT();
   return (
@@ -230,10 +287,25 @@ function HyperframeCard({ record, fps, hovered, onHover, onInsert, onRegenerate,
       </button>
       <div style={cardMeta}>
         <span style={cardName} title={record.prompt}>{record.name}</span>
+        {record.referenceId && (
+          <span style={originLine}>
+            {originName
+              ? t('Revised from {name}', { name: originName })
+              : t('Revised from an earlier graphic')}
+          </span>
+        )}
+        {record.notes && <span style={notesLine} title={record.notes}>{record.notes}</span>}
         <span style={{ fontSize: 10, color: theme.textDim }}>{formatHyperframeTimestamp(record.createdAt)}</span>
       </div>
-      <div style={{ display: 'flex', gap: 5, padding: '0 6px 7px' }}>
-        <button type="button" onClick={onRegenerate} style={miniButton}>{t('Regenerate')}</button>
+      <div style={{ display: 'flex', gap: 5, padding: '0 6px 7px', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          onClick={(event) => {
+            const rect = event.currentTarget.getBoundingClientRect();
+            onRegenerate({ x: rect.left, y: rect.bottom + 4 });
+          }}
+          style={miniButton}
+        >{t('Regenerate')}</button>
         <button
           type="button"
           onClick={() => {
@@ -242,8 +314,33 @@ function HyperframeCard({ record, fps, hovered, onHover, onInsert, onRegenerate,
           }}
           style={miniButton}
         >{t('Rename')}</button>
-        <button type="button" onClick={onRemove} style={{ ...miniButton, color: theme.danger }}>{t('Delete')}</button>
+        {placed ? (
+          <button
+            type="button"
+            disabled
+            title={t('This graphic is used by a clip on the timeline. Delete the clip first.')}
+            style={{ ...miniButton, color: theme.textDim, cursor: 'default' }}
+          >{t('Delete')}</button>
+        ) : (
+          <button
+            type="button"
+            onClick={onRemove}
+            style={{ ...miniButton, color: theme.danger }}
+          >{confirmingDelete ? t('Confirm Delete') : t('Delete')}</button>
+        )}
+        {confirmingDelete && !placed && (
+          <button
+            type="button"
+            onClick={onCancelRemove}
+            style={{ ...miniButton, color: theme.textDim }}
+          >{t('Cancel')}</button>
+        )}
       </div>
+      {placed && (
+        <div style={{ fontSize: 10, color: theme.textDim, lineHeight: 1.35, padding: '0 6px 7px' }}>
+          {t('This graphic is used by a clip on the timeline. Delete the clip first.')}
+        </div>
+      )}
     </article>
   );
 }
@@ -278,6 +375,22 @@ const cardName: React.CSSProperties = {
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
+};
+const originLine: React.CSSProperties = {
+  fontSize: 10,
+  color: theme.textDim,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+};
+const notesLine: React.CSSProperties = {
+  fontSize: 10,
+  color: theme.textDim,
+  lineHeight: 1.35,
+  overflow: 'hidden',
+  display: '-webkit-box',
+  WebkitBoxOrient: 'vertical',
+  WebkitLineClamp: 2,
 };
 const miniButton: React.CSSProperties = {
   border: `0.5px solid ${theme.border}`,

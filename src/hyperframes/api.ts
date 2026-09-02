@@ -60,6 +60,14 @@ export interface HyperframesGenerationRequest {
   height: number;
   fps: number;
   durationInFrames: number;
+  /**
+   * A revision: the brief and the composition source of the generation being
+   * revised, plus what the user wants changed. All three travel together —
+   * the server ignores the other two without `referenceCode`.
+   */
+  referencePrompt?: string;
+  referenceCode?: string;
+  notes?: string;
 }
 
 export interface HyperframesGenerationResult {

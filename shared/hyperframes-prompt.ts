@@ -18,6 +18,51 @@ export interface HyperframesRequestContext {
   readonly height: number;
   readonly fps: number;
   readonly durationInFrames: number;
+  /** Present when this run revises an earlier generation instead of starting over. */
+  readonly revision?: HyperframesRevisionContext;
+}
+
+export interface HyperframesRevisionContext {
+  /** The brief that produced the graphic being revised. */
+  readonly referencePrompt: string;
+  /** That graphic's composition source — the thing the model is asked to edit. */
+  readonly referenceCode: string;
+  /** What the user wants changed about it. */
+  readonly notes: string;
+}
+
+/**
+ * How much of a reference composition may ride along in the request.
+ *
+ * The built-in model opens an 8192-token context (`shared/llm-model-catalog.ts`)
+ * and reserves 1600 of those for its answer. The system prompt alone is roughly
+ * 2000 tokens, and the repair loop appends a rejected draft plus its errors on
+ * every retry — so the reference has to fit in what is left with room for two
+ * repairs. 6000 characters is about 1700 tokens at the ~3.5 chars/token that
+ * this kind of source measures at, which leaves the repair turns their room.
+ * A real composition is 1-3 KB, so this ceiling is a guard rail, not a normal
+ * code path.
+ */
+export const HYPERFRAMES_REFERENCE_CODE_BUDGET = 6000;
+
+/**
+ * Trim a reference composition to the budget, keeping BOTH ends.
+ *
+ * The head of a composition declares the component, reads its props and defines
+ * the beats; the tail returns the JSX that lays them out. Cutting either end
+ * off would hide half of what a revision has to edit, so an oversized reference
+ * loses its middle and says so, rather than losing its ending.
+ */
+export function truncateHyperframesReferenceCode(
+  code: string,
+  budget: number = HYPERFRAMES_REFERENCE_CODE_BUDGET,
+): string {
+  const trimmed = code.trim();
+  if (trimmed.length <= budget) return trimmed;
+  const marker = '\n\n// … middle of the composition omitted to fit the model\'s context …\n\n';
+  const keep = Math.max(0, budget - marker.length);
+  const head = Math.ceil(keep * 0.6);
+  return `${trimmed.slice(0, head)}${marker}${trimmed.slice(trimmed.length - (keep - head))}`;
 }
 
 const EXAMPLE_TEXT = `const LowerThirdSweep = ({ item }) => {
@@ -182,13 +227,40 @@ ${EXAMPLE_SHAPE}
 Reply with the composition source only. No explanation, no markdown fences.`;
 }
 
-/** The per-request user message: the brief plus the clip it has to fit. */
+/**
+ * The per-request user message: the brief plus the clip it has to fit.
+ *
+ * A revision is the same message with the earlier graphic attached: its brief,
+ * its source and the change the user asked for. The instruction is deliberately
+ * "edit this" rather than "build this", because the point of a revision is to
+ * keep everything the user did not complain about.
+ */
 export function hyperframesUserPrompt(context: HyperframesRequestContext): string {
   const seconds = (context.durationInFrames / Math.max(1, context.fps)).toFixed(1);
-  return `Graphic to build: ${context.prompt}
-
-Canvas: ${context.width}x${context.height} at ${context.fps} fps.
+  const canvas = `Canvas: ${context.width}x${context.height} at ${context.fps} fps.
 Clip length: ${context.durationInFrames} frames (~${seconds}s) — time the beats to fill it.`;
+  const revision = context.revision;
+  if (!revision) {
+    return `Graphic to build: ${context.prompt}
+
+${canvas}`;
+  }
+  return `Revise an existing graphic. Edit the composition below — keep everything the
+change notes do not ask you to change, and rewrite only what they do.
+
+Original brief: ${revision.referencePrompt}
+
+Original composition:
+${truncateHyperframesReferenceCode(revision.referenceCode)}
+
+What should change: ${revision.notes}
+
+Brief for this revision: ${context.prompt}
+
+${canvas}
+
+Reply with the complete revised composition source only — the whole declaration,
+not a patch or a fragment.`;
 }
 
 /** Follow-up message for the repair loop when a draft failed the contract. */

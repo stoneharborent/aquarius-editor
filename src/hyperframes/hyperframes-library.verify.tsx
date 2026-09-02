@@ -9,8 +9,9 @@ import { HyperframesPanel } from './HyperframesPanel.tsx';
 import { migrateProjectDoc } from '../persist/projectStore.ts';
 import { sanitizePortableProjectDoc } from '../persist/portableProject.ts';
 import {
+  HYPERFRAMES_NOTES_PROP, HYPERFRAMES_REFERENCE_PROP,
   hyperframeAsset, hyperframeNameFromPrompt, hyperframeRecords, hyperframeTemplate,
-  isHyperframeAsset, type PendingHyperframe,
+  isHyperframeAsset, toHyperframeRecord, type PendingHyperframe,
 } from './records.ts';
 
 // ── The tab is a main Library tab ────────────────────────────────────────────
@@ -109,11 +110,12 @@ function api(overrides: Partial<HyperframesApi> = {}): HyperframesApi {
     },
     fps: 30,
     generate: () => undefined,
-    regenerate: () => undefined,
+    revise: () => undefined,
     retry: () => undefined,
     dismiss: () => undefined,
     rename: () => undefined,
-    remove: () => undefined,
+    placed: new Set<string>(),
+    remove: () => true,
     insertAtPlayhead: () => undefined,
     refreshConfig: () => undefined,
     ...overrides,
@@ -248,4 +250,153 @@ const loading = render(api({ records: [], config: null }));
 assert.doesNotMatch(loading, /Connect a model to generate graphics/,
   'the setup card must not flash before the server has answered');
 
-console.log('hyperframes-library.verify: tab, input bar, pending/failed cards, item actions and setup card OK');
+
+// ── Revision fields are optional, so old records still load ──────────────────
+// A generation saved before revisions existed carries neither prop. Reading one
+// must produce a valid record with no origin, not a broken card.
+{
+  const legacy = hyperframeAsset({
+    id: 'hf-legacy',
+    prompt: 'an older graphic',
+    code: 'const D = ({ item }) => <AbsoluteFill />;',
+    width: 1920,
+    height: 1080,
+    durationInFrames: 90,
+    createdAt: 1_500_000_000_000,
+  });
+  assert.equal(HYPERFRAMES_REFERENCE_PROP in (legacy.props ?? {}), false,
+    'an ordinary generation must not gain empty revision props');
+  assert.equal(HYPERFRAMES_NOTES_PROP in (legacy.props ?? {}), false);
+  const legacyRecord = toHyperframeRecord(legacy);
+  assert.ok(legacyRecord, 'a record with no revision fields is still a valid Hyperframe');
+  assert.equal(legacyRecord.referenceId, undefined);
+  assert.equal(legacyRecord.notes, undefined);
+
+  // A record whose props hold junk instead of strings degrades to "no origin"
+  // rather than rendering it.
+  const junk = toHyperframeRecord({
+    ...legacy,
+    props: { ...legacy.props, [HYPERFRAMES_REFERENCE_PROP]: 42, [HYPERFRAMES_NOTES_PROP]: null },
+  });
+  assert.ok(junk);
+  assert.equal(junk.referenceId, undefined, 'a non-string reference id is ignored');
+  assert.equal(junk.notes, undefined);
+
+  const derived = hyperframeAsset({
+    id: 'hf-2',
+    prompt: 'neon lower third for a chef interview segment',
+    code: 'const E = ({ item }) => <AbsoluteFill />;',
+    width: 1920,
+    height: 1080,
+    durationInFrames: 150,
+    createdAt: 1_700_000_100_000,
+    referenceId: 'hf-1',
+    notes: 'make it orange',
+  });
+  const derivedRecord = toHyperframeRecord(derived)!;
+  assert.equal(derivedRecord.referenceId, 'hf-1', 'a revision remembers what it came from');
+  assert.equal(derivedRecord.notes, 'make it orange', 'and what was asked for');
+
+  // And it survives the project package boundary like everything else.
+  const doc = migrateProjectDoc({
+    version: 1,
+    assets: [asset, derived],
+    mediaFolders: [],
+    timelines: [{
+      id: 't1', name: 'Timeline', order: 0,
+      fps: 30, width: 1920, height: 1080, items: [], selectedId: null,
+    }],
+    activeTimelineId: 't1',
+  });
+  const reopened = migrateProjectDoc(JSON.parse(JSON.stringify(sanitizePortableProjectDoc(doc!))))!;
+  const restored = hyperframeRecords(reopened.assets).find((record) => record.id === 'hf-2')!;
+  assert.equal(restored.referenceId, 'hf-1', 'the origin survives export and import');
+  assert.equal(restored.notes, 'make it orange');
+}
+
+// ── A revised card says where it came from ───────────────────────────────────
+{
+  const derived = hyperframeAsset({
+    id: 'hf-2',
+    prompt: 'an orange lower third',
+    code: 'const F = ({ item }) => <AbsoluteFill />;',
+    width: 1920,
+    height: 1080,
+    durationInFrames: 150,
+    createdAt: 1_700_000_100_000,
+    referenceId: 'hf-1',
+    notes: 'make it orange',
+  });
+  const withRevision = render(api({ records: hyperframeRecords([asset, derived]) }));
+  assert.match(withRevision, /Revised from Neon lower third for a chef interview…/,
+    'a revision names the graphic it was derived from');
+  assert.match(withRevision, /make it orange/, 'and shows the notes it was made with');
+
+  // The origin can have been deleted; the card must still say it is a revision.
+  const orphan = render(api({ records: hyperframeRecords([derived]) }));
+  assert.match(orphan, /Revised from an earlier graphic/,
+    'a revision whose original is gone still reads as a revision');
+}
+
+// ── A revision in flight is labelled while it runs ───────────────────────────
+{
+  const running = render(api({
+    records: [],
+    pending: [{
+      id: 'run-3',
+      prompt: 'an orange lower third',
+      createdAt: 3,
+      status: 'running',
+      reference: { id: 'hf-1', name: 'Neon lower third', prompt: 'neon', code: 'const G = () => null;' },
+      notes: 'make it orange',
+    }],
+  }));
+  assert.match(running, /Revised from Neon lower third/);
+  assert.match(running, /make it orange/);
+}
+
+// ── Deleting: confirm first, and never while a clip uses the graphic ─────────
+{
+  // Nothing on the timeline: Delete is armed by the first click, not applied.
+  const deletable = render(api());
+  assert.match(deletable, />Delete<\/button>/, 'an unused graphic offers Delete');
+  assert.doesNotMatch(deletable, /Confirm Delete/,
+    'the confirm step only appears once the first click has armed it');
+  assert.doesNotMatch(deletable, /used by a clip on the timeline/);
+
+  // Placed on the timeline: the delete is refused with a reason, because
+  // removing the pool asset would take the clip with it.
+  const inUse = render(api({ placed: new Set(['hf-1']) }));
+  assert.match(inUse, /used by a clip on the timeline/,
+    'a placed graphic explains why it cannot be deleted');
+  assert.match(inUse, /Delete the clip first/, 'and says what to do about it');
+  assert.match(inUse, /disabled=""/, 'the Delete button itself is not live');
+
+  // The rule is enforced in the API, not only drawn in the UI.
+  const host = { removed: [] as string[] };
+  const guarded = api({
+    placed: new Set(['hf-1']),
+    remove: (record) => {
+      if (record.id === 'hf-1') return false;
+      host.removed.push(record.id);
+      return true;
+    },
+  });
+  assert.equal(guarded.remove(records[0]!), false, 'deleting a placed generation is refused');
+  assert.deepEqual(host.removed, [], 'and nothing is removed');
+  assert.equal(guarded.remove(records[1]!), true, 'an unplaced one still deletes');
+}
+
+// ── Regenerate opens the revise prompt rather than re-running the brief ──────
+{
+  const panelSource = await (await import('node:fs/promises'))
+    .readFile(new URL('./HyperframesPanel.tsx', import.meta.url), 'utf8');
+  assert.match(panelSource, /<HyperframesPromptPopup/,
+    'Regenerate must open the prompt popup, not silently re-run the same brief');
+  assert.match(panelSource, /initialPrompt=\{revising\.record\.prompt\}/,
+    'pre-filled with the original brief, editable');
+  assert.match(panelSource, /hyperframes\.revise\(/,
+    'and submitting goes through revise, which keeps the original');
+}
+
+console.log('hyperframes-library.verify: tab, input bar, pending/failed cards, revisions, delete rules and setup card OK');

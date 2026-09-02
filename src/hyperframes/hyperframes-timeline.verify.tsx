@@ -123,6 +123,30 @@ assert.match(
 assert.doesNotMatch(unconfiguredPopup, /Press Enter to generate/,
   'and does not offer a prompt that could not go anywhere');
 
+// ── Revise mode: the same popup, pre-filled, with a notes field ─────────────
+const revisePopup = renderToStaticMarkup(
+  <HyperframesPromptPopup
+    x={220}
+    y={340}
+    configured
+    initialPrompt="a green lower third"
+    reviseFrom="Green lower third"
+    onSubmit={() => undefined}
+    onClose={() => undefined}
+    onConfigured={() => undefined}
+  />,
+);
+assert.match(revisePopup, /value="a green lower third"/,
+  'the original brief arrives pre-filled and editable');
+assert.match(revisePopup, /placeholder="What should change\?"/,
+  'a second field asks for the change, separately from the brief');
+assert.match(revisePopup, /Based on Green lower third/,
+  'and the popup names the graphic it is revising');
+assert.match(revisePopup, /The original is kept/,
+  'the user is told the original survives — a revision is a new graphic');
+assert.doesNotMatch(revisePopup, /drops in at/,
+  'a revision from the Library tab has no timeline spot to promise');
+
 // ── Timeline wiring ──────────────────────────────────────────────────────────
 const timelineSource = await readFile(
   new URL('../components/timeline/Timeline.tsx', import.meta.url),

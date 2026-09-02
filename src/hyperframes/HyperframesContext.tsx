@@ -7,8 +7,8 @@ import {
 import type { MediaAsset, TrackId } from '../editor/types';
 import { fetchHyperframesConfig, generateHyperframe, type HyperframesConfigStatus } from './api';
 import {
-  hyperframeAsset, hyperframeNameFromPrompt, hyperframeRecords,
-  type HyperframeRecord, type PendingHyperframe,
+  hyperframeAsset, hyperframeNameFromPrompt, hyperframeRecords, hyperframeReference,
+  type HyperframeRecord, type HyperframeReference, type PendingHyperframe,
 } from './records';
 import {
   deliverHyperframeRun, dropHyperframeRun, drainHyperframeInbox, failHyperframeRun,
@@ -31,6 +31,8 @@ export interface HyperframesHost {
   readonly placeAsset: (asset: MediaAsset, at: { track?: TrackId; startFrame?: number }) => void;
   readonly renameAsset: (id: string, name: string) => void;
   readonly removeAsset: (id: string) => void;
+  /** Pool assets that at least one timeline clip is made from. */
+  readonly usedAssetIds: ReadonlySet<string>;
   readonly getPlayhead: () => number;
 }
 
@@ -40,11 +42,34 @@ export interface HyperframesApi {
   readonly config: HyperframesConfigStatus | null;
   readonly fps: number;
   readonly generate: (prompt: string, placement?: HyperframesPlacement) => void;
-  readonly regenerate: (record: HyperframeRecord) => void;
+  /**
+   * Revise a finished generation: a NEW record is produced from the (possibly
+   * edited) original brief plus change notes, with the original handed to the
+   * model as the reference. The original is never touched.
+   */
+  readonly revise: (record: HyperframeRecord, prompt: string, notes: string) => void;
   readonly retry: (run: PendingHyperframe) => void;
   readonly dismiss: (runId: string) => void;
   readonly rename: (record: HyperframeRecord, name: string) => void;
-  readonly remove: (record: HyperframeRecord) => void;
+  /**
+   * Ids of generations that a timeline clip is made from. Deleting one of these
+   * is refused — see `remove`.
+   */
+  readonly placed: ReadonlySet<string>;
+  /**
+   * Delete a generation. Returns false, changing nothing, when a timeline clip
+   * is made from it.
+   *
+   * WHY REFUSE rather than keep the file and drop only the card: a generation
+   * has no file. It IS a code-backed pool asset, and removing a pool asset also
+   * strips every clip made from it (`pool.removeAsset` in `reducerProject.ts`),
+   * so "just remove the card" would quietly cut the user's edit. A refusal is
+   * something they can undo by deleting the clips first; a silently shortened
+   * timeline is not. There is likewise nothing on disk for the server to clean
+   * up — the composition source lives inside the project document, which is why
+   * autosave, version history and `.ccproj` export carry it for free.
+   */
+  readonly remove: (record: HyperframeRecord) => boolean;
   readonly insertAtPlayhead: (record: HyperframeRecord) => void;
   readonly refreshConfig: () => void;
 }
@@ -90,17 +115,24 @@ export function HyperframesProvider({ host, children }: { host: HyperframesHost;
     }
   }, [projectId, runs.inbox]);
 
-  const run = useCallback((prompt: string, placement?: HyperframesPlacement) => {
+  const run = useCallback((
+    prompt: string,
+    placement?: HyperframesPlacement,
+    revision?: { reference: HyperframeReference; notes: string },
+  ) => {
     const trimmed = prompt.trim();
     if (!trimmed) return;
     const current = hostRef.current;
     const runId = newRunId();
     const createdAt = Date.now();
+    const notes = revision?.notes.trim() ?? '';
     startHyperframeRun(projectId, {
       id: runId,
       prompt: trimmed,
       createdAt,
       status: 'running',
+      ...(revision ? { reference: revision.reference } : {}),
+      ...(notes ? { notes } : {}),
       ...(placement ? { placement: { track: placement.track, startFrame: placement.startFrame } } : {}),
     });
     const durationInFrames = Math.round(current.fps * HYPERFRAMES_DEFAULT_SECONDS);
@@ -111,6 +143,11 @@ export function HyperframesProvider({ host, children }: { host: HyperframesHost;
       height: current.height,
       fps: current.fps,
       durationInFrames,
+      ...(revision ? {
+        referencePrompt: revision.reference.prompt,
+        referenceCode: revision.reference.code,
+        notes,
+      } : {}),
     }).then((result) => {
       if (!result.configured) {
         // Carry the server's reason through so the setup card that reappears
@@ -154,6 +191,8 @@ export function HyperframesProvider({ host, children }: { host: HyperframesHost;
           durationInFrames: result.durationInFrames ?? durationInFrames,
           createdAt,
           name: hyperframeNameFromPrompt(trimmed),
+          ...(revision ? { referenceId: revision.reference.id } : {}),
+          ...(notes ? { notes } : {}),
         }),
         ...(placement
           ? { placement: { track: placement.track, startFrame: placement.startFrame, timelineId } }
@@ -172,24 +211,37 @@ export function HyperframesProvider({ host, children }: { host: HyperframesHost;
     config,
     fps: host.fps,
     generate: run,
-    regenerate: (record) => run(record.prompt),
+    revise: (record, prompt, notes) => run(
+      prompt.trim() || record.prompt,
+      undefined,
+      { reference: hyperframeReference(record), notes },
+    ),
     retry: (failed) => {
       dropHyperframeRun(projectId, failed.id);
-      run(failed.prompt, failed.placement
-        ? { track: failed.placement.track as TrackId, startFrame: failed.placement.startFrame }
-        : undefined);
+      run(
+        failed.prompt,
+        failed.placement
+          ? { track: failed.placement.track as TrackId, startFrame: failed.placement.startFrame }
+          : undefined,
+        failed.reference ? { reference: failed.reference, notes: failed.notes ?? '' } : undefined,
+      );
     },
     dismiss: (runId) => dropHyperframeRun(projectId, runId),
     rename: (record, name) => {
       const trimmed = name.trim();
       if (trimmed && trimmed !== record.name) hostRef.current.renameAsset(record.id, trimmed);
     },
-    remove: (record) => hostRef.current.removeAsset(record.id),
+    placed: host.usedAssetIds,
+    remove: (record) => {
+      if (hostRef.current.usedAssetIds.has(record.id)) return false;
+      hostRef.current.removeAsset(record.id);
+      return true;
+    },
     insertAtPlayhead: (record) => hostRef.current.placeAsset(record.asset, {
       startFrame: hostRef.current.getPlayhead(),
     }),
     refreshConfig: () => { void fetchHyperframesConfig().then(setConfig); },
-  }), [config, host.fps, projectId, records, run, runs.pending, setConfig]);
+  }), [config, host.fps, host.usedAssetIds, projectId, records, run, runs.pending, setConfig]);
 
   return <HyperframesContext.Provider value={api}>{children}</HyperframesContext.Provider>;
 }

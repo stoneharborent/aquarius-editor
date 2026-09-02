@@ -12,6 +12,11 @@ import {
   type HyperframesAuthor,
 } from './hyperframes.ts';
 import { HYPERFRAMES_MAX_FRAMES, HYPERFRAMES_MIN_FRAMES } from '../../shared/hyperframes-contract.ts';
+import {
+  HYPERFRAMES_REFERENCE_CODE_BUDGET,
+  hyperframesUserPrompt,
+  truncateHyperframesReferenceCode,
+} from '../../shared/hyperframes-prompt.ts';
 import { BUILTIN_LLM_PROVIDER } from '../../shared/llm-providers.ts';
 import { builtinLlmModel } from '../../shared/llm-model-catalog.ts';
 import type { BuiltinLlmModelState } from '../builtin-llm/model-file.ts';
@@ -239,4 +244,99 @@ function scriptedAuthor(replies: string[]): { author: HyperframesAuthor; calls: 
   assert.equal(halfConfigured.builtin, true);
 }
 
-console.log('hyperframes.verify: generation, repair loop, compile stage, validation and provider precedence OK');
+
+// ── Regenerating with notes, using the original as the reference ─────────────
+// A revision is not a re-run of the same brief: the earlier composition and the
+// change notes have to reach the model, or it starts over instead of editing.
+{
+  const REFERENCE_CODE = `const OldLowerThird = ({ item }) => {
+  const frame = useCurrentFrame();
+  return <AbsoluteFill style={{ color: '#00ff00' }}>{item.props.title}</AbsoluteFill>;
+};`;
+  const revised = {
+    ...REQUEST,
+    revision: {
+      referencePrompt: 'a green lower third for a chef interview',
+      referenceCode: REFERENCE_CODE,
+      notes: 'make it orange and hold two seconds longer',
+    },
+  };
+  const message = hyperframesUserPrompt(revised);
+  assert.match(message, /a green lower third for a chef interview/,
+    'the ORIGINAL brief must be in the message — it is what the graphic already is');
+  assert.match(message, /OldLowerThird/,
+    'the original composition source is the reference the model edits');
+  assert.match(message, /make it orange and hold two seconds longer/,
+    'and the notes are the change instruction');
+  assert.match(message, /Edit the composition below/,
+    'the instruction must say edit, not build — that is the whole point of a revision');
+  assert.match(message, /1920x1080 at 30 fps/, 'the canvas still travels with it');
+
+  // Plain generations keep exactly the message they always had.
+  const plain = hyperframesUserPrompt(REQUEST);
+  assert.match(plain, /^Graphic to build: /, 'a first-time brief is unchanged');
+  assert.doesNotMatch(plain, /Edit the composition below/);
+
+  const { author, calls } = scriptedAuthor([GOOD]);
+  const outcome = await runHyperframesGeneration(revised, author);
+  assert.equal(outcome.ok, true);
+  assert.match(calls[0]!.messages[0]!.content, /OldLowerThird/,
+    'the reference reaches the model through the real generation loop');
+}
+
+// ── The reference respects the built-in model's context budget ───────────────
+// The bundled model opens 8192 tokens and keeps 1600 for its answer, so an
+// oversized reference is trimmed rather than allowed to crowd out the repair
+// turns. Both ends survive: the head declares the beats, the tail returns the
+// layout, and a revision has to be able to edit either.
+{
+  const head = '// HEAD MARKER\n';
+  const tail = '\n// TAIL MARKER';
+  const huge = `${head}${'const filler = 1;\n'.repeat(2000)}${tail}`;
+  assert.ok(huge.length > HYPERFRAMES_REFERENCE_CODE_BUDGET * 3, 'the fixture really is oversized');
+
+  const trimmed = truncateHyperframesReferenceCode(huge);
+  assert.ok(trimmed.length <= HYPERFRAMES_REFERENCE_CODE_BUDGET,
+    'a reference must never exceed the budget');
+  assert.match(trimmed, /HEAD MARKER/, 'the head of the composition survives');
+  assert.match(trimmed, /TAIL MARKER/, 'and so does its ending');
+  assert.match(trimmed, /omitted to fit/, 'the elision is stated, never silent');
+
+  const small = 'const A = ({ item }) => <AbsoluteFill />;';
+  assert.equal(truncateHyperframesReferenceCode(small), small,
+    'a normal composition is passed through untouched');
+
+  // The route trims too, so no caller can grow the request the model sees.
+  const parsed = parseHyperframesRequest({
+    prompt: 'brighter',
+    referenceCode: huge,
+    referencePrompt: 'the original',
+    notes: 'brighter please',
+  });
+  assert.ok(typeof parsed !== 'string');
+  assert.ok(typeof parsed !== 'string' && parsed.revision, 'reference source makes it a revision');
+  assert.ok(
+    typeof parsed !== 'string' && parsed.revision!.referenceCode.length <= HYPERFRAMES_REFERENCE_CODE_BUDGET,
+    'the route enforces the budget as well as the prompt builder',
+  );
+  assert.ok(hyperframesUserPrompt(parsed as never).length < 20_000,
+    'the assembled revision message stays well inside the context window');
+}
+
+// ── Revision fields are optional and validated ───────────────────────────────
+{
+  // No reference source: notes alone never turn a brief into a revision.
+  const plain = parseHyperframesRequest({ prompt: 'a title card', notes: 'bluer' });
+  assert.ok(typeof plain !== 'string');
+  assert.equal(typeof plain !== 'string' && plain.revision, undefined,
+    'without the original source there is nothing to revise from');
+
+  const longNotes = parseHyperframesRequest({
+    prompt: 'a title card',
+    referenceCode: 'const A = ({ item }) => <AbsoluteFill />;',
+    notes: 'x'.repeat(2001),
+  });
+  assert.equal(longNotes, 'notes must be at most 2000 characters');
+}
+
+console.log('hyperframes.verify: generation, repair loop, compile stage, validation, revisions and provider precedence OK');
