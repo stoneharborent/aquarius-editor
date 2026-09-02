@@ -20,11 +20,12 @@ export const TIMELINE_MAX_HEIGHT = timelineHeightForVisibleTracks(TIMELINE_MAX_V
 
 /**
  * Breathing room kept under the last track. Royce first asked for "an inch or
- * so" (96px) and then, seeing it on the bench, asked for less — 40px is the
- * settled gap: enough to grab a clip and drag it past the last track, small
- * enough that it does not read as dead space.
+ * so" (96px), then for half of that (40px), then — on the bench again,
+ * 2026-09-02 — for half of that too. 20px is the settled gap: still enough to
+ * grab a clip and drag it past the last track, small enough that it reads as a
+ * margin rather than as dead space.
  */
-export const TIMELINE_TRAILING_SPACE = 40;
+export const TIMELINE_TRAILING_SPACE = 20;
 
 /**
  * Height the timeline panel wants for the tracks it currently has: its own

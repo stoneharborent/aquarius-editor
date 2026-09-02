@@ -21,11 +21,12 @@ function close(actual: number, expected: number, what: string): void {
 const CONTENT = 761; // the layout baseline: a 802px window minus the 41px titlebar
 const ROW = 56; // one track row at the default track scale
 const CHROME = TIMELINE_TOOLBAR_HEIGHT + TIMELINE_RULER_HEIGHT;
-const GAP = 40; // the settled breathing space under the last track
+const GAP = 20; // the settled breathing space under the last track
 
 // --- the gap -------------------------------------------------------------
-// Royce asked for "an inch or so" (96px), saw it on the bench, and asked for
-// less. 40px is the settled number.
+// Royce asked for "an inch or so" (96px), saw it on the bench, asked for half
+// of that (40px), saw it again and asked for half of that. 20px is the settled
+// number.
 assert.equal(TIMELINE_TRAILING_SPACE, GAP);
 
 // --- content fit ----------------------------------------------------------
@@ -41,17 +42,21 @@ const STORED_RATIO = 0.5;
 function auto(fitHeight: number | null, timelineRatio = STORED_RATIO): number {
   return resolveTimelineHeight({ mode: 'auto', fitHeight, contentHeight: CONTENT, timelineRatio });
 }
-function manual(timelineRatio: number, fitHeight: number | null = timelineContentFitHeight(3 * ROW)): number {
+function manual(timelineRatio: number, fitHeight: number | null = timelineContentFitHeight(4 * ROW)): number {
   return resolveTimelineHeight({ mode: 'manual', fitHeight, contentHeight: CONTENT, timelineRatio });
 }
 
 // --- AUTO: fit + the gap, bracketed --------------------------------------
-const threeTracks = timelineContentFitHeight(3 * ROW);
-assert.equal(threeTracks, CHROME + 3 * ROW + GAP);
-assert.equal(auto(threeTracks), threeTracks, 'auto sits exactly at the content-fit height');
+// Four rows, not three: with the gap down to 20px a three-track timeline no
+// longer clears the 260px floor, so it is the wrong example for "auto sits
+// exactly where the content puts it". The floor itself is checked below.
+const fourTracks = timelineContentFitHeight(4 * ROW);
+assert.equal(fourTracks, CHROME + 4 * ROW + GAP);
+assert.ok(fourTracks > CONTENT * MIN_TIMELINE_RATIO, 'four tracks clear the floor');
+assert.equal(auto(fourTracks), fourTracks, 'auto sits exactly at the content-fit height');
 // The stored ratio has no say in AUTO — the whole point of the feature.
-assert.equal(auto(threeTracks, 0.2), threeTracks);
-assert.equal(auto(threeTracks, 0.6), threeTracks);
+assert.equal(auto(fourTracks, 0.2), fourTracks);
+assert.equal(auto(fourTracks, 0.6), fourTracks);
 
 // Floor: an empty timeline is still no shorter than the historical minimum.
 const floor = CONTENT * MIN_TIMELINE_RATIO;
@@ -81,11 +86,11 @@ assert.equal(auto(timelineContentFitHeight(4 * ROW * 1.5)), CHROME + 4 * ROW * 1
 close(manual(STORED_RATIO), CONTENT * STORED_RATIO, 'manual honours the dragged ratio');
 // Dragged below the fit height: the panel shrinks and the tracks scroll.
 const shortRatio = MIN_TIMELINE_RATIO;
-assert.ok(CONTENT * shortRatio < threeTracks, 'this drag is shorter than the content');
+assert.ok(CONTENT * shortRatio < fourTracks, 'this drag is shorter than the content');
 close(manual(shortRatio), 260, 'dragged short');
 // Dragged above the fit height: the panel grows and empty space appears.
 const tallRatio = 0.6;
-assert.ok(CONTENT * tallRatio > threeTracks, 'this drag is taller than the content');
+assert.ok(CONTENT * tallRatio > fourTracks, 'this drag is taller than the content');
 close(manual(tallRatio), CONTENT * tallRatio, 'dragged tall');
 // Tracks and Alt+wheel no longer move it — the user asked for this height.
 for (const tracks of [0, 3, 12, 30]) {
@@ -98,11 +103,11 @@ close(manual(STORED_RATIO, null), CONTENT * STORED_RATIO, 'manual before the tim
 
 // --- the CSS grid track mirrors the numeric rule --------------------------
 const CALC = '(100vh - 41px)';
-assert.equal(timelineRowTrack('manual', threeTracks, STORED_RATIO), `calc(${CALC} * ${STORED_RATIO})`);
+assert.equal(timelineRowTrack('manual', fourTracks, STORED_RATIO), `calc(${CALC} * ${STORED_RATIO})`);
 assert.equal(timelineRowTrack('auto', null, STORED_RATIO), `calc(${CALC} * ${STORED_RATIO})`);
 assert.equal(
-  timelineRowTrack('auto', threeTracks, STORED_RATIO),
-  `clamp(calc(${CALC} * ${MIN_TIMELINE_RATIO}), ${threeTracks}px, calc(${CALC} * ${TIMELINE_AUTO_MAX_RATIO}))`,
+  timelineRowTrack('auto', fourTracks, STORED_RATIO),
+  `clamp(calc(${CALC} * ${MIN_TIMELINE_RATIO}), ${fourTracks}px, calc(${CALC} * ${TIMELINE_AUTO_MAX_RATIO}))`,
 );
 
 // --- the drag: seeded from the rendered height, first pixel counts --------
@@ -126,12 +131,12 @@ function drag(state: { mode: TimelineHeightMode; ratio: number }, fitHeight: num
 // From AUTO with three tracks (a short panel), one pixel up grows it by one
 // pixel — it does not jump to the stored ratio, and it does not sit still.
 const autoState = { mode: 'auto' as TimelineHeightMode, ratio: STORED_RATIO };
-const upOne = drag(autoState, threeTracks, -1);
+const upOne = drag(autoState, fourTracks, -1);
 assert.equal(upOne.mode, 'manual', 'a drag always switches to manual');
-close(upOne.height, threeTracks + 1, 'the first pixel up moves one pixel');
+close(upOne.height, fourTracks + 1, 'the first pixel up moves one pixel');
 // And one pixel down shrinks it by one, so both directions respond immediately.
-const downOne = drag(autoState, threeTracks, 1);
-close(downOne.height, threeTracks - 1, 'the first pixel down moves one pixel');
+const downOne = drag(autoState, fourTracks, 1);
+close(downOne.height, fourTracks - 1, 'the first pixel down moves one pixel');
 
 // A whole drag of 120px down from AUTO on a six-track project lands 120px below
 // the fit height, below which the tracks scroll.
@@ -148,15 +153,15 @@ const more = drag({ mode: 'manual', ratio: dragged.ratio }, timelineContentFitHe
 close(more.height, dragged.height + 40, 'the drag keeps tracking in manual');
 
 // The drag is still bounded by the old limits.
-assert.equal(drag(autoState, threeTracks, 10_000).ratio, MIN_TIMELINE_RATIO);
-assert.equal(drag(autoState, threeTracks, -10_000).ratio, 1 - MIN_UPPER_RATIO);
+assert.equal(drag(autoState, fourTracks, 10_000).ratio, MIN_TIMELINE_RATIO);
+assert.equal(drag(autoState, fourTracks, -10_000).ratio, 1 - MIN_UPPER_RATIO);
 
 // --- double-click restores AUTO ------------------------------------------
 const reset = { mode: normalizeTimelineMode('auto'), ratio: dragged.ratio };
 assert.equal(reset.mode, 'auto');
 assert.equal(
-  resolveTimelineHeight({ mode: reset.mode, fitHeight: threeTracks, contentHeight: CONTENT, timelineRatio: reset.ratio }),
-  threeTracks,
+  resolveTimelineHeight({ mode: reset.mode, fitHeight: fourTracks, contentHeight: CONTENT, timelineRatio: reset.ratio }),
+  fourTracks,
   'back to fitting the tracks, whatever the drag left in the stored ratio',
 );
 // The dragged ratio survives the reset, so dragging again resumes from there.
@@ -179,13 +184,13 @@ assert.equal(normalizeTimelineMode(''), 'auto');
 assert.equal(
   resolveTimelineHeight({
     mode: normalizeTimelineMode(undefined),
-    fitHeight: threeTracks,
+    fitHeight: fourTracks,
     contentHeight: CONTENT,
     timelineRatio: STORED_RATIO,
   }),
-  threeTracks,
+  fourTracks,
 );
 // A fresh install: no ratio either. Still auto, still the fit.
-assert.equal(auto(threeTracks, 350 / 761), threeTracks);
+assert.equal(auto(fourTracks, 350 / 761), fourTracks);
 
 console.log('useEditorPanelLayout.verify: auto/manual timeline panel height passed');

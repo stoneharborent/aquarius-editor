@@ -23,11 +23,11 @@
   It used to keep whatever height you last dragged it to no matter what was in it, so a
   project with two or three tracks left a big slab of empty grey under the last one. Now
   the timeline starts out fitting its content — its toolbar, its ruler, every track row,
-  and a 40px gap after the last track — and the panel is exactly that tall, so the preview
+  and a 20px gap after the last track — and the panel is exactly that tall, so the preview
   above gets the space back. Add a track and it grows by one row; delete one and it shrinks
   again; zooming track height with Alt+wheel moves it too. It never goes below its old
   minimum height, and it never takes more than about three fifths of the window on its own —
-  past that the timeline scrolls the way it always did, with the same 40px gap waiting at
+  past that the timeline scrolls the way it always did, with the same 20px gap waiting at
   the end of the scroll so you can still drag a clip past the last one. **Drag the divider
   and the timeline stops fitting and simply stays where you put it**, exactly as it behaved
   before: drag it down past the tracks and they scroll, drag it up and you get empty space,
