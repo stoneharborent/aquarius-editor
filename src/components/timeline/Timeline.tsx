@@ -72,7 +72,7 @@ export function Timeline(props: TimelineProps) {
   const trimRipplePreview = trimRipplePreviewShifts(state, drag, editMode);
 
   // Tell the editor's panel layout how tall this timeline wants to be: chrome +
-  // every track row + the trailing inch. Adding or removing a track, and
+  // every track row + the trailing gap. Adding or removing a track, and
   // Alt+wheel track-height zoom, all flow through tracksHeight.
   usePublishTimelineContentHeight(timelineContentFitHeight(tracksHeight));
 
@@ -284,10 +284,10 @@ The playhead line/triangle is pointerEvents:none, click it to click the ruler - 
             <div className="cc-playhead-handle" style={{ transform: 'translateX(-6px)', width: 13, height: 11, clipPath: 'polygon(0 0, 100% 0, 50% 100%)' }} />
           </div>
 
-          {/* Royce's inch of breathing room after the last track. It lives inside
-              the scrolled content, so it is still there once the timeline is
-              taller than its ceiling and a clip can be dragged into it (the drop
-              lands on the last track, as it always did). */}
+          {/* The trailing gap after the last track. It lives inside the scrolled
+              content, so it is still there once the timeline is taller than the
+              panel and a clip can be dragged into it (the drop lands on the last
+              track, as it always did). */}
           <div aria-hidden style={{ height: TIMELINE_TRAILING_SPACE }} />
         </div>
       </div>

@@ -31,6 +31,7 @@ export interface EditorWorkspaceViewProps {
   previewPanel: ComponentProps<typeof PreviewPanel>;
   inspectorPanel: ComponentProps<typeof InspectorPanel> | null;
   onResizeTimeline: ComponentProps<typeof Divider>['onResize'];
+  onResetTimelineHeight: ComponentProps<typeof Divider>['onReset'];
   timelineTabs: ComponentProps<typeof TimelineTabs>;
   timeline: ComponentProps<typeof Timeline>;
   /** Owns generated graphics for both the Library tab and the timeline prompt. */
@@ -92,7 +93,7 @@ export function EditorWorkspaceView(props: EditorWorkspaceViewProps) {
       </div>
       {renderPreview(props)}
       <div style={{ gridColumn: '1 / -1', gridRow: 3 }}>
-        <Divider orientation="horizontal" onResize={props.onResizeTimeline} />
+        <Divider orientation="horizontal" onResize={props.onResizeTimeline} onReset={props.onResetTimelineHeight} />
       </div>
       {renderTimeline(props)}
       <ExternalAgentOverlay {...props.externalAgentOverlay} />

@@ -4,8 +4,16 @@ import { useT } from '../i18n/locale';
 
 // A thin drag handle for resizing adjacent panels. Reports the pointer delta
 // (along its axis) on each move; the parent clamps and applies it to a size.
-export function Divider({ onResize, orientation = 'vertical' }: { onResize: (delta: number) => void; orientation?: 'vertical' | 'horizontal' }) {
+// With `onReset`, a double-click hands the panel back to its automatic size.
+export function Divider({ onResize, onReset, orientation = 'vertical' }: {
+  onResize: (delta: number) => void;
+  /** Optional double-click action — the timeline divider uses it to go back to
+   *  fitting the tracks. Its presence is what changes the label. */
+  onReset?: () => void;
+  orientation?: 'vertical' | 'horizontal';
+}) {
   const t = useT();
+  const label = onReset ? t('Drag to resize · double-click to fit the tracks') : t('Drag to resize');
   const last = useRef<number | null>(null);
   const [active, setActive] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -18,7 +26,7 @@ export function Divider({ onResize, orientation = 'vertical' }: { onResize: (del
       role="separator"
       tabIndex={0}
       aria-orientation={horiz ? 'horizontal' : 'vertical'}
-      aria-label={t('Drag to resize')}
+      aria-label={label}
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
         last.current = axis(e);
@@ -36,6 +44,10 @@ export function Divider({ onResize, orientation = 'vertical' }: { onResize: (del
         setActive(false);
         e.currentTarget.releasePointerCapture(e.pointerId);
       }}
+      onDoubleClick={onReset ? (event) => {
+        event.preventDefault();
+        onReset();
+      } : undefined}
       onKeyDown={(event) => {
         const step = event.shiftKey ? 32 : 8;
         const delta = horiz
@@ -45,7 +57,7 @@ export function Divider({ onResize, orientation = 'vertical' }: { onResize: (del
         event.preventDefault();
         onResize(delta);
       }}
-      title={t('Drag to resize')}
+      title={label}
       style={{
         position: 'relative', zIndex: 20,
         width: horiz ? '100%' : 9, height: horiz ? 9 : '100%',

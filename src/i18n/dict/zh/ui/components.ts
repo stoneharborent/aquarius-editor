@@ -129,6 +129,7 @@ export default {
   'Drop media here': '拖拽媒体到这里',
   'Drag to select a frame region as a reference': '拖拽框选画面区域作为引用',
   'Drag to resize': '拖动调整大小',
+  'Drag to resize · double-click to fit the tracks': '拖动调整大小 · 双击以适应轨道高度',
   '(preview)': '(预览)',
   'Video URL or /media/uploads/…': '视频 URL 或 /media/uploads/…',
   'Image URL or /media/uploads/…': '图片 URL 或 /media/uploads/…',

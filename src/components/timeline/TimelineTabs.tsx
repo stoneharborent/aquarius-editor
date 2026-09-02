@@ -32,7 +32,7 @@ export function TimelineTabs({ doc, commands }: TimelineTabsProps) {
   };
 
   // The strip shares the timeline's grid row, so the panel height has to budget
-  // for it — otherwise it would eat into the inch under the last track.
+  // for it — otherwise it would eat into the gap under the last track.
   const visible = timelines.length > 1;
   usePublishTimelineChromeHeight(visible ? TIMELINE_TABS_STRIP_HEIGHT : 0);
 
