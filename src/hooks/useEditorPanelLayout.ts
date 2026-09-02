@@ -10,8 +10,37 @@ const DEFAULT_LIBRARY_RATIO = 406 / BASELINE_WIDTH;
 const DEFAULT_TIMELINE_RATIO = 350 / BASELINE_CONTENT_HEIGHT;
 const MIN_LIBRARY_RATIO = 176 / BASELINE_WIDTH;
 const MIN_PREVIEW_RATIO = 280 / BASELINE_WIDTH;
-export const MIN_TIMELINE_RATIO = 260 / BASELINE_CONTENT_HEIGHT;
 const MIN_UPPER_RATIO = 300 / BASELINE_CONTENT_HEIGHT;
+
+/**
+ * The shortest the timeline panel may be, in CSS px — an absolute height, not a
+ * share of the window.
+ *
+ * It used to be a ratio of the baseline layout (260/761 = 34.17%), which meant
+ * the "minimum" grew with the window: on Royce's 1434px-tall bench (content
+ * ~1393px) it came out at 476px, so a three-track project — 252px of content —
+ * rendered a 476px panel with a 220px dead slab under the last track. That
+ * defeats the whole point of AUTO on any window taller than the 761px baseline
+ * (measured on the bench, 2026-09-02).
+ *
+ * 260px is a property of the timeline's own chrome (toolbar + ruler + a couple
+ * of usable track rows), not of the window, so it is expressed in px and used
+ * everywhere the panel has a floor: the AUTO fit, its CSS mirror, and the
+ * MANUAL drag clamp. Making the drag floor absolute too is not just for
+ * consistency — a ratio floor there would snap a tall window's 260px AUTO panel
+ * up to 476px on the first pixel of a downward drag, exactly the jump the rest
+ * of this file works to avoid.
+ */
+export const MIN_TIMELINE_HEIGHT_PX = 260;
+
+/**
+ * MIN_TIMELINE_HEIGHT_PX as a ratio of the content area, which is the unit the
+ * stored layout and the drag work in. On a window too short to give the timeline
+ * its minimum and the preview MIN_UPPER_RATIO at the same time, the preview wins.
+ */
+export function minTimelineRatio(content: number): number {
+  return Math.min(MIN_TIMELINE_HEIGHT_PX / Math.max(1, content), 1 - MIN_UPPER_RATIO);
+}
 
 /**
  * The most of the editor the timeline may take on its own in AUTO mode. A
@@ -60,7 +89,7 @@ function contentHeight(): number {
   return Math.max(1, window.innerHeight - HEADER_HEIGHT);
 }
 
-function normalizeRatios(library: number, timeline: number) {
+function normalizeRatios(library: number, timeline: number, content: number) {
   return {
     libraryRatio: clamp(
       finiteRatio(library, DEFAULT_LIBRARY_RATIO),
@@ -69,7 +98,7 @@ function normalizeRatios(library: number, timeline: number) {
     ),
     timelineRatio: clamp(
       finiteRatio(timeline, DEFAULT_TIMELINE_RATIO),
-      MIN_TIMELINE_RATIO,
+      minTimelineRatio(content),
       1 - MIN_UPPER_RATIO,
     ),
   };
@@ -89,7 +118,7 @@ const CONTENT_HEIGHT_CALC = `(100vh - ${HEADER_HEIGHT}px)`;
  *   under the last track — so it grows as tracks are added and shrinks as they
  *   are removed, and never leaves a slab of dead space under the last audio
  *   track. It is bracketed by the long-standing minimum panel height
- *   (MIN_TIMELINE_RATIO) below and TIMELINE_AUTO_MAX_RATIO of the editor above;
+ *   (MIN_TIMELINE_HEIGHT_PX) below and TIMELINE_AUTO_MAX_RATIO of the editor above;
  *   past that the timeline scrolls, with the trailing gap at the end of the
  *   scrolled content so a clip can still be dragged past the last track.
  *
@@ -114,9 +143,10 @@ export function resolveTimelineHeight(input: {
   // both fall back to the stored ratio.
   if (input.mode === 'manual') return dragged;
   if (input.fitHeight === null || !Number.isFinite(input.fitHeight)) return dragged;
-  const floor = input.contentHeight * MIN_TIMELINE_RATIO;
   const ceiling = input.contentHeight * TIMELINE_AUTO_MAX_RATIO;
-  return clamp(input.fitHeight, Math.min(floor, ceiling), ceiling);
+  // Math.min keeps the clamp from inverting on a window so short that the
+  // absolute floor is taller than the auto ceiling: the ceiling wins.
+  return clamp(input.fitHeight, Math.min(MIN_TIMELINE_HEIGHT_PX, ceiling), ceiling);
 }
 
 /**
@@ -131,7 +161,10 @@ export function timelineRowTrack(
   const dragged = `calc(${CONTENT_HEIGHT_CALC} * ${timelineRatio})`;
   if (mode === 'manual') return dragged;
   if (fitHeight === null || !Number.isFinite(fitHeight)) return dragged;
-  return `clamp(calc(${CONTENT_HEIGHT_CALC} * ${MIN_TIMELINE_RATIO}), ${fitHeight}px, calc(${CONTENT_HEIGHT_CALC} * ${TIMELINE_AUTO_MAX_RATIO}))`;
+  const ceiling = `calc(${CONTENT_HEIGHT_CALC} * ${TIMELINE_AUTO_MAX_RATIO})`;
+  // `min(260px, ceiling)` is the CSS spelling of resolveTimelineHeight's
+  // Math.min(floor, ceiling): CSS clamp() with min > max would return the min.
+  return `clamp(min(${MIN_TIMELINE_HEIGHT_PX}px, ${ceiling}), ${fitHeight}px, ${ceiling})`;
 }
 
 export interface EditorPanelLayout {
@@ -176,6 +209,7 @@ export function useEditorPanelLayout(): EditorPanelLayout {
   const { libraryRatio, timelineRatio } = normalizeRatios(
     storedLibraryRatio,
     storedTimelineRatio,
+    contentHeight(),
   );
   const timelineMode = normalizeTimelineMode(storedTimelineMode);
 
@@ -211,11 +245,11 @@ export function useEditorPanelLayout(): EditorPanelLayout {
         mode: wasAuto ? 'auto' : 'manual',
         fitHeight,
         contentHeight: content,
-        timelineRatio: clamp(stored, MIN_TIMELINE_RATIO, 1 - MIN_UPPER_RATIO),
+        timelineRatio: clamp(stored, minTimelineRatio(content), 1 - MIN_UPPER_RATIO),
       });
       return roundRatio(clamp(
         (rendered - delta) / content,
-        MIN_TIMELINE_RATIO,
+        minTimelineRatio(content),
         1 - MIN_UPPER_RATIO,
       ));
     });

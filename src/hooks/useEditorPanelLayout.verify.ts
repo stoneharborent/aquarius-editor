@@ -6,8 +6,9 @@ import {
   timelineContentFitHeight,
 } from '../../shared/timeline-geometry';
 import {
-  MIN_TIMELINE_RATIO,
+  MIN_TIMELINE_HEIGHT_PX,
   TIMELINE_AUTO_MAX_RATIO,
+  minTimelineRatio,
   normalizeTimelineMode,
   resolveTimelineHeight,
   timelineRowTrack,
@@ -52,15 +53,15 @@ function manual(timelineRatio: number, fitHeight: number | null = timelineConten
 // exactly where the content puts it". The floor itself is checked below.
 const fourTracks = timelineContentFitHeight(4 * ROW);
 assert.equal(fourTracks, CHROME + 4 * ROW + GAP);
-assert.ok(fourTracks > CONTENT * MIN_TIMELINE_RATIO, 'four tracks clear the floor');
+assert.ok(fourTracks > MIN_TIMELINE_HEIGHT_PX, 'four tracks clear the floor');
 assert.equal(auto(fourTracks), fourTracks, 'auto sits exactly at the content-fit height');
 // The stored ratio has no say in AUTO — the whole point of the feature.
 assert.equal(auto(fourTracks, 0.2), fourTracks);
 assert.equal(auto(fourTracks, 0.6), fourTracks);
 
 // Floor: an empty timeline is still no shorter than the historical minimum.
-const floor = CONTENT * MIN_TIMELINE_RATIO;
-assert.equal(floor, 260, 'the minimum panel height is still the historical 260px at baseline');
+const floor = MIN_TIMELINE_HEIGHT_PX;
+assert.equal(floor, 260, 'the minimum panel height is still the historical 260px');
 assert.ok(timelineContentFitHeight(0) < floor, 'an empty timeline is shorter than the minimum');
 assert.equal(auto(timelineContentFitHeight(0)), floor);
 
@@ -82,10 +83,42 @@ assert.equal(growth[3]! - growth[2]!, ROW, 'clear of the floor, each track adds 
 // Alt+wheel track-height zoom moves the summed row heights, so it moves the panel.
 assert.equal(auto(timelineContentFitHeight(4 * ROW * 1.5)), CHROME + 4 * ROW * 1.5 + GAP);
 
+// --- AUTO on a window taller than the baseline ---------------------------
+// Measured on Royce's bench, 2026-09-02: innerHeight 1434 → content ~1393px.
+// The floor used to be a ratio of the content height (260/761 = 34.17%), which
+// on this window meant 476px — so three tracks (252px of content) rendered a
+// 476px panel with a ~220px dead slab under the last track. The floor is an
+// absolute 260px now, so a tall window behaves exactly like the baseline one.
+const TALL = 1393;
+function autoTall(fitHeight: number): number {
+  return resolveTimelineHeight({ mode: 'auto', fitHeight, contentHeight: TALL, timelineRatio: STORED_RATIO });
+}
+const threeTallTracks = timelineContentFitHeight(3 * ROW);
+assert.equal(threeTallTracks, CHROME + 3 * ROW + GAP);
+assert.ok(threeTallTracks < MIN_TIMELINE_HEIGHT_PX, 'three tracks sit just under the 260px floor');
+assert.ok(TALL * (260 / CONTENT) > 470, 'the old ratio floor would have been ~476px here');
+assert.equal(autoTall(threeTallTracks), MIN_TIMELINE_HEIGHT_PX, 'the absolute 260px floor applies, not 476');
+// Four tracks clear the floor, so a tall window sits exactly on the content.
+const fourTallTracks = timelineContentFitHeight(4 * ROW);
+assert.ok(fourTallTracks > MIN_TIMELINE_HEIGHT_PX, 'four tracks clear the floor');
+assert.equal(autoTall(fourTallTracks), fourTallTracks, 'no dead space on a tall window');
+
+// A window too short to give the timeline 260px and the preview its minimum:
+// the ceiling wins and the clamp does not invert.
+const SHORT = 400;
+const shortCeiling = SHORT * TIMELINE_AUTO_MAX_RATIO;
+assert.ok(shortCeiling < MIN_TIMELINE_HEIGHT_PX, 'this window cannot afford the 260px floor');
+close(
+  resolveTimelineHeight({ mode: 'auto', fitHeight: 10, contentHeight: SHORT, timelineRatio: STORED_RATIO }),
+  shortCeiling,
+  'the ceiling wins over the floor on a very short window',
+);
+close(minTimelineRatio(SHORT), 1 - 300 / CONTENT, 'and the drag floor collapses to the drag limit');
+
 // --- MANUAL: the panel is exactly where the divider was dragged ----------
 close(manual(STORED_RATIO), CONTENT * STORED_RATIO, 'manual honours the dragged ratio');
 // Dragged below the fit height: the panel shrinks and the tracks scroll.
-const shortRatio = MIN_TIMELINE_RATIO;
+const shortRatio = minTimelineRatio(CONTENT);
 assert.ok(CONTENT * shortRatio < fourTracks, 'this drag is shorter than the content');
 close(manual(shortRatio), 260, 'dragged short');
 // Dragged above the fit height: the panel grows and empty space appears.
@@ -105,9 +138,18 @@ close(manual(STORED_RATIO, null), CONTENT * STORED_RATIO, 'manual before the tim
 const CALC = '(100vh - 41px)';
 assert.equal(timelineRowTrack('manual', fourTracks, STORED_RATIO), `calc(${CALC} * ${STORED_RATIO})`);
 assert.equal(timelineRowTrack('auto', null, STORED_RATIO), `calc(${CALC} * ${STORED_RATIO})`);
+const AUTO_CEILING_CALC = `calc(${CALC} * ${TIMELINE_AUTO_MAX_RATIO})`;
 assert.equal(
   timelineRowTrack('auto', fourTracks, STORED_RATIO),
-  `clamp(calc(${CALC} * ${MIN_TIMELINE_RATIO}), ${fourTracks}px, calc(${CALC} * ${TIMELINE_AUTO_MAX_RATIO}))`,
+  `clamp(min(260px, ${AUTO_CEILING_CALC}), ${fourTracks}px, ${AUTO_CEILING_CALC})`,
+);
+// The floor in the CSS is the absolute 260px, never a share of the window: a
+// `calc((100vh - 41px) * 0.3417…)` floor is the bug this replaced.
+const autoTrack = timelineRowTrack('auto', fourTracks, STORED_RATIO);
+assert.ok(autoTrack.includes('min(260px,'), 'the CSS floor is an absolute 260px');
+assert.ok(
+  !autoTrack.includes(`${CALC} * ${260 / CONTENT}`),
+  'the CSS floor is not a ratio of the content height',
 );
 
 // --- the drag: seeded from the rendered height, first pixel counts --------
@@ -122,9 +164,9 @@ function drag(state: { mode: TimelineHeightMode; ratio: number }, fitHeight: num
     mode: state.mode,
     fitHeight,
     contentHeight: CONTENT,
-    timelineRatio: clamp(state.ratio, MIN_TIMELINE_RATIO, 1 - MIN_UPPER_RATIO),
+    timelineRatio: clamp(state.ratio, minTimelineRatio(CONTENT), 1 - MIN_UPPER_RATIO),
   });
-  const ratio = clamp((rendered - delta) / CONTENT, MIN_TIMELINE_RATIO, 1 - MIN_UPPER_RATIO);
+  const ratio = clamp((rendered - delta) / CONTENT, minTimelineRatio(CONTENT), 1 - MIN_UPPER_RATIO);
   return { mode: 'manual' as TimelineHeightMode, ratio, height: CONTENT * ratio };
 }
 
@@ -153,7 +195,7 @@ const more = drag({ mode: 'manual', ratio: dragged.ratio }, timelineContentFitHe
 close(more.height, dragged.height + 40, 'the drag keeps tracking in manual');
 
 // The drag is still bounded by the old limits.
-assert.equal(drag(autoState, fourTracks, 10_000).ratio, MIN_TIMELINE_RATIO);
+assert.equal(drag(autoState, fourTracks, 10_000).ratio, minTimelineRatio(CONTENT));
 assert.equal(drag(autoState, fourTracks, -10_000).ratio, 1 - MIN_UPPER_RATIO);
 
 // --- double-click restores AUTO ------------------------------------------
