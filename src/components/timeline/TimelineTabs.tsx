@@ -4,6 +4,11 @@ import { ratioLabel, type ProjectDoc } from '../../editor/types';
 import type { EditorCommands } from '../../editor/store';
 import { useT } from '../../i18n/locale';
 import { Icon } from '../icons';
+import { usePublishTimelineChromeHeight } from './timelinePanelHeight';
+
+/** Fixed strip height: 4px padding + a 25px tab + 4px padding. Enforced by the
+ *  style below so the editor's panel layout can budget for it exactly. */
+export const TIMELINE_TABS_STRIP_HEIGHT = 33;
 
 interface TimelineTabsProps {
   doc: ProjectDoc;
@@ -26,10 +31,15 @@ export function TimelineTabs({ doc, commands }: TimelineTabsProps) {
     setRenaming(null);
   };
 
-  if (timelines.length <= 1) return null;
+  // The strip shares the timeline's grid row, so the panel height has to budget
+  // for it — otherwise it would eat into the inch under the last track.
+  const visible = timelines.length > 1;
+  usePublishTimelineChromeHeight(visible ? TIMELINE_TABS_STRIP_HEIGHT : 0);
+
+  if (!visible) return null;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderTop: `0.5px solid ${theme.border}`, background: theme.panel, overflowX: 'auto', flexShrink: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, height: TIMELINE_TABS_STRIP_HEIGHT, boxSizing: 'border-box', padding: '4px 8px', borderTop: `0.5px solid ${theme.border}`, background: theme.panel, overflowX: 'auto', flexShrink: 0 }}>
       {timelines.map((tl) => {
         const active = tl.id === doc.activeTimelineId;
         return (

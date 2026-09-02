@@ -15,6 +15,19 @@
   to remove the clip first — deleting it would have quietly taken the clip out of your edit,
   and that is not something you would get back.
 
+### Changed
+- **The timeline is only as tall as the tracks it holds.** It used to keep whatever
+  height you last dragged it to no matter what was in it, so a project with two or
+  three tracks left a big slab of empty grey under the last one. Now the timeline
+  measures itself — its toolbar, its ruler, every track row, and an inch of breathing
+  space after the last track — and the panel is exactly that tall, so the preview above
+  gets the space back. Add a track and it grows by one row; delete one and it shrinks
+  again; zooming track height with Alt+wheel moves it too. Dragging the divider still
+  works and now sets the *most* the timeline is allowed to grow to: once there are more
+  tracks than fit, the timeline stops there and scrolls the way it always did, with the
+  same inch of space waiting at the end of the scroll so you can still drag a clip past
+  the last one. It never goes below its old minimum height.
+
 ### Fixed
 - **HyperFrames generation with the built-in model works in installed builds again.**
   Every attempt used to stop at "the built-in model process exited with code 1". The app
