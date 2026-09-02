@@ -1,6 +1,6 @@
 # Aquarius Editor changelog
 
-## Unreleased
+## v0.7.2 — 2026-09-02
 
 ### Added
 - **Ask for a change instead of starting over.** Regenerate on a finished graphic in the
