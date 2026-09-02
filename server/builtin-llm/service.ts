@@ -14,6 +14,7 @@
 // same built worker when Electron is not around.
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
+import { existsSync } from 'node:fs';
 import { fork } from 'node:child_process';
 import {
   parseBuiltinLlmResponse,
@@ -79,13 +80,40 @@ export function builtinLlmRuntimeAvailable(
  * The built worker file. `desktop:build:main` esbuilds it next to the other
  * native workers, and `predev` builds it too so `npm run dev` has one.
  *
+ * There are two places this module can be running from, and the worker sits in
+ * a different spot relative to each:
+ *   - packaged: this file has been esbuilt *into* `desktop-dist/main.mjs`, so
+ *     the worker is a plain sibling of the bundle.
+ *   - from source (`npm run dev`, tsx): this file is
+ *     `server/builtin-llm/service.ts`, so the worker is two levels up in
+ *     `desktop-dist/`.
+ * Guessing one broke every installed build — the packaged app climbed a level
+ * too far and looked for the worker in `resources/desktop-dist/` — so try both
+ * and take whichever actually exists.
+ *
  * fileURLToPath, never `URL.pathname`: an install path containing a space (or
  * any other character a URL escapes) comes back percent-encoded from pathname
  * and the fork then fails with ENOENT on a path that visibly exists. This
  * checkout lives under "Mobile Documents", which is exactly that case.
  */
+export function resolveBuiltinLlmWorkerPath(
+  moduleUrl: string = import.meta.url,
+  exists: (path: string) => boolean = existsSync,
+): string {
+  const bundled = fileURLToPath(new URL('./builtin-llm-worker.mjs', moduleUrl));
+  const fromSource = fileURLToPath(new URL('../../desktop-dist/builtin-llm-worker.mjs', moduleUrl));
+  for (const candidate of [bundled, fromSource]) {
+    if (exists(candidate)) return candidate;
+  }
+  throw new Error(
+    'The built-in model helper is missing. It was not found next to the app at '
+    + `${bundled}, nor in the build folder at ${fromSource}. `
+    + 'Run "npm run desktop:build:main" to build it, or reinstall the app.',
+  );
+}
+
 function defaultWorkerPath(): string {
-  return fileURLToPath(new URL('../../desktop-dist/builtin-llm-worker.mjs', import.meta.url));
+  return resolveBuiltinLlmWorkerPath();
 }
 
 function defaultCreateWorker(workerPath: string): BuiltinLlmWorker {

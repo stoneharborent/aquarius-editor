@@ -3,9 +3,11 @@
 // lazily, loaded once, given back when the editor goes quiet, and that a worker
 // that dies never leaves a request hanging.
 import assert from 'node:assert/strict';
+import { pathToFileURL } from 'node:url';
 import {
   BuiltinLlmService,
   builtinLlmRuntimeAvailable,
+  resolveBuiltinLlmWorkerPath,
   type BuiltinLlmWorker,
 } from './service.ts';
 import {
@@ -243,5 +245,51 @@ assert.equal(
   false,
   'a build without the native runtime must report unavailable rather than throw',
 );
+
+// ── Where the worker file lives ──────────────────────────────────────────────
+// Two layouts, one resolver. Packaged, this module is bundled into
+// desktop-dist/main.mjs and the worker is its sibling; from source it is
+// server/builtin-llm/service.ts and the worker is two levels up in
+// desktop-dist/. Resolving only the source layout is what made HyperFrames
+// generation fail in every installed build.
+{
+  const bundledDir = '/opt/Aquarius Editor/resources/app/desktop-dist';
+  const bundledWorker = `${bundledDir}/builtin-llm-worker.mjs`;
+  assert.equal(
+    resolveBuiltinLlmWorkerPath(
+      pathToFileURL(`${bundledDir}/main.mjs`).href,
+      (candidate) => candidate === bundledWorker,
+    ),
+    bundledWorker,
+    'a packaged build must find the worker next to the bundle it was built into',
+  );
+
+  const repo = '/home/dev/aquarius editor';
+  const sourceWorker = `${repo}/desktop-dist/builtin-llm-worker.mjs`;
+  assert.equal(
+    resolveBuiltinLlmWorkerPath(
+      pathToFileURL(`${repo}/server/builtin-llm/service.ts`).href,
+      (candidate) => candidate === sourceWorker,
+    ),
+    sourceWorker,
+    'running from source must find the worker in the repo\'s desktop-dist',
+  );
+
+  // A space in the install path must survive as a space, not %20 — fork()
+  // fails with ENOENT on the percent-encoded form.
+  assert.ok(
+    !resolveBuiltinLlmWorkerPath(
+      pathToFileURL(`${repo}/server/builtin-llm/service.ts`).href,
+      (candidate) => candidate === sourceWorker,
+    ).includes('%20'),
+    'the resolved path must be a real filesystem path, never a percent-encoded URL path',
+  );
+
+  assert.throws(
+    () => resolveBuiltinLlmWorkerPath(pathToFileURL(`${bundledDir}/main.mjs`).href, () => false),
+    /built-in model helper is missing[\s\S]*desktop-dist/,
+    'with the worker nowhere on disk the error must name both places it looked',
+  );
+}
 
 console.log('builtin-llm/service.verify: lazy load, reuse, idle unload, failure paths and wire protocol OK');

@@ -60,6 +60,14 @@ assert.ok(
   arm64.files?.includes('desktop-dist/builtin-llm-worker.mjs'),
   'the installer must ship the worker that hosts the bundled HyperFrames model',
 );
+// The server resolves that worker as a sibling of the bundle it was built into,
+// so both must be packaged from the same folder. Shipping the worker anywhere
+// else brought back "the built-in model process exited with code 1".
+assert.equal(
+  arm64.files?.includes('desktop-dist/main.mjs'),
+  true,
+  'the main bundle must ship from desktop-dist, next to the built-in model worker',
+);
 // node-llama-cpp ships one prebuilt llama.cpp package per platform/backend and
 // they are tens of megabytes each. Keep this artifact's, drop the rest.
 assert.equal(

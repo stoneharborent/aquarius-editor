@@ -1,5 +1,15 @@
 # Aquarius Editor changelog
 
+## Unreleased
+
+### Fixed
+- **HyperFrames generation with the built-in model works in installed builds again.**
+  Every attempt used to stop at "the built-in model process exited with code 1". The app
+  was looking for its model helper one folder too high up, so it never found the file and
+  the helper died before it could start. It only ever worked in development because the
+  place it looked happens to be the right one when the editor is run from its source code
+  — which is how it is run while it is being built, and nowhere else.
+
 ## v0.7.1 — 2026-08-31
 
 ### Fixed
