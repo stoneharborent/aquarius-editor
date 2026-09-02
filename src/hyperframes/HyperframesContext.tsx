@@ -76,7 +76,6 @@ export interface HyperframesApi {
    * autosave, version history and `.ccproj` export carry it for free.
    */
   readonly remove: (record: HyperframeRecord) => boolean;
-  readonly insertAtPlayhead: (record: HyperframeRecord) => void;
   readonly refreshConfig: () => void;
 }
 
@@ -243,9 +242,6 @@ export function HyperframesProvider({ host, children }: { host: HyperframesHost;
       hostRef.current.removeAsset(record.id);
       return true;
     },
-    insertAtPlayhead: (record) => hostRef.current.placeAsset(record.asset, {
-      startFrame: hostRef.current.getPlayhead(),
-    }),
     refreshConfig: () => { void fetchHyperframesConfig().then(setConfig); },
   }), [config, host.clipCounts, host.fps, projectId, records, run, runs.pending, setConfig]);
 

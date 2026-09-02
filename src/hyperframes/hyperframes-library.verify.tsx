@@ -10,6 +10,11 @@ import { migrateProjectDoc } from '../persist/projectStore.ts';
 import { sanitizePortableProjectDoc } from '../persist/portableProject.ts';
 import { CURRENT_PROJECT_VERSION } from '../../shared/project-version.ts';
 import { makeDraft } from '../editor/store.ts';
+import { activeEditorState } from '../editor/projectTypes.ts';
+import { laneKindForAsset, libraryPlacement } from '../library/libraryPlacement.ts';
+import {
+  clearLibraryItem, resetLibrarySelection, selectLibraryItem, selectedLibraryItemId,
+} from '../library/librarySelection.ts';
 import { mediaAssetClipCounts } from '../editor/mediaAssetUsage.ts';
 import {
   HYPERFRAMES_NOTES_PROP, HYPERFRAMES_REFERENCE_PROP,
@@ -119,7 +124,6 @@ function api(overrides: Partial<HyperframesApi> = {}): HyperframesApi {
     rename: () => undefined,
     clipCount: () => 0,
     remove: () => true,
-    insertAtPlayhead: () => undefined,
     refreshConfig: () => undefined,
     ...overrides,
   };
@@ -453,7 +457,7 @@ assert.doesNotMatch(loading, /Connect a model to generate graphics/,
     'so its card must not claim the timeline is using it');
   assert.doesNotMatch(deleteButton(render(liveApi())), /disabled/, 'and Delete must be pressable');
 
-  // Drop it on the timeline the way the card's own click does.
+  // Drop it on the timeline the way a drag, or the E / W / Q keys, do.
   draft.commands.addMediaItem(draft.getDoc().assets[0]!, { startFrame: 0 });
   assert.equal(mediaAssetClipCounts(draft.getDoc()).get('hf-live'), 1,
     'once a clip is made from it, the generation is in use');
@@ -514,6 +518,116 @@ assert.doesNotMatch(loading, /Connect a model to generate graphics/,
     'renaming a graphic must not touch the brief it was generated from');
 }
 
+// ── Clicking a card SELECTS it — it never places a clip ─────────────────────
+// Royce, 2026-09-02: "clicking on a generated image should not send it to the
+// timeline. That step needs to be done manually by dragging or through one of
+// the shortcut keys." The card's picture used to be an insert button.
+{
+  const panelSource = await (await import('node:fs/promises'))
+    .readFile(new URL('./HyperframesPanel.tsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(panelSource, /insertAtPlayhead/,
+    'the panel must have no insert-at-playhead path left at all');
+  assert.doesNotMatch(panelSource, /Added \{name\} at the playhead/,
+    'and no toast announcing an insert it no longer performs');
+  assert.match(panelSource, /onClick=\{onSelect\}/,
+    'the picture selects the card and does nothing else');
+  assert.match(panelSource, /selectLibraryItem\(record\.id\)/,
+    'through the shared library selection the edit keys read');
+
+  // The rendered card advertises the two ways in, and neither is a click.
+  const card = render(api());
+  assert.match(card, /Drag onto a track, or select it and press E to append, W to insert, Q to connect/,
+    'the tooltip must teach drag and the keys, not clicking');
+  assert.match(card, /draggable="true"/, 'dragging a card is still how you place it by mouse');
+
+  // Clicking really does nothing to the project. `remove` is the only API
+  // member a click may reach, and this render has none of them wired to a
+  // document — so the proof is at the store level: selecting, then placing.
+  const draft = makeDraft({
+    version: CURRENT_PROJECT_VERSION,
+    assets: [],
+    mediaFolders: [],
+    activeTimelineId: 't1',
+    timelines: [{
+      id: 't1', name: 'Main', order: 0, fps: 30, width: 1920, height: 1080,
+      items: [], tracks: { V1: { kind: 'video' } }, trackOrder: ['V1'], selectedId: null,
+    }],
+  });
+  draft.commands.addAsset(hyperframeAsset({
+    id: 'hf-keys',
+    prompt: 'a spinning globe',
+    code: 'const K = ({ item }) => <AbsoluteFill />;',
+    width: 1920,
+    height: 1080,
+    durationInFrames: 60,
+    createdAt: 1_700_000_400_000,
+  }));
+
+  resetLibrarySelection();
+  selectLibraryItem('hf-keys');
+  assert.equal(selectedLibraryItemId(), 'hf-keys', 'the click points the edit keys at this card');
+  assert.equal(draft.getDoc().timelines[0]!.items.length, 0,
+    'selecting a card must not put anything on the timeline');
+
+  // The shortcut path: the same plan useEditorActions applies, run by hand.
+  const place = (edit: 'append' | 'insert' | 'connect', playhead: number) => {
+    const asset = draft.getDoc().assets.find((candidate) => candidate.id === selectedLibraryItemId())!;
+    const plan = libraryPlacement(activeEditorState(draft.getDoc()), edit, {
+      kind: laneKindForAsset(asset.kind),
+      playhead,
+      durationInFrames: asset.durationInFrames,
+    });
+    const track = plan.createTrack
+      ? draft.commands.createTrack(plan.createTrack.kind, { order: plan.createTrack.order })
+      : plan.track;
+    draft.commands.addMediaItem(asset, {
+      ...(track ? { track } : {}),
+      ...(plan.startFrame === undefined ? {} : { startFrame: plan.startFrame }),
+      ...(plan.ripple ? { ripple: true } : {}),
+    });
+  };
+
+  // E — append: after everything already on V1.
+  place('append', 0);
+  let items = draft.getDoc().timelines[0]!.items;
+  assert.equal(items.length, 1, 'E places the selected card');
+  assert.equal(items[0]!.startFrame, 0, 'at the end of an empty V1, which is frame 0');
+  place('append', 0);
+  items = draft.getDoc().timelines[0]!.items;
+  assert.equal(items.length, 2);
+  assert.equal(items[1]!.startFrame, 60, 'and the next append lands after the first clip');
+
+  // W — insert at the playhead, pushing the clip that was there to the right.
+  place('insert', 0);
+  items = [...draft.getDoc().timelines[0]!.items].sort((a, b) => a.startFrame - b.startFrame);
+  assert.equal(items.length, 3);
+  assert.deepEqual(items.map((item) => item.startFrame), [0, 60, 120],
+    'W inserts at the playhead and ripples the rest right');
+
+  // Q — connect: a lane ABOVE V1, made for it because V1 is busy at frame 0.
+  const videoLanesBefore = draft.getDoc().timelines[0]!.trackOrder!.length;
+  place('connect', 0);
+  const timeline = draft.getDoc().timelines[0]!;
+  assert.equal(timeline.trackOrder!.length, videoLanesBefore + 1,
+    'Q makes a lane when every lane above the main one is busy');
+  const connected = timeline.items.find((item) => item.track === timeline.trackOrder![0]);
+  assert.ok(connected, 'and the clip lands on the new top lane');
+  assert.equal(connected.startFrame, 0, 'at the playhead, over the story rather than in it');
+
+  // A second connect where that new lane is still free REUSES it — a lane per
+  // graphic would bury the timeline in empty tracks.
+  place('connect', 120);
+  const after = draft.getDoc().timelines[0]!;
+  assert.equal(after.trackOrder!.length, videoLanesBefore + 1,
+    'the free lane above is reused rather than a fresh one made');
+  assert.equal(after.items.filter((item) => item.track === after.trackOrder![0]).length, 2);
+
+  // A card that is deleted stops being what the keys will place.
+  clearLibraryItem('hf-keys');
+  assert.equal(selectedLibraryItemId(), null);
+  resetLibrarySelection();
+}
+
 // ── Regenerate opens the revise prompt rather than re-running the brief ──────
 {
   const panelSource = await (await import('node:fs/promises'))
@@ -526,4 +640,4 @@ assert.doesNotMatch(loading, /Connect a model to generate graphics/,
     'and submitting goes through revise, which keeps the original');
 }
 
-console.log('hyperframes-library.verify: tab, input bar, pending/failed cards, revisions, rename, delete rules and setup card OK');
+console.log('hyperframes-library.verify: tab, input bar, pending/failed cards, revisions, rename, click-selects, E/W/Q placement, delete rules and setup card OK');

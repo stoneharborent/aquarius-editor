@@ -14,11 +14,23 @@
   on your timeline was made from that graphic, Delete is switched off and the card tells you
   to remove the clip first — deleting it would have quietly taken the clip out of your edit,
   and that is not something you would get back. The switched-off Delete now says how many
-  clips are in the way, both as text on the card and as a tooltip when you hover it, and
-  clicking a graphic's picture — which drops it onto the timeline at the playhead — now
-  says that it did, so a graphic that has just become undeletable explains itself.
+  clips are in the way, both as text on the card and as a tooltip when you hover it. A
+  graphic only becomes undeletable once you have actually placed it, which is now always a
+  deliberate drag or keypress — see the click change below.
 
 ### Changed
+- **Clicking a generated graphic no longer drops it on your timeline.** A click on a
+  Hyperframes card now only *selects* it — the card outlines itself so you can see which one
+  is picked — and nothing is added to your edit until you say so. There are two ways to say
+  so, and both are deliberate: **drag the card onto a track**, exactly as before, or select it
+  and press one of the three Final Cut edit keys — **E appends** it after the last clip on the
+  main video track, **W inserts** it at the playhead and pushes everything after it to the
+  right, **Q connects** it at the playhead on a track *above* the main one, making a new track
+  when every track above is already busy there. The keys work while the Library still has your
+  attention, so click and press without travelling back to the timeline first, and they do
+  nothing at all when no card is selected. Before this, the card's picture was a button that
+  added a clip the moment you touched it — usually while you were only trying to look at what
+  you had made.
 - **The timeline is only as tall as the tracks it holds, and the divider still works.**
   It used to keep whatever height you last dragged it to no matter what was in it, so a
   project with two or three tracks left a big slab of empty grey under the last one. Now

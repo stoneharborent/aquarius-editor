@@ -8,7 +8,7 @@ a binding in `src/shortcuts/catalog.ts`, change the matching row here in the sam
 
 ## How to read this
 
-- The catalog holds **56 actions**. Every one of them is in the tables below — nothing is omitted.
+- The catalog holds **58 actions**. Every one of them is in the tables below — nothing is omitted.
 - **Mod** = ⌘ on macOS, **Ctrl** on Linux and Windows. **Alt** = ⌥ on macOS. **Ctrl** written on
   its own always means the literal Control key, on every platform.
 - The Shortcuts dialog (⌥⌘K) prints macOS glyphs on a Mac and spelled-out names elsewhere, so the
@@ -59,6 +59,9 @@ a binding in `src/shortcuts/catalog.ts`, change the matching row here in the sam
 | Nudge right 1 / 10 frames (`nudge-right`) | R / Shift + R | **. / Shift + .** | . / ⇧. | FCP | R is freed. |
 | Trim start (`trim-start`) | Q | **Alt + [** | ⌥[ ("Trim Start") | FCP | Q is freed. |
 | Trim end (`trim-end`) | W | **Alt + ]** | ⌥] ("Trim End") | FCP | W is freed. |
+| Append selected library item (`library-append`) | — | **E** | E ("Append to Storyline") | FCP | New in 2026-09-02. Acts on the card selected in a Library tab (`src/library/librarySelection.ts`), and does nothing when nothing is selected. Appends after the last clip on the item's own lane (V1 for pictures, A1 for audio). This and the two rows below are why E, W and Q were held free by the remap. |
+| Insert selected library item at playhead (`library-insert`) | — | **W** | W ("Insert") | FCP | Places at the playhead on the item's own lane and ripples later clips right, the way FCP's insert edit does. |
+| Connect selected library item at playhead (`library-connect`) | — | **Q** | Q ("Connect to Primary Storyline") | FCP-ish | Aquarius Editor has tracks, not a primary storyline with connected clips, so "connect" means the first lane *above* the main one that is free for the clip's whole length — a new top lane is created when every existing one is busy. |
 | Select all (`select-all`) | Mod + A | **Mod + A** | ⌘A | FCP | Suppressed while typing so ⌘A still selects text in the inspector. |
 | Select clips forward (`select-after`) | Y | **Y** | — | Extension | Nearest FCP idea is a range selection; Premiere's Track Select Forward is A, which is now the Select tool. Y stays. |
 | Move clip up (`move-up`) | Alt + ↑ | **Alt + ↑** | ⌥↑ (move a connected clip up a lane) | FCP-ish | Same gesture, applied to this app's track model. |
@@ -158,10 +161,13 @@ decision point, shared by the commit path (`useTimelinePointer.ts`) and the live
 
 ## Keys the remap freed
 
-**C, Enter, V, Q, W, E, R, S, `/`, ⇧E, ⇧R, ⌘M, ⇧↑, ⇧↓, ⌘⇧B.** They are intentionally left
-unassigned. When an FCP command that owns one of these keys gets built (E = Append,
-W = Insert, Q = Connect, R = Range Selection tool, S = Skimming), the key is waiting for it —
-do not spend them on anything else without updating this file.
+**C, Enter, V, R, S, `/`, ⇧E, ⇧R, ⌘M, ⇧↑, ⇧↓, ⌘⇧B.** They are intentionally left
+unassigned. When an FCP command that owns one of these keys gets built (R = Range Selection
+tool, S = Skimming), the key is waiting for it — do not spend them on anything else without
+updating this file.
+
+**E, W and Q were spent as intended on 2026-09-02**: Append, Insert and Connect, acting on the
+selected Library card. See the three rows in the Edit table.
 
 ## Matcher changes that the layout required
 

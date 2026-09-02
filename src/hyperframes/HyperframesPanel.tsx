@@ -4,13 +4,18 @@
 // thumbnail (`MgThumb`) so a generated graphic previews exactly the way a stock
 // template does, and they drag onto the timeline through the existing library
 // `template` drop path.
+//
+// CLICKING A CARD ONLY SELECTS IT. It never places a clip (Royce, 2026-09-02):
+// a graphic reaches the timeline by being dragged onto a track, or by pressing
+// one of the Final Cut edit keys — E append, W insert, Q connect — which act on
+// the selected card through `src/library/librarySelection.ts`.
 import { useState } from 'react';
 import { theme } from '../theme';
 import { useT } from '../i18n/locale';
 import { Icon } from '../components/icons';
 import { MgThumb } from '../media/MgThumb';
 import { setLibraryDrag } from '../library/drag';
-import { showAppToast } from '../ui/appToast';
+import { clearLibraryItem, selectLibraryItem, useSelectedLibraryItemId } from '../library/librarySelection';
 import { useHyperframes } from './HyperframesContext';
 import { hyperframesAcceptsPrompts } from './api';
 import { HyperframesSetupCard } from './HyperframesSetupCard';
@@ -38,6 +43,7 @@ export function HyperframesPanel() {
   // Two-step delete, the same shape the media pool and the template browser
   // use: the first click arms the card, the second one does it.
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const selectedId = useSelectedLibraryItemId();
   const config = hyperframes.config;
   const unconfigured = config !== null && !config.configured;
   // The setup card still shows while the built-in model downloads, but the
@@ -166,14 +172,11 @@ export function HyperframesPanel() {
                   : undefined}
                 clips={hyperframes.clipCount(record)}
                 confirmingDelete={confirmDeleteId === record.id}
+                selected={selectedId === record.id}
                 onHover={setHoveredId}
-                // Clicking the picture PLACES a clip. Saying so is what stops
-                // the next step — Delete going grey because a clip now uses the
-                // graphic — from looking like a broken button.
-                onInsert={() => {
-                  hyperframes.insertAtPlayhead(record);
-                  showAppToast(t('Added {name} at the playhead', { name: record.name }));
-                }}
+                // Selecting, and ONLY selecting. The edit keys read this;
+                // nothing here touches the timeline.
+                onSelect={() => selectLibraryItem(record.id)}
                 onRegenerate={(at) => {
                   setConfirmDeleteId(null);
                   setRevising({ record, x: at.x, y: at.y });
@@ -185,7 +188,8 @@ export function HyperframesPanel() {
                     return;
                   }
                   setConfirmDeleteId(null);
-                  hyperframes.remove(record);
+                  // A deleted graphic must not stay under the edit keys.
+                  if (hyperframes.remove(record)) clearLibraryItem(record.id);
                 }}
                 onCancelRemove={() => setConfirmDeleteId(null)}
               />
@@ -251,8 +255,8 @@ function PendingCard({ run, onRetry, onDismiss }: {
 }
 
 function HyperframeCard({
-  record, fps, hovered, originName, clips, confirmingDelete,
-  onHover, onInsert, onRegenerate, onRename, onRemove, onCancelRemove,
+  record, fps, hovered, originName, clips, confirmingDelete, selected,
+  onHover, onSelect, onRegenerate, onRename, onRemove, onCancelRemove,
 }: {
   record: HyperframeRecord;
   fps: number;
@@ -265,8 +269,10 @@ function HyperframeCard({
    */
   clips: number;
   confirmingDelete: boolean;
+  /** This card is what the E / W / Q edit keys will place. */
+  selected: boolean;
   onHover: (id: string | null) => void;
-  onInsert: () => void;
+  onSelect: () => void;
   onRegenerate: (at: { x: number; y: number }) => void;
   onRename: (name: string) => void;
   onRemove: () => void;
@@ -301,12 +307,16 @@ function HyperframeCard({
       })}
       onPointerEnter={() => onHover(record.id)}
       onPointerLeave={() => onHover(null)}
-      style={cardShell}
+      data-selected={selected ? 'true' : undefined}
+      style={selected
+        ? { ...cardShell, borderColor: theme.accent, boxShadow: `0 0 0 1px ${theme.accent}` }
+        : cardShell}
     >
       <button
         type="button"
-        onClick={onInsert}
-        title={t('Click to add at the playhead, or drag onto a track: {name}', { name: record.name })}
+        onClick={onSelect}
+        aria-pressed={selected}
+        title={t('Drag onto a track, or select it and press E to append, W to insert, Q to connect: {name}', { name: record.name })}
         style={{ ...thumbShell, border: 'none', padding: 0, cursor: 'pointer', width: '100%' }}
       >
         <MgThumb asset={record.asset} fps={fps} active={hovered} />

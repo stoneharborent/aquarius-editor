@@ -1,6 +1,9 @@
 import type { RefObject } from 'react';
 import { activeEditorState, type ProjectDoc } from '../editor/types';
 import type { EditorCommands } from '../editor/store';
+import { isTimelineMediaAssetKind } from '../editor/mediaTypes';
+import { laneKindForAsset, libraryPlacement, type LibraryEdit } from '../library/libraryPlacement';
+import { selectedLibraryItemId } from '../library/librarySelection';
 import { keyboardPreviewNudgePlan, type PreviewNudgeDirection } from '../components/preview/previewTransform';
 import { saveVersion } from '../persist/versionStore';
 import type { TimelineShortcutApi } from './timelineApi';
@@ -105,6 +108,46 @@ function editingActions(deps: EditorActionDeps): ActionBindings {
   };
 }
 
+/**
+ * Final Cut's three edit keys, applied to whatever card is selected in the
+ * Library: E appends, W inserts at the playhead (rippling), Q connects on a
+ * lane above. Nothing happens when nothing is selected — that is what makes it
+ * safe to let these keys fire from any surface (see shortcutScope.ts).
+ *
+ * The asset is looked up in the live document by id, so a graphic renamed or
+ * deleted since the click is placed correctly or not at all, never from a
+ * stale copy.
+ */
+function placeSelectedLibraryItem(deps: EditorActionDeps, edit: LibraryEdit): void {
+  const assetId = selectedLibraryItemId();
+  if (!assetId) return;
+  const doc = deps.docRef.current;
+  const asset = doc.assets?.find((candidate) => candidate.id === assetId);
+  if (!asset || !isTimelineMediaAssetKind(asset.kind)) return;
+  const state = activeEditorState(doc);
+  const placement = libraryPlacement(state, edit, {
+    kind: laneKindForAsset(asset.kind),
+    playhead: timeline(deps.timelineRef)?.getPlayhead() ?? 0,
+    durationInFrames: asset.durationInFrames,
+  });
+  const track = placement.createTrack
+    ? deps.commands.createTrack(placement.createTrack.kind, { order: placement.createTrack.order })
+    : placement.track;
+  deps.commands.addMediaItem(asset, {
+    ...(track ? { track } : {}),
+    ...(placement.startFrame === undefined ? {} : { startFrame: placement.startFrame }),
+    ...(placement.ripple ? { ripple: true } : {}),
+  });
+}
+
+function libraryActions(deps: EditorActionDeps): ActionBindings {
+  return {
+    'library-append': () => placeSelectedLibraryItem(deps, 'append'),
+    'library-insert': () => placeSelectedLibraryItem(deps, 'insert'),
+    'library-connect': () => placeSelectedLibraryItem(deps, 'connect'),
+  };
+}
+
 function navigationActions(deps: EditorActionDeps): ActionBindings {
   const tl = () => timeline(deps.timelineRef);
   return {
@@ -148,6 +191,7 @@ export function useEditorActions(deps: EditorActionDeps): void {
   const bindings: ActionBindings = {
     ...playbackActions(deps),
     ...editingActions(deps),
+    ...libraryActions(deps),
     ...navigationActions(deps),
     ...viewActions(deps),
     'save-version': () => {

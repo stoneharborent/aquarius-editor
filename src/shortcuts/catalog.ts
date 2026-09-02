@@ -1,4 +1,4 @@
-// Default keyboard preset with 56 actions — the Final Cut Pro layout.
+// Default keyboard preset with 58 actions — the Final Cut Pro layout.
 //
 // `docs/fcp-shortcut-map.md` is the law: it lists every action here, the FCP command it
 // mirrors, and the reason for each deviation. Change that table in the same commit as any
@@ -33,7 +33,7 @@ export const SHORTCUT_GROUPS: { id: ShortcutGroup; label: string }[] = [
   { id: 'view', label: 'View' },
 ];
 
-/** Canonical 55 actions — source of truth for help UI + matcher. */
+/** Canonical 58 actions — source of truth for help UI + matcher. */
 export const SHORTCUT_CATALOG: ShortcutAction[] = [
   { id: 'play-pause', label: 'Play / Pause', group: 'playback', keys: 'Space' },
   { id: 'seek-back', label: 'Previous frame', group: 'playback', keys: '←' },
@@ -65,6 +65,12 @@ export const SHORTCUT_CATALOG: ShortcutAction[] = [
   { id: 'trim-start', label: 'Trim start', group: 'edit', keys: 'Alt + [' },
   { id: 'trim-end', label: 'Trim end', group: 'edit', keys: 'Alt + ]' },
   // disabled when typing so ⌘A still selects text in chat/inspector inputs
+  // The three Final Cut edit keys, acting on the card selected in the Library
+  // (see src/library/librarySelection.ts). They were held free for exactly this
+  // in docs/fcp-shortcut-map.md.
+  { id: 'library-append', label: 'Append selected library item', group: 'edit', keys: 'E' },
+  { id: 'library-insert', label: 'Insert selected library item at playhead', group: 'edit', keys: 'W' },
+  { id: 'library-connect', label: 'Connect selected library item at playhead', group: 'edit', keys: 'Q' },
   { id: 'select-all', label: 'Select all', group: 'edit', keys: 'Mod + A' },
   { id: 'select-after', label: 'Select clips forward', group: 'edit', keys: 'Y' },
   { id: 'move-up', label: 'Move clip up', group: 'edit', keys: 'Alt + ↑' },

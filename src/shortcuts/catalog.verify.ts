@@ -4,7 +4,7 @@ import assert from 'node:assert';
 import { SHORTCUT_CATALOG, SHORTCUT_BY_ID } from './catalog';
 import { matchShortcut, parseBindingAlts, parseChord } from './match';
 
-assert.strictEqual(SHORTCUT_CATALOG.length, 55);
+assert.strictEqual(SHORTCUT_CATALOG.length, 58);
 assert.ok(SHORTCUT_BY_ID['play-pause']);
 assert.ok(SHORTCUT_BY_ID['shuttle-back']);
 
@@ -68,8 +68,13 @@ assert.strictEqual(match({ key: '“', altKey: true, code: 'BracketLeft' }), 'tr
 assert.strictEqual(match({ key: '‘', altKey: true, code: 'BracketRight' }), 'trim-end', '⌥] = trim end');
 assert.strictEqual(match({ key: 'z', shiftKey: true }), 'zoom-fit', '⇧Z = zoom to fit');
 assert.strictEqual(match({ key: 'f', metaKey: true, shiftKey: true }), 'fullscreen', '⇧⌘F = full-screen preview');
-// Keys the remap freed must no longer fire anything.
-for (const key of ['v', 'q', 'w', 'e', 'r', 's', 'c', '/']) {
+// The three Final Cut edit keys the remap held free were spent on the Library
+// (2026-09-02): they place the selected card, and nothing else claims them.
+assert.strictEqual(match({ key: 'e' }), 'library-append', 'E = append the selected library item');
+assert.strictEqual(match({ key: 'w' }), 'library-insert', 'W = insert it at the playhead');
+assert.strictEqual(match({ key: 'q' }), 'library-connect', 'Q = connect it at the playhead');
+// The rest of the keys the remap freed must still fire nothing.
+for (const key of ['v', 'r', 's', 'c', '/']) {
   assert.strictEqual(match({ key }), null, `${key.toUpperCase()} is free after the FCP remap`);
 }
 
