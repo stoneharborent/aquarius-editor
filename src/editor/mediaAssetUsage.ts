@@ -30,23 +30,36 @@ export function timelineItemUsesAsset(
   return timelineItemAssetId(item, assets) === asset.id;
 }
 
+/**
+ * How many timeline clips are made from each pool asset, counted across EVERY
+ * timeline in the project (plus multicam angle sources, which are clips too).
+ *
+ * An asset with no entry here is used by nothing, anywhere: removing it cannot
+ * shorten an edit. Callers that only need the yes/no answer use
+ * `usedMediaAssetIds`, which is this map's key set — one traversal, so the two
+ * can never disagree about whether an asset is in use.
+ */
+export function mediaAssetClipCounts(
+  doc: Pick<ProjectDoc, 'assets' | 'timelines'>,
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  const tally = (item: TimelineItem): void => {
+    const assetId = timelineItemAssetId(item, doc.assets);
+    if (assetId) counts.set(assetId, (counts.get(assetId) ?? 0) + 1);
+  };
+  for (const timeline of doc.timelines) {
+    for (const item of timeline.items) tally(item);
+    for (const group of timeline.multicamGroups ?? []) {
+      for (const angle of group.angles) tally(angle.source);
+    }
+  }
+  return counts;
+}
+
 export function usedMediaAssetIds(
   doc: Pick<ProjectDoc, 'assets' | 'timelines'>,
 ): Set<string> {
-  const used = new Set<string>();
-  for (const timeline of doc.timelines) {
-    for (const item of timeline.items) {
-      const assetId = timelineItemAssetId(item, doc.assets);
-      if (assetId) used.add(assetId);
-    }
-    for (const group of timeline.multicamGroups ?? []) {
-      for (const angle of group.angles) {
-        const assetId = timelineItemAssetId(angle.source, doc.assets);
-        if (assetId) used.add(assetId);
-      }
-    }
-  }
-  return used;
+  return new Set(mediaAssetClipCounts(doc).keys());
 }
 
 export function mapTimelineAssetItems(

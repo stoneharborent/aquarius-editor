@@ -107,7 +107,7 @@ function buildEditorWorkspaceViewProps(
 ): EditorWorkspaceViewProps {
   const { project, onRename } = props;
   const { state, doc, commands, canUndo, canRedo, selection, t } = base;
-  const { activeSlipPreview, captionSelection, captionSelections, captionTracks, reviewRequest, selectCaption, selectMarqueeCaptions, selectedCaption, selectedIds, selectedItem, selectedItems, selectedSlipPlan, selectedTransition, sequenceOptions, setActiveSlipPreview, setReviewRequest, setTimelineHoverPreviewFrame, timelineHoverPreviewFrame, trackOptions, usedAssetIds } = selection;
+  const { activeSlipPreview, captionSelection, captionSelections, captionTracks, reviewRequest, selectCaption, selectMarqueeCaptions, selectedCaption, selectedIds, selectedItem, selectedItems, selectedSlipPlan, selectedTransition, sequenceOptions, setActiveSlipPreview, setReviewRequest, setTimelineHoverPreviewFrame, timelineHoverPreviewFrame, trackOptions, usedAssetIds, assetClipCounts } = selection;
   const { historyGesture, stateRef, applyInspectorSelection, docRef, offlineSrcs, offlineAssetIds, markOffline: markMediaOffline, creativeMode, changeCreativeMode, playerRef, selectedPreviewStatuses, handleSelectedPreviewStatus, allTemplates, previewState, setPreviewState } = environment.agent;
   const { autoGradeBusy, autoGradeSession, autoGradeTargets, cancelAutoGrade, analyzeSelectedColor, applyAutoGrade, autoGradePreviewState, selectedAutoGrade } = environment.autoGrade;
   const { showDesign, setShowDesign, showVersions, setShowVersions, showShortcuts, setShowShortcuts, showSettings, setShowSettings, shortcutApiRef, getPlayhead } = ui.dialogs;
@@ -143,8 +143,10 @@ function buildEditorWorkspaceViewProps(
       renameAsset: commands.renameMediaAsset,
       removeAsset: commands.removeMediaAsset,
       // Deleting a generation that a clip is made from is refused, not silently
-      // applied: removing the pool asset would take the clips with it.
-      usedAssetIds,
+      // applied: removing the pool asset would take the clips with it. The card
+      // needs the COUNT, not just a yes/no, so the refusal can say how much of
+      // the edit is standing in the way.
+      clipCounts: assetClipCounts,
       getPlayhead,
     },
     timelineTabs: { doc, commands },

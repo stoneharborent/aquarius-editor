@@ -13,7 +13,10 @@
   anything: the first click turns it into "Confirm Delete", and Cancel backs out. If a clip
   on your timeline was made from that graphic, Delete is switched off and the card tells you
   to remove the clip first — deleting it would have quietly taken the clip out of your edit,
-  and that is not something you would get back.
+  and that is not something you would get back. The switched-off Delete now says how many
+  clips are in the way, both as text on the card and as a tooltip when you hover it, and
+  clicking a graphic's picture — which drops it onto the timeline at the playhead — now
+  says that it did, so a graphic that has just become undeletable explains itself.
 
 ### Changed
 - **The timeline is only as tall as the tracks it holds, and the divider still works.**
@@ -34,6 +37,11 @@
   before is kept, so one drag of the divider brings it straight back.
 
 ### Fixed
+- **Rename on a Hyperframes card works.** The button asked for the new name with a browser
+  dialog that the desktop app does not have, so pressing it did nothing at all — in every
+  installed build since the feature shipped. The name is now typed on the card itself:
+  press Rename, type, and press Enter (Escape backs out). The new name is saved with the
+  graphic and follows it onto any clip already made from it.
 - **HyperFrames generation with the built-in model works in installed builds again.**
   Every attempt used to stop at "the built-in model process exited with code 1". The app
   was looking for its model helper one folder too high up, so it never found the file and

@@ -31,8 +31,12 @@ export interface HyperframesHost {
   readonly placeAsset: (asset: MediaAsset, at: { track?: TrackId; startFrame?: number }) => void;
   readonly renameAsset: (id: string, name: string) => void;
   readonly removeAsset: (id: string) => void;
-  /** Pool assets that at least one timeline clip is made from. */
-  readonly usedAssetIds: ReadonlySet<string>;
+  /**
+   * How many timeline clips are made from each pool asset, across every
+   * timeline in the project. An id that is absent is used by NOTHING — that is
+   * what makes a generation safe to delete.
+   */
+  readonly clipCounts: ReadonlyMap<string, number>;
   readonly getPlayhead: () => number;
 }
 
@@ -52,10 +56,12 @@ export interface HyperframesApi {
   readonly dismiss: (runId: string) => void;
   readonly rename: (record: HyperframeRecord, name: string) => void;
   /**
-   * Ids of generations that a timeline clip is made from. Deleting one of these
-   * is refused — see `remove`.
+   * How many timeline clips are made from a generation. Zero means no clip
+   * anywhere in the project points at it, so Delete is live; anything above
+   * zero is refused — see `remove` — and the card says how many clips are in
+   * the way.
    */
-  readonly placed: ReadonlySet<string>;
+  readonly clipCount: (record: HyperframeRecord) => number;
   /**
    * Delete a generation. Returns false, changing nothing, when a timeline clip
    * is made from it.
@@ -231,9 +237,9 @@ export function HyperframesProvider({ host, children }: { host: HyperframesHost;
       const trimmed = name.trim();
       if (trimmed && trimmed !== record.name) hostRef.current.renameAsset(record.id, trimmed);
     },
-    placed: host.usedAssetIds,
+    clipCount: (record) => host.clipCounts.get(record.id) ?? 0,
     remove: (record) => {
-      if (hostRef.current.usedAssetIds.has(record.id)) return false;
+      if ((hostRef.current.clipCounts.get(record.id) ?? 0) > 0) return false;
       hostRef.current.removeAsset(record.id);
       return true;
     },
@@ -241,7 +247,7 @@ export function HyperframesProvider({ host, children }: { host: HyperframesHost;
       startFrame: hostRef.current.getPlayhead(),
     }),
     refreshConfig: () => { void fetchHyperframesConfig().then(setConfig); },
-  }), [config, host.fps, host.usedAssetIds, projectId, records, run, runs.pending, setConfig]);
+  }), [config, host.clipCounts, host.fps, projectId, records, run, runs.pending, setConfig]);
 
   return <HyperframesContext.Provider value={api}>{children}</HyperframesContext.Provider>;
 }
