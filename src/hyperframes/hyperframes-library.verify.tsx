@@ -8,6 +8,9 @@ import { HyperframesContext, type HyperframesApi } from './HyperframesContext.ts
 import { HyperframesPanel } from './HyperframesPanel.tsx';
 import { migrateProjectDoc } from '../persist/projectStore.ts';
 import { sanitizePortableProjectDoc } from '../persist/portableProject.ts';
+import { CURRENT_PROJECT_VERSION } from '../../shared/project-version.ts';
+import { makeDraft } from '../editor/store.ts';
+import { mediaAssetClipCounts } from '../editor/mediaAssetUsage.ts';
 import {
   HYPERFRAMES_NOTES_PROP, HYPERFRAMES_REFERENCE_PROP,
   hyperframeAsset, hyperframeNameFromPrompt, hyperframeRecords, hyperframeTemplate,
@@ -114,12 +117,23 @@ function api(overrides: Partial<HyperframesApi> = {}): HyperframesApi {
     retry: () => undefined,
     dismiss: () => undefined,
     rename: () => undefined,
-    placed: new Set<string>(),
+    clipCount: () => 0,
     remove: () => true,
     insertAtPlayhead: () => undefined,
     refreshConfig: () => undefined,
     ...overrides,
   };
+}
+
+/**
+ * The `<button …>Delete</button>` markup on the FIRST card, isolated from the
+ * rest of the panel: the prompt bar carries a disabled Generate button of its
+ * own, so a bare search for `disabled` proves nothing about this button.
+ */
+function deleteButton(markup: string): string {
+  const chunk = markup.split('<button').find((part) => part.includes('>Delete</button>'));
+  assert.ok(chunk, 'no Delete button was rendered');
+  return chunk;
 }
 
 const render = (value: HyperframesApi): string => renderToStaticMarkup(
@@ -363,19 +377,30 @@ assert.doesNotMatch(loading, /Connect a model to generate graphics/,
   assert.doesNotMatch(deletable, /Confirm Delete/,
     'the confirm step only appears once the first click has armed it');
   assert.doesNotMatch(deletable, /used by a clip on the timeline/);
+  assert.doesNotMatch(deleteButton(deletable), /disabled/,
+    'a graphic no clip is made from must have a LIVE Delete button — the bug Royce hit '
+    + 'on the bench was a fresh generation whose Delete was greyed out');
 
   // Placed on the timeline: the delete is refused with a reason, because
   // removing the pool asset would take the clip with it.
-  const inUse = render(api({ placed: new Set(['hf-1']) }));
+  const inUse = render(api({ clipCount: (record) => record.id === 'hf-1' ? 1 : 0 }));
   assert.match(inUse, /used by a clip on the timeline/,
     'a placed graphic explains why it cannot be deleted');
   assert.match(inUse, /Delete the clip first/, 'and says what to do about it');
-  assert.match(inUse, /disabled=""/, 'the Delete button itself is not live');
+  assert.match(deleteButton(inUse), /disabled=""/, 'the Delete button itself is not live');
+  // A disabled <button> receives no pointer events, so Chromium never shows its
+  // own tooltip: the reason has to hang on something that is not disabled.
+  assert.match(inUse, /<span title="This graphic is used by a clip on the timeline\. Delete the clip first\."/,
+    'the reason must be reachable by hovering, not only as text under the row');
+
+  const inUseTwice = render(api({ clipCount: (record) => record.id === 'hf-1' ? 3 : 0 }));
+  assert.match(inUseTwice, /used by 3 clips on the timeline/,
+    'the refusal counts the clips standing in the way, so it is actionable');
 
   // The rule is enforced in the API, not only drawn in the UI.
   const host = { removed: [] as string[] };
   const guarded = api({
-    placed: new Set(['hf-1']),
+    clipCount: (record) => record.id === 'hf-1' ? 1 : 0,
     remove: (record) => {
       if (record.id === 'hf-1') return false;
       host.removed.push(record.id);
@@ -385,6 +410,108 @@ assert.doesNotMatch(loading, /Connect a model to generate graphics/,
   assert.equal(guarded.remove(records[0]!), false, 'deleting a placed generation is refused');
   assert.deepEqual(host.removed, [], 'and nothing is removed');
   assert.equal(guarded.remove(records[1]!), true, 'an unplaced one still deletes');
+}
+
+// ── The delete gate against the real project, not a stubbed set ──────────────
+// Royce reported Delete greyed out on a graphic he had never placed. The gate
+// is a clip count taken from the whole project document, so the cycle it has to
+// survive is: generated (0) → placed (1) → clip deleted (0 again).
+{
+  const draft = makeDraft({
+    version: CURRENT_PROJECT_VERSION,
+    assets: [],
+    mediaFolders: [],
+    activeTimelineId: 't1',
+    timelines: [{
+      id: 't1', name: 'Main', order: 0, fps: 30, width: 1920, height: 1080,
+      items: [], tracks: { V1: { kind: 'video' } }, trackOrder: ['V1'], selectedId: null,
+    }],
+  });
+  const generated = hyperframeAsset({
+    id: 'hf-live',
+    prompt: 'a spinning globe',
+    code: 'const H = ({ item }) => <AbsoluteFill />;',
+    width: 1920,
+    height: 1080,
+    durationInFrames: 150,
+    createdAt: 1_700_000_200_000,
+  });
+  draft.commands.addAsset(generated);
+
+  const liveRecords = () => hyperframeRecords(draft.getDoc().assets);
+  const liveApi = () => {
+    const counts = mediaAssetClipCounts(draft.getDoc());
+    return api({
+      records: liveRecords(),
+      clipCount: (record) => counts.get(record.id) ?? 0,
+    });
+  };
+
+  assert.equal(mediaAssetClipCounts(draft.getDoc()).get('hf-live'), undefined,
+    'a finished generation nobody has placed is used by no clip anywhere in the project');
+  assert.doesNotMatch(render(liveApi()), /used by a clip on the timeline/,
+    'so its card must not claim the timeline is using it');
+  assert.doesNotMatch(deleteButton(render(liveApi())), /disabled/, 'and Delete must be pressable');
+
+  // Drop it on the timeline the way the card's own click does.
+  draft.commands.addMediaItem(draft.getDoc().assets[0]!, { startFrame: 0 });
+  assert.equal(mediaAssetClipCounts(draft.getDoc()).get('hf-live'), 1,
+    'once a clip is made from it, the generation is in use');
+  assert.match(deleteButton(render(liveApi())), /disabled=""/, 'and Delete is refused');
+
+  // Delete the clip: the graphic goes back to being deletable.
+  draft.commands.removeItem(draft.getDoc().timelines[0]!.items[0]!.id);
+  assert.equal(mediaAssetClipCounts(draft.getDoc()).get('hf-live'), undefined,
+    'removing the clip releases the generation again');
+  assert.doesNotMatch(deleteButton(render(liveApi())), /disabled/,
+    'and Delete comes back — a graphic must never be stuck undeletable');
+}
+
+// ── Renaming happens in the card, and the new name sticks ────────────────────
+// `window.prompt` is not implemented in Electron (it throws instead of opening
+// a dialog), so the old Rename button did nothing at all in the desktop app.
+{
+  const panelSource = await (await import('node:fs/promises'))
+    .readFile(new URL('./HyperframesPanel.tsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(panelSource, /window\.prompt\(/,
+    'Electron has no prompt() — renaming must use an inline field, not a browser dialog');
+  assert.match(panelSource, /aria-label=\{t\('Rename graphic'\)\}/,
+    'the inline field is labelled for the keyboard and for tests');
+  assert.match(panelSource, /draggable=\{!renaming\}/,
+    'the card stops being draggable while its name is edited, or the input cannot be selected');
+
+  // And the rename reaches the project: the pool asset AND every clip made from
+  // it carry the new name, which is what the timeline shows.
+  const draft = makeDraft({
+    version: CURRENT_PROJECT_VERSION,
+    assets: [],
+    mediaFolders: [],
+    activeTimelineId: 't1',
+    timelines: [{
+      id: 't1', name: 'Main', order: 0, fps: 30, width: 1920, height: 1080,
+      items: [], tracks: { V1: { kind: 'video' } }, trackOrder: ['V1'], selectedId: null,
+    }],
+  });
+  draft.commands.addAsset(hyperframeAsset({
+    id: 'hf-rename',
+    prompt: 'a spinning globe',
+    code: 'const R = ({ item }) => <AbsoluteFill />;',
+    width: 1920,
+    height: 1080,
+    durationInFrames: 150,
+    createdAt: 1_700_000_300_000,
+  }));
+  draft.commands.addMediaItem(draft.getDoc().assets[0]!, { startFrame: 0 });
+  draft.commands.renameMediaAsset('hf-rename', 'Globe spin');
+
+  const renamed = hyperframeRecords(draft.getDoc().assets)[0]!;
+  assert.equal(renamed.name, 'Globe spin', 'the card title is the renamed pool asset');
+  assert.equal(draft.getDoc().timelines[0]!.items[0]!.name, 'Globe spin',
+    'and the clip on the timeline is renamed with it');
+  assert.match(render(api({ records: [renamed] })), /Globe spin/,
+    'so the card shows the new name after a reload');
+  assert.equal(renamed.prompt, 'a spinning globe',
+    'renaming a graphic must not touch the brief it was generated from');
 }
 
 // ── Regenerate opens the revise prompt rather than re-running the brief ──────
@@ -399,4 +526,4 @@ assert.doesNotMatch(loading, /Connect a model to generate graphics/,
     'and submitting goes through revise, which keeps the original');
 }
 
-console.log('hyperframes-library.verify: tab, input bar, pending/failed cards, revisions, delete rules and setup card OK');
+console.log('hyperframes-library.verify: tab, input bar, pending/failed cards, revisions, rename, delete rules and setup card OK');

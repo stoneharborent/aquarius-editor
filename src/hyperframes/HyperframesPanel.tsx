@@ -10,6 +10,7 @@ import { useT } from '../i18n/locale';
 import { Icon } from '../components/icons';
 import { MgThumb } from '../media/MgThumb';
 import { setLibraryDrag } from '../library/drag';
+import { showAppToast } from '../ui/appToast';
 import { useHyperframes } from './HyperframesContext';
 import { hyperframesAcceptsPrompts } from './api';
 import { HyperframesSetupCard } from './HyperframesSetupCard';
@@ -163,10 +164,16 @@ export function HyperframesPanel() {
                 originName={record.referenceId
                   ? hyperframes.records.find((other) => other.id === record.referenceId)?.name
                   : undefined}
-                placed={hyperframes.placed.has(record.id)}
+                clips={hyperframes.clipCount(record)}
                 confirmingDelete={confirmDeleteId === record.id}
                 onHover={setHoveredId}
-                onInsert={() => hyperframes.insertAtPlayhead(record)}
+                // Clicking the picture PLACES a clip. Saying so is what stops
+                // the next step — Delete going grey because a clip now uses the
+                // graphic — from looking like a broken button.
+                onInsert={() => {
+                  hyperframes.insertAtPlayhead(record);
+                  showAppToast(t('Added {name} at the playhead', { name: record.name }));
+                }}
                 onRegenerate={(at) => {
                   setConfirmDeleteId(null);
                   setRevising({ record, x: at.x, y: at.y });
@@ -244,7 +251,7 @@ function PendingCard({ run, onRetry, onDismiss }: {
 }
 
 function HyperframeCard({
-  record, fps, hovered, originName, placed, confirmingDelete,
+  record, fps, hovered, originName, clips, confirmingDelete,
   onHover, onInsert, onRegenerate, onRename, onRemove, onCancelRemove,
 }: {
   record: HyperframeRecord;
@@ -252,8 +259,11 @@ function HyperframeCard({
   hovered: boolean;
   /** Name of the generation this one was revised from, when it is still around. */
   originName?: string;
-  /** A timeline clip is made from this generation, so it cannot be deleted. */
-  placed: boolean;
+  /**
+   * How many timeline clips are made from this generation. Zero — the case for
+   * every graphic nobody has placed yet — leaves Delete live.
+   */
+  clips: number;
   confirmingDelete: boolean;
   onHover: (id: string | null) => void;
   onInsert: () => void;
@@ -263,10 +273,26 @@ function HyperframeCard({
   onCancelRemove: () => void;
 }) {
   const t = useT();
+  // Renaming happens INSIDE the card. `window.prompt` is not implemented in
+  // Electron — it throws instead of opening a dialog — so the old prompt-based
+  // Rename button did nothing at all in the desktop app.
+  const [draftName, setDraftName] = useState<string | null>(null);
+  const renaming = draftName !== null;
+  const commitRename = () => {
+    if (draftName === null) return;
+    setDraftName(null);
+    onRename(draftName);
+  };
+  const placed = clips > 0;
+  const placedReason = clips > 1
+    ? t('This graphic is used by {n} clips on the timeline. Delete them first.', { n: clips })
+    : t('This graphic is used by a clip on the timeline. Delete the clip first.');
   return (
     <article
       className="cc-hyperframes-card"
-      draggable
+      // A draggable ancestor swallows the pointer selection an <input> needs, so
+      // the card stops being draggable while its name is being edited.
+      draggable={!renaming}
       onDragStart={(event) => setLibraryDrag(event, {
         kind: 'template',
         id: record.id,
@@ -286,7 +312,36 @@ function HyperframeCard({
         <MgThumb asset={record.asset} fps={fps} active={hovered} />
       </button>
       <div style={cardMeta}>
-        <span style={cardName} title={record.prompt}>{record.name}</span>
+        {renaming ? (
+          <input
+            type="text"
+            autoFocus
+            value={draftName}
+            aria-label={t('Rename graphic')}
+            onChange={(event) => setDraftName(event.target.value)}
+            onFocus={(event) => event.currentTarget.select()}
+            // Timeline shortcuts listen on the window; a name being typed here
+            // must never reach them.
+            onKeyDown={(event) => {
+              event.stopPropagation();
+              if (event.nativeEvent.isComposing) return;
+              if (event.key === 'Enter') { event.preventDefault(); commitRename(); }
+              if (event.key === 'Escape') { event.preventDefault(); setDraftName(null); }
+            }}
+            onBlur={commitRename}
+            style={{
+              border: `0.5px solid ${theme.accent}`,
+              borderRadius: 4,
+              background: theme.inset,
+              color: theme.text,
+              fontSize: 11.5,
+              minWidth: 0,
+              padding: '2px 4px',
+            }}
+          />
+        ) : (
+          <span style={cardName} title={record.prompt}>{record.name}</span>
+        )}
         {record.referenceId && (
           <span style={originLine}>
             {originName
@@ -308,19 +363,21 @@ function HyperframeCard({
         >{t('Regenerate')}</button>
         <button
           type="button"
-          onClick={() => {
-            const next = window.prompt(t('Rename graphic'), record.name);
-            if (next !== null) onRename(next);
-          }}
+          onClick={() => setDraftName(record.name)}
           style={miniButton}
         >{t('Rename')}</button>
         {placed ? (
-          <button
-            type="button"
-            disabled
-            title={t('This graphic is used by a clip on the timeline. Delete the clip first.')}
-            style={{ ...miniButton, color: theme.textDim, cursor: 'default' }}
-          >{t('Delete')}</button>
+          // A disabled button fires no pointer events, so its own `title` never
+          // becomes a tooltip: the reason hangs on the wrapper instead, and is
+          // repeated in plain sight under the row.
+          <span title={placedReason} style={{ display: 'inline-flex' }}>
+            <button
+              type="button"
+              disabled
+              title={placedReason}
+              style={{ ...miniButton, color: theme.textDim, cursor: 'default' }}
+            >{t('Delete')}</button>
+          </span>
         ) : (
           <button
             type="button"
@@ -337,8 +394,8 @@ function HyperframeCard({
         )}
       </div>
       {placed && (
-        <div style={{ fontSize: 10, color: theme.textDim, lineHeight: 1.35, padding: '0 6px 7px' }}>
-          {t('This graphic is used by a clip on the timeline. Delete the clip first.')}
+        <div style={{ fontSize: 10, color: theme.gold, lineHeight: 1.35, padding: '0 6px 7px' }}>
+          {placedReason}
         </div>
       )}
     </article>

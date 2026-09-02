@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { historyReduce, projectReduce } from './reduce';
 import { makeDraft } from './store';
-import { timelineItemAssetId, usedMediaAssetIds } from './mediaAssetUsage';
+import { mediaAssetClipCounts, timelineItemAssetId, usedMediaAssetIds } from './mediaAssetUsage';
 import { verifyMulticamAssetRemoval } from './mediaAssetUsageMulticam.verify-support';
 import { sourceRevisionForTimelineItem } from './mediaSourceRevision';
 import { resolveTimelineRenderPlan } from './sequenceGraph';
@@ -86,6 +86,13 @@ assert.equal(timelineItemAssetId(linkedA, doc.assets), assetA.id);
 assert.equal(timelineItemAssetId(legacyA, doc.assets), assetA.id, 'legacy clips may resolve only when source and name are unambiguous');
 assert.equal(timelineItemAssetId(clip('ambiguous', 'unknown', assetA.src), doc.assets), undefined);
 assert.deepEqual([...usedMediaAssetIds(doc)].sort(), [assetA.id, assetB.id, otherAsset.id]);
+// The count is what a caller needs when it has to explain a refusal ("used by 3
+// clips"), and the used-set is its key set, so the two can never disagree.
+assert.deepEqual(
+  [...mediaAssetClipCounts(doc).entries()].sort(),
+  [[assetA.id, 3], [assetB.id, 1], [otherAsset.id, 1]],
+  'clips are counted across every timeline in the project, not just the active one',
+);
 assert.equal(sourceRevisionForTimelineItem(linkedA, [assetB, assetA, otherAsset]), 'rev-a');
 assert.equal(remainingSourceFrames(linkedA, 30, [assetB, assetA, otherAsset]), 60);
 assert.deepEqual(

@@ -16,7 +16,7 @@ import {
   type CaptionSelectionRef,
 } from '../captions/captionSelection';
 import { updateCaptionSelections } from '../captions/captionSelectionInteraction';
-import { usedMediaAssetIds } from './mediaAssetUsage';
+import { mediaAssetClipCounts } from './mediaAssetUsage';
 import { selectedInspectorItems } from './inspectorBatch';
 import { resolveTimelineRenderPlan, sequenceReferenceError } from './sequenceGraph';
 import { planSlip, type SlipPreview } from './slip';
@@ -215,8 +215,12 @@ function useEditorOptions(state: Timeline, doc: ProjectDoc) {
         disabledReason: referenceError?.message,
       };
     }), [doc]);
-  const usedAssetIds = useMemo(() => usedMediaAssetIds(doc), [doc]);
-  return { captionTracks, sequenceOptions, trackOptions, usedAssetIds };
+  // One traversal answers both questions: how many clips are made from each
+  // pool asset (the Hyperframes card says so when it refuses a delete) and the
+  // plain "is it used at all" set the media pool works from.
+  const assetClipCounts = useMemo(() => mediaAssetClipCounts(doc), [doc]);
+  const usedAssetIds = useMemo(() => new Set(assetClipCounts.keys()), [assetClipCounts]);
+  return { assetClipCounts, captionTracks, sequenceOptions, trackOptions, usedAssetIds };
 }
 
 export function useEditorSelectionState(
